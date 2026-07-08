@@ -1,16 +1,25 @@
 {
   "name": "fizioplan-mobile-app",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "main": "expo/AppEntry",
+  "scripts": {
+    "start": "expo start",
+    "ios": "expo start --ios",
+    "android": "expo start --android",
+    "web": "expo start --web",
+    "typecheck": "tsc --noEmit"
+  },
   "dependencies": {
+    "@supabase/supabase-js": "^2.110.1",
     "expo": "~53.0.0",
     "expo-status-bar": "~2.2.3",
     "react": "19.0.0",
-    "react-native": "0.79.0"
+    "react-native": "0.79.0",
+    "react-native-url-polyfill": "^2.0.0"
   },
   "devDependencies": {
-    "typescript": "~5.8.3",
-    "@types/react": "~19.0.10"
+    "@types/react": "~19.0.10",
+    "typescript": "~5.8.3"
   }
 }
