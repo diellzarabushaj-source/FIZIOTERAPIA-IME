@@ -1,8 +1,9 @@
 import { currentUser } from "@clerk/nextjs/server";
 import { AuthControls } from "@/components/AuthControls";
 import { BrandMark } from "@/components/BrandMark";
-import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import { getBillingStatusLabel, hasActivePhysioAccess, PHYSIO_MONTHLY_PRICE_LABEL } from "@/lib/billing";
+import { clinicalProgramTemplates } from "@/lib/clinical-programs";
+import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import { addExerciseToPlanAction, createPatientAction, createPrivateExerciseAction } from "./actions";
 
 type PatientRow = {
@@ -260,8 +261,8 @@ export default async function PhysiotherapistPortalPage() {
           <section className="physio-workspace" id="new-patient">
             <form action={createPatientAction} className="dashboard-card physio-form-card">
               <span className="mini-badge">Pacient i ri</span>
-              <h2>Shto pacient real</h2>
-              <p>Sistemi gjeneron automatikisht username + kod për pacientin.</p>
+              <h2>Shto pacient + program</h2>
+              <p>Zgjidh template klinik. App-i krijon planin, ushtrimet, username-in dhe kodin automatikisht.</p>
               <label className="label">Emri</label>
               <input className="input" name="firstName" placeholder="Arber" required />
               <label className="label">Mbiemri</label>
@@ -271,45 +272,75 @@ export default async function PhysiotherapistPortalPage() {
               <label className="label">Mosha</label>
               <input className="input" name="age" type="number" min="1" max="120" placeholder="45" />
               <label className="label">Diagnoza / problemi</label>
-              <input className="input" name="diagnosis" placeholder="Lumbosciatica" />
+              <input className="input" name="diagnosis" placeholder="Opsionale, p.sh. Lumbosciatica" />
+              <label className="label">Program template</label>
+              <select className="input" name="programKey" defaultValue="lumbosciatica" required>
+                {clinicalProgramTemplates.map((program) => (
+                  <option key={program.key} value={program.key}>{program.title} · {program.durationDays} ditë</option>
+                ))}
+              </select>
               <label className="label">Titulli i planit</label>
-              <input className="input" name="planTitle" defaultValue="Program rehabilitimi 14 ditë" />
-              <button className="button" type="submit">Ruaj pacientin + planin</button>
+              <input className="input" name="planTitle" placeholder="Lihet bosh për titullin e template-it" />
+              <div className="generated-box">
+                <b>Safety rule:</b> Dhimbje 7/10 ose më shumë = ndalo ushtrimin dhe kontakto fizioterapeutin. AI është vetëm feedback për lëvizje.
+              </div>
+              <button className="button" type="submit">Ruaj pacientin + krijo planin</button>
             </form>
 
             <div className="dashboard-card wide" id="patients">
               <div className="section-header-row">
                 <div>
-                  <span className="mini-badge">Supabase</span>
-                  <h2>Pacientët aktivë</h2>
-                  <p>Pacientët realë, kodet, progresi, dhimbja dhe AI score.</p>
+                  <span className="mini-badge">Clinical templates</span>
+                  <h2>Programet e gatshme</h2>
+                  <p>Zgjedhja e template-it e mbush planin me ushtrime, dozime dhe safety note.</p>
                 </div>
-                <span className="badge">{activePatients.length} total</span>
+                <span className="badge">{clinicalProgramTemplates.length} templates</span>
               </div>
-              <div className="table-scroll">
-                <table className="table physio-patient-table">
-                  <thead><tr><th>Pacient</th><th>Kodi</th><th>Diagnoza</th><th>Plan</th><th>Done</th><th>Dhimbje</th><th>AI</th><th>Raport</th></tr></thead>
-                  <tbody>
-                    {activePatients.length === 0 && <tr><td colSpan={8}>Ende nuk ka pacientë realë. Shto pacientin e parë nga forma majtas.</td></tr>}
-                    {activePatients.map((patient) => {
-                      const stats = getPatientStats(patient.id, logs, aiChecks);
-                      const name = `${patient.first_name} ${patient.last_name || ""}`.trim();
-                      return (
-                        <tr key={patient.id}>
-                          <td><b>{name}</b><br /><small>{patient.patient_username || "—"}</small></td>
-                          <td><b className="code-chip">{patient.patient_code}</b></td>
-                          <td>{patient.diagnosis || "—"}</td>
-                          <td>{patient.plans?.[0]?.title || "—"}</td>
-                          <td>{stats.completed}</td>
-                          <td>{stats.painAlert ? <b className="alert-text">{stats.latestPain}/10</b> : stats.latestPain}</td>
-                          <td>{stats.aiAlert ? <b className="alert-text">{stats.latestAi}</b> : stats.latestAi}</td>
-                          <td><a className="button secondary compact-button" href={`/reports/${patient.id}`}>PDF</a></td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
+              <div className="program-template-grid">
+                {clinicalProgramTemplates.map((program) => (
+                  <article className="program-template-card" key={program.key}>
+                    <span className="mini-badge">{program.category}</span>
+                    <h3>{program.title}</h3>
+                    <p>{program.shortDescription}</p>
+                    <small>{program.exercises.length} ushtrime · {program.durationDays} ditë</small>
+                  </article>
+                ))}
               </div>
+            </div>
+          </section>
+
+          <section className="dashboard-card wide" id="patients">
+            <div className="section-header-row">
+              <div>
+                <span className="mini-badge">Supabase</span>
+                <h2>Pacientët aktivë</h2>
+                <p>Pacientët realë, kodet, progresi, dhimbja dhe AI score.</p>
+              </div>
+              <span className="badge">{activePatients.length} total</span>
+            </div>
+            <div className="table-scroll">
+              <table className="table physio-patient-table">
+                <thead><tr><th>Pacient</th><th>Kodi</th><th>Diagnoza</th><th>Plan</th><th>Done</th><th>Dhimbje</th><th>AI</th><th>Raport</th></tr></thead>
+                <tbody>
+                  {activePatients.length === 0 && <tr><td colSpan={8}>Ende nuk ka pacientë realë. Shto pacientin e parë nga forma sipër.</td></tr>}
+                  {activePatients.map((patient) => {
+                    const stats = getPatientStats(patient.id, logs, aiChecks);
+                    const name = `${patient.first_name} ${patient.last_name || ""}`.trim();
+                    return (
+                      <tr key={patient.id}>
+                        <td><b>{name}</b><br /><small>{patient.patient_username || "—"}</small></td>
+                        <td><b className="code-chip">{patient.patient_code}</b></td>
+                        <td>{patient.diagnosis || "—"}</td>
+                        <td>{patient.plans?.[0]?.title || "—"}</td>
+                        <td>{stats.completed}</td>
+                        <td>{stats.painAlert ? <b className="alert-text">{stats.latestPain}/10</b> : stats.latestPain}</td>
+                        <td>{stats.aiAlert ? <b className="alert-text">{stats.latestAi}</b> : stats.latestAi}</td>
+                        <td><a className="button secondary compact-button" href={`/reports/${patient.id}`}>PDF</a></td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
             </div>
           </section>
 
@@ -363,9 +394,9 @@ export default async function PhysiotherapistPortalPage() {
 
           <section className="physio-workspace">
             <form action={addExerciseToPlanAction} className="dashboard-card wide physio-form-card">
-              <span className="mini-badge">Plan Builder</span>
+              <span className="mini-badge">Plan Builder manual</span>
               <h2>Cakto ushtrim në plan</h2>
-              <p>Zgjidh pacientin dhe ushtrimin. Ruhet direkt në plan_exercises.</p>
+              <p>Zgjidh pacientin dhe ushtrimin. Ruhet direkt në plan_exercises me ownership check.</p>
               <label className="label">Pacienti</label>
               <select className="input" name="patientId" required>
                 <option value="">Zgjidh pacientin</option>
