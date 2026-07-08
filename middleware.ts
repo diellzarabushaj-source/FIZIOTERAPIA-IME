@@ -9,6 +9,7 @@ const isProtectedRoute = createRouteMatcher([
   "/physio(.*)",
   "/owner-hidden(.*)",
   "/physiotherapist-portal(.*)",
+  "/physiotherapist-dashboard(.*)",
   "/admin-hidden(.*)",
 ]);
 
