@@ -1,4 +1,4 @@
-import { NextResponse, type NextFetchEvent, type NextRequest } from "next/server";
+import { NextResponse, type NextProxy } from "next/server";
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 
 const isClerkConfigured = Boolean(
@@ -20,13 +20,13 @@ const protectedProxy = clerkMiddleware(async (auth, req) => {
   }
 });
 
-export function proxy(request: NextRequest, event: NextFetchEvent) {
+export const proxy: NextProxy = (request, event) => {
   if (!isClerkConfigured) {
     return NextResponse.next();
   }
 
   return protectedProxy(request, event);
-}
+};
 
 export const config = {
   matcher: [
