@@ -1,3 +1,5 @@
+import { BrandMark } from "@/components/BrandMark";
+
 type LegalSection = {
   title: string;
   body: string;
@@ -15,10 +17,7 @@ export function LegalPage({ badge, title, intro, lastUpdated = "Korrik 2026", se
   return (
     <main className="page">
       <nav className="top-nav">
-        <a className="brand-link" href="/">
-          <span className="brand-logo">FI</span>
-          <span>Fizioterapia ime</span>
-        </a>
+        <BrandMark />
         <div className="nav-actions">
           <a href="/privacy">Privatësia</a>
           <a href="/terms">Kushtet</a>
