@@ -1,3 +1,4 @@
+import { BrandMark } from "@/components/BrandMark";
 import { patientLoginAction } from "./actions";
 
 export default async function PatientPortalPage({ searchParams }: { searchParams?: Promise<{ error?: string }> }) {
@@ -7,10 +8,7 @@ export default async function PatientPortalPage({ searchParams }: { searchParams
   return (
     <main className="page">
       <nav className="top-nav">
-        <a className="brand-link" href="/">
-          <span className="brand-logo">FP</span>
-          <span>FizioPlan</span>
-        </a>
+        <BrandMark />
         <div className="nav-actions">
           <a href="/">Home</a>
           <a href="/physiotherapist-portal">Fizioterapeut Portal</a>
