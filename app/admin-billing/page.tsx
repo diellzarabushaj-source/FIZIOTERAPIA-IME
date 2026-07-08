@@ -40,8 +40,8 @@ export default async function AdminBillingPage() {
   const supabase = getSupabaseAdmin();
   if (!supabase) {
     return (
-      <main className="page">
-        <section className="hero">
+      <main className="page admin-billing-page">
+        <section className="ai-empty-state">
           <h1>Billing nuk mund të hapet.</h1>
           <div className="role-warning">SUPABASE_SERVICE_ROLE_KEY mungon në Vercel.</div>
         </section>
@@ -56,8 +56,14 @@ export default async function AdminBillingPage() {
     .order("created_at", { ascending: false })
     .returns<Physio[]>();
 
+  const rows = physios || [];
+  const activeCount = rows.filter((physio) => {
+    const latestSubscription = [...(physio.subscriptions || [])].sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime())[0];
+    return hasActivePhysioAccess(physio.role, latestSubscription);
+  }).length;
+
   return (
-    <main className="page">
+    <main className="page admin-billing-page">
       <nav className="top-nav">
         <BrandMark href="/admin-dashboard" />
         <div className="nav-actions">
@@ -67,16 +73,23 @@ export default async function AdminBillingPage() {
         </div>
       </nav>
 
-      <section className="hero">
-        <span className="badge">Manual Billing · Local bank ready</span>
-        <h1>Qasja e fizioterapeutëve: {PHYSIO_MONTHLY_PRICE_LABEL}.</h1>
-        <p>
-          Stripe nuk përdoret tani. Admini e aktivizon manualisht qasjen mujore pasi fizioterapeuti paguan.
-          Më vonë kjo lidhet me bankë lokale.
-        </p>
+      <section className="admin-billing-hero">
+        <div>
+          <span className="badge">Manual Billing · Local bank ready</span>
+          <h1>Qasja e fizioterapeutëve: {PHYSIO_MONTHLY_PRICE_LABEL}.</h1>
+          <p>
+            Stripe nuk përdoret tani. Admini e aktivizon manualisht qasjen mujore pasi fizioterapeuti paguan.
+            Më vonë kjo lidhet me bankë lokale.
+          </p>
+        </div>
+        <div className="report-date-card">
+          <span>Active</span>
+          <strong>{activeCount}/{rows.length}</strong>
+          <small>fizioterapeutë</small>
+        </div>
       </section>
 
-      <section className="dashboard-card wide">
+      <section className="dashboard-card wide admin-billing-table-card">
         <div className="section-header-row">
           <div>
             <h2>Fizioterapeutët dhe subscription status</h2>
@@ -85,42 +98,44 @@ export default async function AdminBillingPage() {
           <span className="badge">29.90 EUR / muaj</span>
         </div>
 
-        <table className="table">
-          <thead>
-            <tr><th>Fizioterapeuti</th><th>Email</th><th>Status</th><th>Paguar deri</th><th>Invoice</th><th>Aktivizo</th><th>Blloko</th></tr>
-          </thead>
-          <tbody>
-            {(physios || []).map((physio) => {
-              const latestSubscription = [...(physio.subscriptions || [])].sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime())[0];
-              const active = hasActivePhysioAccess(physio.role, latestSubscription);
-              return (
-                <tr key={physio.id}>
-                  <td><b>{physio.full_name || physio.email}</b><br /><small>{physio.clinic_name || "—"}</small></td>
-                  <td>{physio.email}</td>
-                  <td>{active ? <b style={{ color: "#16764f" }}>Active</b> : getBillingStatusLabel(latestSubscription)}</td>
-                  <td>{formatDate(latestSubscription?.current_period_end)}</td>
-                  <td>{latestSubscription?.invoice_reference || "—"}</td>
-                  <td>
-                    <form action={activateSubscriptionAction}>
-                      <input type="hidden" name="physioId" value={physio.id} />
-                      <input className="input" name="invoiceReference" placeholder="FI-2026-07" />
-                      <input type="hidden" name="months" value="1" />
-                      <button className="button" type="submit">+ 1 muaj</button>
-                    </form>
-                  </td>
-                  <td>
-                    {latestSubscription?.id ? (
-                      <form action={suspendSubscriptionAction}>
-                        <input type="hidden" name="subscriptionId" value={latestSubscription.id} />
-                        <button className="button secondary" type="submit">Blloko</button>
+        <div className="table-scroll">
+          <table className="table">
+            <thead>
+              <tr><th>Fizioterapeuti</th><th>Email</th><th>Status</th><th>Paguar deri</th><th>Invoice</th><th>Aktivizo</th><th>Blloko</th></tr>
+            </thead>
+            <tbody>
+              {rows.map((physio) => {
+                const latestSubscription = [...(physio.subscriptions || [])].sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime())[0];
+                const active = hasActivePhysioAccess(physio.role, latestSubscription);
+                return (
+                  <tr key={physio.id}>
+                    <td><b>{physio.full_name || physio.email}</b><br /><small>{physio.clinic_name || "—"}</small></td>
+                    <td>{physio.email}</td>
+                    <td>{active ? <b className="access-pill active">Active</b> : getBillingStatusLabel(latestSubscription)}</td>
+                    <td>{formatDate(latestSubscription?.current_period_end)}</td>
+                    <td>{latestSubscription?.invoice_reference || "—"}</td>
+                    <td>
+                      <form action={activateSubscriptionAction}>
+                        <input type="hidden" name="physioId" value={physio.id} />
+                        <input className="input" name="invoiceReference" placeholder="FI-2026-07" />
+                        <input type="hidden" name="months" value="1" />
+                        <button className="button compact-button" type="submit">+ 1 muaj</button>
                       </form>
-                    ) : "—"}
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+                    </td>
+                    <td>
+                      {latestSubscription?.id ? (
+                        <form action={suspendSubscriptionAction}>
+                          <input type="hidden" name="subscriptionId" value={latestSubscription.id} />
+                          <button className="button secondary compact-button" type="submit">Blloko</button>
+                        </form>
+                      ) : "—"}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
       </section>
     </main>
   );
