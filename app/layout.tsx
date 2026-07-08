@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
+import { SiteFooter } from "@/components/SiteFooter";
 import "./globals.css";
 import "./brand.css";
 import "./phase3.css";
@@ -25,11 +26,17 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   const clerkConfigured = Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY);
+  const content = (
+    <>
+      {children}
+      <SiteFooter />
+    </>
+  );
 
   return (
     <html lang="sq">
       <body>
-        {clerkConfigured ? <ClerkProvider>{children}</ClerkProvider> : children}
+        {clerkConfigured ? <ClerkProvider>{content}</ClerkProvider> : content}
       </body>
     </html>
   );
