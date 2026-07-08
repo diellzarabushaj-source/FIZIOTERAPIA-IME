@@ -1,5 +1,6 @@
 import { currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
+import { BrandMark } from "@/components/BrandMark";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import { PrintReportButton } from "@/components/PrintReportButton";
 
@@ -94,8 +95,8 @@ export default async function PatientReportPage({ params }: ReportPageProps) {
   if (!user || !email) redirect("/sign-in");
   if (!supabase) {
     return (
-      <main className="page">
-        <section className="hero">
+      <main className="page report-page">
+        <section className="ai-empty-state">
           <h1>Raporti nuk mund të hapet.</h1>
           <div className="role-warning">SUPABASE_SERVICE_ROLE_KEY mungon në Vercel.</div>
         </section>
@@ -168,6 +169,7 @@ export default async function PatientReportPage({ params }: ReportPageProps) {
   const averageAi = average(aiValues);
   const highPainCount = painValues.filter((value) => value >= 7).length;
   const lowAiCount = aiValues.filter((value) => value < 60).length;
+  const name = patientName(patient);
 
   return (
     <main className="page report-page">
@@ -176,39 +178,38 @@ export default async function PatientReportPage({ params }: ReportPageProps) {
           .top-nav, .no-print { display: none !important; }
           body { background: #ffffff !important; }
           .page { padding: 0 !important; }
-          .report-sheet { box-shadow: none !important; border: 0 !important; }
-          .dashboard-card, .kpi-card { break-inside: avoid; }
+          .report-sheet { box-shadow: none !important; border: 0 !important; max-width: 100% !important; }
+          .dashboard-card, .kpi-card, .report-summary-card { break-inside: avoid; }
         }
       `}</style>
 
-      <nav className="top-nav no-print">
-        <a className="brand-link" href="/physiotherapist-portal">
-          <span className="brand-logo">FI</span>
-          <span>Fizioterapia ime</span>
-        </a>
+      <nav className="top-nav no-print report-nav">
+        <BrandMark href="/physiotherapist-portal" />
         <div className="nav-actions">
           <a href="/physiotherapist-portal">Dashboard</a>
+          <a href={`/patient-dashboard`}>Patient preview</a>
           <PrintReportButton />
         </div>
       </nav>
 
-      <section className="dashboard-card report-sheet" style={{ maxWidth: 980, margin: "0 auto" }}>
-        <div className="section-header-row">
+      <section className="report-sheet">
+        <header className="report-cover">
           <div>
-            <span className="badge">Raport PDF</span>
+            <span className="badge">Raport PDF · Fizioterapia ime</span>
             <h1>Raport i progresit të pacientit</h1>
-            <p>Raport i gjeneruar nga Fizioterapia ime për ndjekje rehabilitimi.</p>
+            <p>Raport print-ready për ndjekje rehabilitimi, adherence, dhimbje dhe AI Movement Check.</p>
           </div>
-          <div className="generated-box">
-            <b>Data:</b><br />
-            {new Date().toLocaleDateString("sq-AL")}
+          <div className="report-date-card">
+            <span>Data</span>
+            <strong>{new Date().toLocaleDateString("sq-AL")}</strong>
+            <small>{profile.clinic_name || "Fizioterapia ime"}</small>
           </div>
-        </div>
+        </header>
 
-        <section className="dashboard-kpis" style={{ marginTop: 22 }}>
+        <section className="report-kpis">
           <div className="kpi-card">
             <span>Pacienti</span>
-            <strong>{patientName(patient)}</strong>
+            <strong>{name}</strong>
             <small>{patient.diagnosis || "Pa diagnozë"}</small>
           </div>
           <div className="kpi-card">
@@ -228,13 +229,13 @@ export default async function PatientReportPage({ params }: ReportPageProps) {
           </div>
         </section>
 
-        <section className="dashboard-grid" style={{ marginTop: 22 }}>
-          <div className="dashboard-card">
+        <section className="report-grid">
+          <div className="report-summary-card">
             <h2>Të dhënat e pacientit</h2>
             <table className="table">
               <tbody>
                 <tr><td>Username</td><td>{patient.patient_username || "—"}</td></tr>
-                <tr><td>Kodi</td><td>{patient.patient_code}</td></tr>
+                <tr><td>Kodi</td><td><b className="code-chip">{patient.patient_code}</b></td></tr>
                 <tr><td>Mosha</td><td>{patient.age || "—"}</td></tr>
                 <tr><td>Telefoni</td><td>{patient.phone || "—"}</td></tr>
                 <tr><td>Fizioterapeuti</td><td>{profile.full_name || profile.email}</td></tr>
@@ -243,7 +244,7 @@ export default async function PatientReportPage({ params }: ReportPageProps) {
             </table>
           </div>
 
-          <div className="dashboard-card">
+          <div className="report-summary-card">
             <h2>Plani aktiv</h2>
             <table className="table">
               <tbody>
@@ -258,64 +259,76 @@ export default async function PatientReportPage({ params }: ReportPageProps) {
           </div>
         </section>
 
-        <section className="dashboard-card wide" style={{ marginTop: 22 }}>
-          <h2>Ushtrimet e caktuara</h2>
-          <table className="table">
-            <thead><tr><th>Dita</th><th>Ushtrimi</th><th>Kategoria</th><th>Dozimi</th><th>AI</th></tr></thead>
-            <tbody>
-              {exercises.length === 0 && <tr><td colSpan={5}>Nuk ka ushtrime të caktuara.</td></tr>}
-              {exercises.map((exercise) => (
-                <tr key={exercise.id}>
-                  <td>{exercise.day_number || 1}</td>
-                  <td>{exercise.exercise_library?.name || "Ushtrim"}</td>
-                  <td>{exercise.exercise_library?.category || "—"}</td>
-                  <td>{exercise.sets || "—"} sete {exercise.reps ? `× ${exercise.reps}` : ""}<br /><small>{exercise.frequency || ""}</small></td>
-                  <td>{exercise.exercise_library?.ai_enabled ? "Aktiv" : "Jo"}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <section className="report-summary-card wide">
+          <div className="section-header-row">
+            <div>
+              <h2>Ushtrimet e caktuara</h2>
+              <p>Lista e ushtrimeve nga plani aktiv i pacientit.</p>
+            </div>
+            <span className="badge">{exercises.length} ushtrime</span>
+          </div>
+          <div className="table-scroll">
+            <table className="table">
+              <thead><tr><th>Dita</th><th>Ushtrimi</th><th>Kategoria</th><th>Dozimi</th><th>AI</th></tr></thead>
+              <tbody>
+                {exercises.length === 0 && <tr><td colSpan={5}>Nuk ka ushtrime të caktuara.</td></tr>}
+                {exercises.map((exercise) => (
+                  <tr key={exercise.id}>
+                    <td>{exercise.day_number || 1}</td>
+                    <td>{exercise.exercise_library?.name || "Ushtrim"}</td>
+                    <td>{exercise.exercise_library?.category || "—"}</td>
+                    <td>{exercise.sets || "—"} sete {exercise.reps ? `× ${exercise.reps}` : ""}<br /><small>{exercise.frequency || ""}</small></td>
+                    <td>{exercise.exercise_library?.ai_enabled ? "Aktiv" : "Jo"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </section>
 
-        <section className="dashboard-grid" style={{ marginTop: 22 }}>
-          <div className="dashboard-card wide">
+        <section className="report-grid two-wide">
+          <div className="report-summary-card wide">
             <h2>Dhimbja dhe përfundimi</h2>
-            <table className="table">
-              <thead><tr><th>Data</th><th>Dhimbja</th><th>Status</th><th>Koment</th></tr></thead>
-              <tbody>
-                {exerciseLogs.length === 0 && <tr><td colSpan={4}>Ende nuk ka logs.</td></tr>}
-                {exerciseLogs.slice(0, 12).map((log) => (
-                  <tr key={log.id}>
-                    <td>{formatDate(log.completed_at)}</td>
-                    <td>{log.pain_score !== null && log.pain_score !== undefined ? `${log.pain_score}/10` : "—"}</td>
-                    <td>{log.completed ? "E përfunduar" : "Jo"}</td>
-                    <td>{log.comment || "—"}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <div className="table-scroll">
+              <table className="table">
+                <thead><tr><th>Data</th><th>Dhimbja</th><th>Status</th><th>Koment</th></tr></thead>
+                <tbody>
+                  {exerciseLogs.length === 0 && <tr><td colSpan={4}>Ende nuk ka logs.</td></tr>}
+                  {exerciseLogs.slice(0, 12).map((log) => (
+                    <tr key={log.id}>
+                      <td>{formatDate(log.completed_at)}</td>
+                      <td>{log.pain_score !== null && log.pain_score !== undefined ? `${log.pain_score}/10` : "—"}</td>
+                      <td>{log.completed ? "E përfunduar" : "Jo"}</td>
+                      <td>{log.comment || "—"}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
 
-          <div className="dashboard-card wide">
+          <div className="report-summary-card wide">
             <h2>AI Movement Check</h2>
-            <table className="table">
-              <thead><tr><th>Data</th><th>Score</th><th>Alert</th><th>Feedback</th></tr></thead>
-              <tbody>
-                {checks.length === 0 && <tr><td colSpan={4}>Ende nuk ka AI checks.</td></tr>}
-                {checks.slice(0, 12).map((check) => (
-                  <tr key={check.id}>
-                    <td>{formatDate(check.created_at)}</td>
-                    <td>{check.score !== null && check.score !== undefined ? `${check.score}%` : "—"}</td>
-                    <td>{check.alert_type || "—"}</td>
-                    <td>{check.feedback || "—"}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <div className="table-scroll">
+              <table className="table">
+                <thead><tr><th>Data</th><th>Score</th><th>Alert</th><th>Feedback</th></tr></thead>
+                <tbody>
+                  {checks.length === 0 && <tr><td colSpan={4}>Ende nuk ka AI checks.</td></tr>}
+                  {checks.slice(0, 12).map((check) => (
+                    <tr key={check.id}>
+                      <td>{formatDate(check.created_at)}</td>
+                      <td>{check.score !== null && check.score !== undefined ? `${check.score}%` : "—"}</td>
+                      <td>{check.alert_type || "—"}</td>
+                      <td>{check.feedback || "—"}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         </section>
 
-        <section className="dashboard-card blue-soft-card" style={{ marginTop: 22 }}>
+        <section className="report-clinical-note">
           <h2>Përmbledhje klinike</h2>
           <p>
             Pacienti ka përfunduar {completedCount} ushtrime. Adherence aktual është {adherence}%. Dhimbja mesatare është {averagePain !== null ? `${averagePain}/10` : "ende pa të dhëna"}. AI score mesatar është {averageAi !== null ? `${averageAi}%` : "ende pa të dhëna"}.
