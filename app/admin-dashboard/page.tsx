@@ -1,6 +1,8 @@
 import { currentUser } from "@clerk/nextjs/server";
 import { AuthControls } from "@/components/AuthControls";
 
+const defaultAdminEmail = "diellzarabushaj@gmail.com";
+
 const defaultExercises = [
   ["Glute bridge", "Lumbosciatica", "Strength", "AI aktiv", "Published"],
   ["Cat cow", "Back pain", "Mobility", "AI aktiv", "Published"],
@@ -19,7 +21,7 @@ const physios = [
 const platformSettings = [
   ["Patient login", "Username + plan code", "Active"],
   ["Physio login", "Clerk sign in / sign up", "Active"],
-  ["Admin access", "Single ADMIN_EMAIL", "Needs env"],
+  ["Admin access", "diellzarabushaj@gmail.com", "Active"],
   ["AI safety", "No diagnosis, feedback only", "Active"],
   ["Pain rule", "7/10 or higher triggers warning", "Active"]
 ];
@@ -33,11 +35,11 @@ const usage = [
 
 export default async function AdminDashboardPage() {
   const clerkConfigured = Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY && process.env.CLERK_SECRET_KEY);
-  const adminEmail = process.env.ADMIN_EMAIL?.toLowerCase();
+  const adminEmail = (process.env.ADMIN_EMAIL || defaultAdminEmail).toLowerCase();
   const user = clerkConfigured ? await currentUser() : null;
   const userEmail = user?.primaryEmailAddress?.emailAddress?.toLowerCase();
-  const isAllowedAdmin = Boolean(adminEmail && userEmail && userEmail === adminEmail);
-  const shouldHideContent = clerkConfigured && adminEmail && !isAllowedAdmin;
+  const isAllowedAdmin = Boolean(userEmail && userEmail === adminEmail);
+  const shouldHideContent = clerkConfigured && !isAllowedAdmin;
 
   return (
     <main className="page admin-dashboard-page">
@@ -58,6 +60,10 @@ export default async function AdminDashboardPage() {
           <div className="patient-avatar">AD</div>
           <h2>Admin</h2>
           <p>Hidden owner dashboard</p>
+          <div className="generated-box">
+            <b>Allowed admin:</b><br />
+            {adminEmail}
+          </div>
           <div className="side-menu">
             <a className="active" href="#overview">Overview</a>
             <a href="#default-exercises">Default exercises</a>
@@ -85,19 +91,13 @@ export default async function AdminDashboardPage() {
 
           {!clerkConfigured && (
             <div className="role-warning">
-              Clerk eshte vendosur ne kod. Admin protection aktivizohet pasi te shtohen Clerk keys dhe ADMIN_EMAIL ne Vercel.
+              Clerk keys mungojne ne deployment. Admin protection aktivizohet kur Clerk keys jane ne Vercel.
             </div>
           )}
 
-          {clerkConfigured && !adminEmail && (
+          {clerkConfigured && !isAllowedAdmin && (
             <div className="role-warning">
-              Mungon ADMIN_EMAIL ne Vercel. Vendose vetem nje email qe lejohet te hyje si admin.
-            </div>
-          )}
-
-          {clerkConfigured && adminEmail && !isAllowedAdmin && (
-            <div className="role-warning">
-              Access denied. Kjo llogari nuk eshte email-i i adminit te caktuar.
+              Access denied. Kjo llogari nuk eshte email-i i adminit te caktuar: <b>{adminEmail}</b>.
             </div>
           )}
 
