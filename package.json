@@ -9,7 +9,8 @@
     "lint": "next lint",
     "preflight:routes": "node scripts/verify-route-files.mjs",
     "smoke:production": "node scripts/smoke-test-production.mjs",
-    "smoke:report": "node scripts/render-smoke-report.mjs"
+    "smoke:report": "node scripts/render-smoke-report.mjs",
+    "mobile:typecheck": "cd apps/mobile-app && npm install && npm run typecheck"
   },
   "dependencies": {
     "@clerk/nextjs": "latest",
