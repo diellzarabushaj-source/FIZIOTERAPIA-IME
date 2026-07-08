@@ -6,22 +6,38 @@ export default async function PatientPortalPage({ searchParams }: { searchParams
   const error = params?.error;
 
   return (
-    <main className="page">
-      <nav className="top-nav">
+    <main className="page patient-login-page">
+      <nav className="top-nav patient-nav">
         <BrandMark />
         <div className="nav-actions">
           <a href="/">Home</a>
           <a href="/physiotherapist-portal">Fizioterapeut Portal</a>
+          <a href="/faq">FAQ</a>
         </div>
       </nav>
 
-      <section className="hero">
-        <span className="badge">Patient Portal · Supabase login</span>
-        <h1>Hyrje për pacientin me username dhe kod.</h1>
-        <p>
-          Pacienti nuk krijon llogari vetë. Fizioterapeuti ia gjeneron username-in dhe kodin, pastaj pacienti sheh planin real nga Supabase.
-        </p>
-        <form action={patientLoginAction} className="portal-login-card">
+      <section className="patient-login-hero">
+        <div className="patient-login-copy">
+          <span className="badge">Patient Portal · Hyrje me kod</span>
+          <h1>Plani yt i fizioterapisë, në një vend të thjeshtë.</h1>
+          <p>
+            Pacienti nuk krijon plan vetë. Fizioterapeuti e gjeneron username-in dhe kodin personal,
+            pastaj pacienti sheh ushtrimet, progresin, dhimbjen dhe AI Movement Check.
+          </p>
+          <div className="patient-login-highlights">
+            <div><strong>01</strong><span>Merr kodin nga fizioterapeuti</span></div>
+            <div><strong>02</strong><span>Hyn në planin personal</span></div>
+            <div><strong>03</strong><span>Raporton dhimbjen 0–10</span></div>
+          </div>
+        </div>
+
+        <form action={patientLoginAction} className="patient-login-card">
+          <BrandMark compact />
+          <div>
+            <span className="mini-badge">Qasje e sigurt</span>
+            <h2>Hyr në dashboard</h2>
+            <p>Shkruaj username-in dhe kodin që ta ka dhënë fizioterapeuti.</p>
+          </div>
           <label className="label">Username i pacientit</label>
           <input className="input" name="username" placeholder="p.sh. arber-krasniqi-4821" required />
           <label className="label">Kodi i pacientit</label>
@@ -32,44 +48,38 @@ export default async function PatientPortalPage({ searchParams }: { searchParams
         </form>
       </section>
 
-      <section className="grid">
-        <div className="phone">
-          <h2>Si e merr pacienti qasjen</h2>
-          <p>Fizioterapeuti krijon pacientin dhe ia dërgon username + kod.</p>
-          <div className="exercise"><b>Username:</b><br />gjenerohet automatikisht</div>
-          <div className="exercise"><b>Kodi:</b><br />p.sh. ARB-4821</div>
-          <div className="exercise"><b>Plan:</b><br />nga fizioterapeuti</div>
+      <section className="patient-preview-section">
+        <div className="patient-phone-preview">
+          <div className="phone-notch" />
+          <span className="mini-badge">Plani sot</span>
+          <h2>Program rehabilitimi</h2>
+          <div className="progress-line"><span style={{ width: "62%" }} /></div>
+          <div className="patient-task"><b>Glute bridge</b><span>3 sete × 12</span><em>AI</em></div>
+          <div className="patient-task"><b>Cat cow</b><span>2 sete × 10</span><em>Done</em></div>
+          <div className="patient-task"><b>Pain score</b><span>Raporto pas ushtrimit</span><em>0–10</em></div>
         </div>
 
-        <div className="card" style={{ gridColumn: "span 2" }}>
-          <h2>Çka sheh pacienti pas login</h2>
-          <table className="table">
-            <thead>
-              <tr><th>Moduli</th><th>Funksioni</th><th>Burimi</th></tr>
-            </thead>
-            <tbody>
-              <tr><td>Plani</td><td>Ushtrimet e caktuara</td><td>Supabase</td></tr>
-              <tr><td>Video / instruksione</td><td>Udhëzime për çdo ushtrim</td><td>Exercise library</td></tr>
-              <tr><td>Dhimbja</td><td>Raportim 0–10 pas ushtrimit</td><td>exercise_logs</td></tr>
-              <tr><td>AI check</td><td>Score dhe feedback bazik</td><td>ai_checks</td></tr>
-              <tr><td>Mesazhe</td><td>Korrigjime nga fizioterapeuti</td><td>physio_messages</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </section>
-
-      <section className="grid" style={{ marginTop: 20 }}>
-        <div className="card green">
-          <h2>Safety rule</h2>
-          <p>Nëse dhimbja është 7/10 ose më shumë, pacienti ndalon ushtrimin dhe kontakton fizioterapeutin.</p>
-        </div>
-        <div className="card blue">
-          <h2>AI nuk zëvendëson fizioterapeutin</h2>
-          <p>AI jep vetëm feedback për cilësinë e lëvizjes dhe ruan score/feedback për fizioterapeutin.</p>
-        </div>
-        <div className="card">
-          <h2>Real data</h2>
-          <p>Ky portal tash lidhet me pacientë, plane, ushtrime, logs dhe AI checks reale në Supabase.</p>
+        <div className="patient-info-grid">
+          <article>
+            <span className="mini-badge">Për pacientë</span>
+            <h2>Qasje me username + kod</h2>
+            <p>Pacienti hyn pa krijuar llogari. Qasja lidhet me planin që e ka krijuar fizioterapeuti.</p>
+          </article>
+          <article>
+            <span className="mini-badge">Siguri klinike</span>
+            <h2>Dhimbje 7/10 = ndalo</h2>
+            <p>Nëse dhimbja është 7 ose më shumë, pacienti ndalon ushtrimin dhe kontakton fizioterapeutin.</p>
+          </article>
+          <article>
+            <span className="mini-badge">AI Movement Check</span>
+            <h2>Feedback, jo diagnozë</h2>
+            <p>AI jep vetëm feedback për cilësinë e lëvizjes dhe nuk e zëvendëson fizioterapeutin.</p>
+          </article>
+          <article>
+            <span className="mini-badge">Real data</span>
+            <h2>Supabase + plan real</h2>
+            <p>Plani, ushtrimet, logs, dhimbja, mesazhet dhe AI score ruhen në databazë.</p>
+          </article>
         </div>
       </section>
     </main>
