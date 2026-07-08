@@ -1,4 +1,5 @@
 import { AuthControls } from "@/components/AuthControls";
+import { BrandMark } from "@/components/BrandMark";
 
 const portals = [
   {
@@ -41,10 +42,7 @@ export default function HomePage() {
   return (
     <main className="page">
       <nav className="top-nav">
-        <a className="brand-link" href="/">
-          <span className="brand-logo">FI</span>
-          <span>Fizioterapia ime</span>
-        </a>
+        <BrandMark />
         <div className="nav-actions">
           <a href="/patient-portal">Patient</a>
           <a href="/physiotherapist-portal">Physio</a>
@@ -54,22 +52,29 @@ export default function HomePage() {
         </div>
       </nav>
 
-      <section className="hero">
-        <span className="badge">Digital physiotherapy platform</span>
-        <h1>Fizioterapia ime për pacientë, fizioterapeutë dhe klinika.</h1>
-        <p>
-          Një platformë profesionale ku fizioterapeuti krijon planin, pacienti e ndjek në app,
-          ndërsa AI ndihmon me kontroll bazik të lëvizjes dhe sinjalizime sigurie.
-        </p>
-        <div className="portal-actions">
-          <a className="button" href="/physiotherapist-portal">Hyr si fizioterapeut</a>
-          <a className="button secondary" href="/patient-portal">Hyr si pacient</a>
-          <a className="button secondary" href="/faq">FAQ</a>
-          <a className="button secondary" href="/app-preview">Shiko app preview</a>
+      <section className="hero hero-brand">
+        <div>
+          <span className="badge">Digital physiotherapy platform</span>
+          <h1>Fizioterapia ime për pacientë, fizioterapeutë dhe klinika.</h1>
+          <p>
+            Një platformë profesionale ku fizioterapeuti krijon planin, pacienti e ndjek në app,
+            ndërsa AI ndihmon me kontroll bazik të lëvizjes dhe sinjalizime sigurie.
+          </p>
+          <div className="portal-actions">
+            <a className="button" href="/physiotherapist-portal">Hyr si fizioterapeut</a>
+            <a className="button secondary" href="/patient-portal">Hyr si pacient</a>
+            <a className="button secondary" href="/faq">FAQ</a>
+            <a className="button secondary" href="/app-preview">Shiko app preview</a>
+          </div>
+          <p style={{ fontSize: 14 }}>
+            Patient login është me username + kod. Fizioterapeuti dhe Admin mbrohen me Clerk authentication.
+          </p>
         </div>
-        <p style={{ fontSize: 14 }}>
-          Patient login është me username + kod. Fizioterapeuti dhe Admin mbrohen me Clerk authentication.
-        </p>
+        <div className="hero-brand-card" aria-hidden="true">
+          <BrandMark compact />
+          <strong>29.90€</strong>
+          <span>për fizioterapeut / muaj</span>
+        </div>
       </section>
 
       <section className="grid">
