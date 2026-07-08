@@ -16,6 +16,7 @@ const requiredPublicRoutes = [
   "/pilot-runbook",
   "/pilot-communications",
   "/mobile-submission",
+  "/final-handoff",
   "/patient-handout",
   "/pilot-feedback",
   "/patient-portal",
