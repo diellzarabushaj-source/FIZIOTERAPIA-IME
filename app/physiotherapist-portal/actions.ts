@@ -3,6 +3,7 @@
 import { currentUser } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 import { createPatientCode, createPatientUsername, getSupabaseAdmin } from "@/lib/supabase-admin";
+import { hasActivePhysioAccess } from "@/lib/billing";
 
 type Profile = {
   id: string;
@@ -56,7 +57,7 @@ async function requireProfile() {
       email,
       role,
       full_name: fullName,
-      clinic_name: "FizioPlan Clinic",
+      clinic_name: "Fizioterapia ime Clinic",
       status: "active",
     })
     .select("*")
@@ -66,11 +67,30 @@ async function requireProfile() {
   return data as Profile;
 }
 
+async function requirePaidAccess(profile: Profile) {
+  const supabase = getSupabaseAdmin();
+  if (!supabase) throw new Error("Missing Supabase service key.");
+
+  const { data: subscription } = await supabase
+    .from("subscriptions")
+    .select("status,current_period_end,price,currency")
+    .eq("physio_id", profile.id)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (!hasActivePhysioAccess(profile.role, subscription)) {
+    throw new Error("Qasja është e bllokuar. Fizioterapeuti duhet të paguajë 29.90 EUR / muaj për të përdorur dashboard-in.");
+  }
+}
+
 export async function createPatientAction(formData: FormData) {
   const supabase = getSupabaseAdmin();
   if (!supabase) throw new Error("Missing Supabase service key.");
 
   const profile = await requireProfile();
+  await requirePaidAccess(profile);
+
   const firstName = String(formData.get("firstName") || "").trim();
   const lastName = String(formData.get("lastName") || "").trim();
   const diagnosis = String(formData.get("diagnosis") || "").trim();
@@ -149,6 +169,8 @@ export async function createPrivateExerciseAction(formData: FormData) {
   if (!supabase) throw new Error("Missing Supabase service key.");
 
   const profile = await requireProfile();
+  await requirePaidAccess(profile);
+
   const name = String(formData.get("name") || "").trim();
   const category = String(formData.get("category") || "").trim();
   const diagnosis = String(formData.get("diagnosis") || "").trim();
@@ -178,6 +200,8 @@ export async function addExerciseToPlanAction(formData: FormData) {
   if (!supabase) throw new Error("Missing Supabase service key.");
 
   const profile = await requireProfile();
+  await requirePaidAccess(profile);
+
   const patientId = String(formData.get("patientId") || "");
   const exerciseId = String(formData.get("exerciseId") || "");
   const sets = Number(formData.get("sets") || 2);
