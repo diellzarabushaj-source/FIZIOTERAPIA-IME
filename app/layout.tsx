@@ -9,6 +9,7 @@ import "./phase5.css";
 import "./phase6.css";
 import "./phase10.css";
 import "./phase13.css";
+import "./phase-code-access.css";
 
 export const metadata: Metadata = {
   title: "Fizioterapia ime – Digital physiotherapy platform",
