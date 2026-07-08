@@ -1,0 +1,218 @@
+.brand-mark {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--fi-ink);
+  font-weight: 900;
+  letter-spacing: -0.035em;
+}
+
+.brand-mark:hover {
+  transform: translateY(-1px);
+}
+
+.brand-mark.compact {
+  gap: 0;
+}
+
+.brand-symbol {
+  width: 46px;
+  height: 46px;
+  display: grid;
+  place-items: center;
+  border-radius: 16px;
+  background:
+    radial-gradient(circle at 28% 20%, rgba(255, 255, 255, 0.38), transparent 32%),
+    linear-gradient(135deg, var(--fi-teal) 0%, var(--fi-green) 100%);
+  color: #fff;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 14px 30px rgba(48, 181, 168, 0.24);
+  flex: 0 0 auto;
+}
+
+.brand-symbol::after {
+  content: "";
+  position: absolute;
+  inset: 1px;
+  border-radius: 15px;
+  border: 1px solid rgba(255, 255, 255, 0.32);
+}
+
+.brand-symbol-dot {
+  position: absolute;
+  top: 9px;
+  left: 50%;
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: #fff;
+  transform: translateX(-50%);
+}
+
+.brand-symbol-spine {
+  position: absolute;
+  top: 20px;
+  left: 50%;
+  width: 6px;
+  height: 19px;
+  border-radius: 999px;
+  background: #fff;
+  transform: translateX(-50%);
+  box-shadow: 0 -7px 0 rgba(255, 255, 255, 0.82), 0 7px 0 rgba(255, 255, 255, 0.82);
+}
+
+.brand-symbol-left,
+.brand-symbol-right {
+  position: absolute;
+  top: 23px;
+  width: 4px;
+  height: 18px;
+  border-radius: 999px;
+  background: #fff;
+  transform-origin: top center;
+  opacity: 0.92;
+}
+
+.brand-symbol-left {
+  left: 16px;
+  transform: rotate(23deg);
+}
+
+.brand-symbol-right {
+  right: 16px;
+  transform: rotate(-23deg);
+}
+
+.brand-wordmark {
+  display: grid;
+  gap: 1px;
+  line-height: 1;
+}
+
+.brand-wordmark b {
+  color: var(--fi-ink);
+  font-size: 16px;
+}
+
+.brand-wordmark span {
+  color: var(--fi-teal-dark);
+  font-size: 13px;
+  letter-spacing: 0.02em;
+}
+
+.hero-brand {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 240px;
+  align-items: center;
+  gap: 28px;
+}
+
+.hero-brand-card {
+  min-height: 260px;
+  border-radius: 34px;
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(230, 238, 248, 0.88);
+  box-shadow: 0 20px 60px rgba(15, 32, 51, 0.09);
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 12px;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.hero-brand-card .brand-symbol {
+  width: 88px;
+  height: 88px;
+  border-radius: 28px;
+}
+
+.hero-brand-card .brand-symbol::after {
+  border-radius: 27px;
+}
+
+.hero-brand-card .brand-symbol-dot {
+  width: 14px;
+  height: 14px;
+  top: 16px;
+}
+
+.hero-brand-card .brand-symbol-spine {
+  top: 37px;
+  width: 10px;
+  height: 35px;
+  box-shadow: 0 -13px 0 rgba(255, 255, 255, 0.82), 0 13px 0 rgba(255, 255, 255, 0.82);
+}
+
+.hero-brand-card .brand-symbol-left,
+.hero-brand-card .brand-symbol-right {
+  top: 44px;
+  width: 7px;
+  height: 34px;
+}
+
+.hero-brand-card .brand-symbol-left {
+  left: 31px;
+}
+
+.hero-brand-card .brand-symbol-right {
+  right: 31px;
+}
+
+.hero-brand-card strong {
+  font-size: 42px;
+  line-height: 1;
+  letter-spacing: -0.055em;
+  color: var(--fi-ink);
+}
+
+.hero-brand-card span:not(.brand-symbol):not(.brand-symbol-dot):not(.brand-symbol-spine):not(.brand-symbol-left):not(.brand-symbol-right) {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--fi-gray);
+  text-align: center;
+}
+
+.brand-foundation-grid {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  gap: 20px;
+}
+
+.brand-token-row {
+  display: grid;
+  grid-template-columns: 150px 1fr auto;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--fi-line);
+}
+
+.brand-swatch {
+  width: 54px;
+  height: 38px;
+  border-radius: 14px;
+  border: 1px solid rgba(16, 32, 51, 0.08);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+@media (max-width: 980px) {
+  .hero-brand {
+    grid-template-columns: 1fr;
+  }
+
+  .hero-brand-card {
+    min-height: 210px;
+  }
+
+  .brand-foundation-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .brand-wordmark b {
+    font-size: 15px;
+  }
+}
