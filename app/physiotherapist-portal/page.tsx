@@ -163,6 +163,10 @@ function formatDate(value?: string | null) {
   return new Date(value).toLocaleDateString("sq-AL");
 }
 
+function codePath(code: string) {
+  return encodeURIComponent(code);
+}
+
 export default async function PhysiotherapistPortalPage() {
   const clerkConfigured = Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY && process.env.CLERK_SECRET_KEY);
   const user = clerkConfigured ? await currentUser() : null;
@@ -195,7 +199,7 @@ export default async function PhysiotherapistPortalPage() {
           <h1>Dashboard për pacientë, plane dhe progres klinik.</h1>
           <p>I kyçur si: <b>{displayName}</b></p>
           <p>
-            Krijo pacientë me username + kod, cakto ushtrime, monitoro dhimbjen, AI score dhe gjenero raporte PDF.
+            Krijo pacientë me kod unik, jep QR code, cakto ushtrime, monitoro dhimbjen, AI score dhe gjenero raporte PDF.
           </p>
           <div className="physio-hero-actions">
             <a className="button" href="#new-patient">Shto pacient</a>
@@ -262,7 +266,7 @@ export default async function PhysiotherapistPortalPage() {
             <form action={createPatientAction} className="dashboard-card physio-form-card">
               <span className="mini-badge">Pacient i ri</span>
               <h2>Shto pacient + program</h2>
-              <p>Zgjidh template klinik. App-i krijon planin, ushtrimet, username-in dhe kodin automatikisht.</p>
+              <p>Zgjidh template klinik. App-i krijon planin, ushtrimet dhe kodin unik për pacientin automatikisht.</p>
               <label className="label">Emri</label>
               <input className="input" name="firstName" placeholder="Arber" required />
               <label className="label">Mbiemri</label>
@@ -282,12 +286,13 @@ export default async function PhysiotherapistPortalPage() {
               <label className="label">Titulli i planit</label>
               <input className="input" name="planTitle" placeholder="Lihet bosh për titullin e template-it" />
               <div className="generated-box">
+                <b>Access:</b> Pacienti hyn vetëm me kod unik ose QR. <br />
                 <b>Safety rule:</b> Dhimbje 7/10 ose më shumë = ndalo ushtrimin dhe kontakto fizioterapeutin. AI është vetëm feedback për lëvizje.
               </div>
               <button className="button" type="submit">Ruaj pacientin + krijo planin</button>
             </form>
 
-            <div className="dashboard-card wide" id="patients">
+            <div className="dashboard-card wide" id="templates">
               <div className="section-header-row">
                 <div>
                   <span className="mini-badge">Clinical templates</span>
@@ -312,24 +317,31 @@ export default async function PhysiotherapistPortalPage() {
           <section className="dashboard-card wide" id="patients">
             <div className="section-header-row">
               <div>
-                <span className="mini-badge">Supabase</span>
+                <span className="mini-badge">Code-only access</span>
                 <h2>Pacientët aktivë</h2>
-                <p>Pacientët realë, kodet, progresi, dhimbja dhe AI score.</p>
+                <p>Pacienti hyn vetëm me kod unik ose QR. Një kod i takon vetëm një pacienti.</p>
               </div>
               <span className="badge">{activePatients.length} total</span>
             </div>
             <div className="table-scroll">
               <table className="table physio-patient-table">
-                <thead><tr><th>Pacient</th><th>Kodi</th><th>Diagnoza</th><th>Plan</th><th>Done</th><th>Dhimbje</th><th>AI</th><th>Raport</th></tr></thead>
+                <thead><tr><th>Pacient</th><th>Kodi unik</th><th>QR / Kod</th><th>Diagnoza</th><th>Plan</th><th>Done</th><th>Dhimbje</th><th>AI</th><th>Raport</th></tr></thead>
                 <tbody>
-                  {activePatients.length === 0 && <tr><td colSpan={8}>Ende nuk ka pacientë realë. Shto pacientin e parë nga forma sipër.</td></tr>}
+                  {activePatients.length === 0 && <tr><td colSpan={9}>Ende nuk ka pacientë realë. Shto pacientin e parë nga forma sipër.</td></tr>}
                   {activePatients.map((patient) => {
                     const stats = getPatientStats(patient.id, logs, aiChecks);
                     const name = `${patient.first_name} ${patient.last_name || ""}`.trim();
+                    const encodedCode = codePath(patient.patient_code);
                     return (
                       <tr key={patient.id}>
-                        <td><b>{name}</b><br /><small>{patient.patient_username || "—"}</small></td>
+                        <td><b>{name}</b><br /><small>Hyrje vetëm me kod</small></td>
                         <td><b className="code-chip">{patient.patient_code}</b></td>
+                        <td>
+                          <div className="patient-access-actions">
+                            <a className="button secondary compact-button" href={`/patient-access/${encodedCode}`}>Printo QR</a>
+                            <a className="button secondary compact-button" href={`/p/${encodedCode}`}>Testo</a>
+                          </div>
+                        </td>
                         <td>{patient.diagnosis || "—"}</td>
                         <td>{patient.plans?.[0]?.title || "—"}</td>
                         <td>{stats.completed}</td>
