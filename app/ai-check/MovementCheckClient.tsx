@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { BrandMark } from "@/components/BrandMark";
 
 type Landmark = {
   x: number;
@@ -21,6 +22,8 @@ type PoseLandmarkerLike = {
 };
 
 const keyPoints = [11, 12, 23, 24, 25, 26, 27, 28];
+const MEDIAPIPE_WASM_URL = "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm";
+const GOOGLE_POSE_MODEL_URL = "https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/latest/pose_landmarker_lite.task";
 
 function clamp(value: number, min: number, max: number) {
   return Math.max(min, Math.min(max, value));
@@ -28,6 +31,12 @@ function clamp(value: number, min: number, max: number) {
 
 function distance(a: Landmark, b: Landmark) {
   return Math.hypot(a.x - b.x, a.y - b.y);
+}
+
+function getAlertLabel(alertType: AnalysisResult["alertType"]) {
+  if (alertType === "good") return "Lëvizje e mirë";
+  if (alertType === "needs_attention") return "Duhet më shumë kontroll";
+  return "Kontakto fizioterapeutin";
 }
 
 function analyzePose(landmarks: Landmark[] | undefined): AnalysisResult {
@@ -97,7 +106,7 @@ export function MovementCheckClient({ planExerciseId }: { planExerciseId?: strin
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const poseRef = useRef<PoseLandmarkerLike | null>(null);
-  const [status, setStatus] = useState("Gati për AI Movement Check");
+  const [status, setStatus] = useState("Gati për Google MediaPipe Movement Check");
   const [cameraReady, setCameraReady] = useState(false);
   const [modelReady, setModelReady] = useState(false);
   const [result, setResult] = useState<AnalysisResult | null>(null);
@@ -110,13 +119,12 @@ export function MovementCheckClient({ planExerciseId }: { planExerciseId?: strin
 
     async function loadModel() {
       try {
-        setStatus("Duke ngarkuar MediaPipe Pose Landmarker...");
+        setStatus("Duke ngarkuar Google MediaPipe Pose Landmarker...");
         const { FilesetResolver, PoseLandmarker } = await import("@mediapipe/tasks-vision");
-        const vision = await FilesetResolver.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm");
+        const vision = await FilesetResolver.forVisionTasks(MEDIAPIPE_WASM_URL);
         const poseLandmarker = await PoseLandmarker.createFromOptions(vision, {
           baseOptions: {
-            modelAssetPath:
-              "https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/latest/pose_landmarker_lite.task",
+            modelAssetPath: GOOGLE_POSE_MODEL_URL,
             delegate: "GPU",
           },
           runningMode: "VIDEO",
@@ -126,12 +134,12 @@ export function MovementCheckClient({ planExerciseId }: { planExerciseId?: strin
         if (!cancelled) {
           poseRef.current = poseLandmarker as PoseLandmarkerLike;
           setModelReady(true);
-          setStatus("Modeli AI është gati. Aktivizo kamerën.");
+          setStatus("Google MediaPipe modeli është gati. Aktivizo kamerën.");
         }
       } catch (loadError) {
         console.error(loadError);
         if (!cancelled) {
-          setError("MediaPipe nuk u ngarkua. Provo refresh ose përdor Chrome/Safari modern.");
+          setError("Google MediaPipe nuk u ngarkua. Provo refresh ose përdor Chrome/Safari modern.");
           setStatus("Gabim gjatë ngarkimit të AI modelit.");
         }
       }
@@ -155,11 +163,19 @@ export function MovementCheckClient({ planExerciseId }: { planExerciseId?: strin
         await videoRef.current.play();
       }
       setCameraReady(true);
-      setStatus("Kamera është aktive. Vendose trupin në ekran dhe kliko Analyze movement.");
+      setStatus("Kamera është aktive. Vendose gjithë trupin në ekran dhe kliko Analyze movement.");
     } catch (cameraError) {
       console.error(cameraError);
       setError("Kamera nuk u hap. Lejo camera permission në browser dhe provo përsëri.");
     }
+  }
+
+  function stopCamera() {
+    streamRef.current?.getTracks().forEach((track) => track.stop());
+    streamRef.current = null;
+    if (videoRef.current) videoRef.current.srcObject = null;
+    setCameraReady(false);
+    setStatus("Kamera u ndal. Mund ta aktivizosh përsëri kur je gati.");
   }
 
   function analyzeMovement() {
@@ -209,19 +225,32 @@ export function MovementCheckClient({ planExerciseId }: { planExerciseId?: strin
     }
 
     setSaved(true);
-    setStatus("AI check u ruajt në Supabase.");
+    setStatus("AI check u ruajt në Supabase dhe fizioterapeuti mund ta shohë rezultatin.");
   }
 
   return (
-    <section className="patient-shell">
-      <aside className="patient-sidebar">
-        <div className="patient-avatar">AI</div>
-        <h2>Movement Check</h2>
-        <p>MediaPipe Pose Landmarker</p>
-        <div className="generated-box">
-          <b>Status:</b><br />
-          {modelReady ? "AI model gati" : "Duke u ngarkuar"}<br />
-          {cameraReady ? "Kamera aktive" : "Kamera joaktive"}
+    <section className="ai-check-shell">
+      <aside className="ai-check-sidebar">
+        <BrandMark compact />
+        <h2>AI Movement Check</h2>
+        <p>Google MediaPipe Pose Landmarker</p>
+        <div className="ai-status-stack">
+          <div className={modelReady ? "ai-status ready" : "ai-status loading"}>
+            <b>Modeli</b>
+            <span>{modelReady ? "Gati" : "Duke u ngarkuar"}</span>
+          </div>
+          <div className={cameraReady ? "ai-status ready" : "ai-status loading"}>
+            <b>Kamera</b>
+            <span>{cameraReady ? "Aktive" : "Joaktive"}</span>
+          </div>
+          <div className={result ? "ai-status ready" : "ai-status loading"}>
+            <b>Rezultati</b>
+            <span>{result ? `${result.score}%` : "Pa analizë"}</span>
+          </div>
+        </div>
+        <div className="ai-disclaimer-card">
+          <b>Rregull klinik</b>
+          <span>AI nuk diagnostikon, nuk cakton terapi dhe nuk e zëvendëson fizioterapeutin.</span>
         </div>
         <div className="side-menu">
           <a className="active" href="#camera">Kamera</a>
@@ -230,55 +259,84 @@ export function MovementCheckClient({ planExerciseId }: { planExerciseId?: strin
         </div>
       </aside>
 
-      <div className="patient-main">
-        <section className="dashboard-hero">
+      <div className="ai-check-main">
+        <section className="ai-check-hero">
           <div>
-            <span className="badge">AI Movement Check · Real camera</span>
-            <h1>Kontrollo cilësinë e lëvizjes.</h1>
-            <p>Ky modul përdor kamerën dhe MediaPipe për të detektuar landmark-et e trupit. Nuk diagnostikon dhe nuk zëvendëson fizioterapeutin.</p>
+            <span className="badge">Google MediaPipe · Real camera</span>
+            <h1>Kontrollo cilësinë e lëvizjes me kamerë.</h1>
+            <p>
+              Ky modul përdor Google MediaPipe Pose Landmarker për të detektuar landmark-et e trupit në browser.
+              Video nuk ruhet në MVP; ruhet vetëm score, feedback dhe alert për fizioterapeutin.
+            </p>
           </div>
-          <div className="today-card">
+          <div className="ai-score-orb">
             <span>Score</span>
             <strong>{result ? `${result.score}%` : "—"}</strong>
-            <small>{result ? result.alertType : "Pa analizë"}</small>
+            <small>{result ? getAlertLabel(result.alertType) : "Pa analizë"}</small>
           </div>
         </section>
 
         {error && <div className="role-warning">{error}</div>}
-        <div className="role-warning">Nëse ke dhimbje të fortë, ndalo ushtrimin dhe kontakto fizioterapeutin.</div>
+        <div className="ai-safety-banner">Nëse ke dhimbje të fortë, marramendje ose pasiguri, ndalo ushtrimin dhe kontakto fizioterapeutin.</div>
 
-        <section id="camera" className="dashboard-grid">
-          <div className="dashboard-card wide">
-            <h2>Kamera</h2>
-            <p>{status}</p>
-            <video
-              ref={videoRef}
-              playsInline
-              muted
-              style={{ width: "100%", minHeight: 360, borderRadius: 24, background: "#102033", objectFit: "cover" }}
-            />
-            <div className="button-row">
-              <button className="button" type="button" onClick={startCamera} disabled={!modelReady}>Aktivizo kamerën</button>
+        <section id="camera" className="ai-check-grid">
+          <div className="ai-camera-card">
+            <div className="section-header-row">
+              <div>
+                <span className="mini-badge">Live camera</span>
+                <h2>Kamera + detektim i trupit</h2>
+                <p>{status}</p>
+              </div>
+              <span className="badge">Browser only</span>
+            </div>
+
+            <div className="ai-video-frame">
+              <video ref={videoRef} playsInline muted />
+              {!cameraReady && (
+                <div className="ai-video-placeholder">
+                  <div className="ai-body-guide">
+                    <span />
+                    <span />
+                    <span />
+                  </div>
+                  <p>Vendose telefonin stabil dhe sigurohu që trupi të shihet qartë.</p>
+                </div>
+              )}
+            </div>
+
+            <div className="button-row ai-button-row">
+              <button className="button" type="button" onClick={startCamera} disabled={!modelReady || cameraReady}>Aktivizo kamerën</button>
               <button className="button secondary" type="button" onClick={analyzeMovement} disabled={!cameraReady || !modelReady}>Analyze movement</button>
+              <button className="button secondary" type="button" onClick={stopCamera} disabled={!cameraReady}>Ndalo kamerën</button>
             </div>
           </div>
 
-          <div id="result" className="dashboard-card">
-            <h2>Rezultati</h2>
+          <div id="result" className="ai-result-card">
+            <span className="mini-badge">Rezultati</span>
+            <h2>Feedback i lëvizjes</h2>
             {result ? (
               <>
-                <div className="kpis">
-                  <div className="kpi">AI score<strong>{result.score}%</strong></div>
-                  <div className="kpi">Landmarks<strong>{result.landmarksDetected}/8</strong></div>
+                <div className="ai-result-score">
+                  <strong>{result.score}%</strong>
+                  <span>{getAlertLabel(result.alertType)}</span>
+                </div>
+                <div className="ai-result-metrics">
+                  <div><b>{result.landmarksDetected}/8</b><span>landmarks kryesore</span></div>
+                  <div><b>{result.alertType}</b><span>alert type</span></div>
                 </div>
                 <p>{result.feedback}</p>
-                <div className="generated-box"><b>Alert:</b> {result.alertType}</div>
                 <button className="button" type="button" onClick={saveResult} disabled={saving || saved || !planExerciseId}>
                   {saved ? "U ruajt" : saving ? "Duke ruajtur..." : "Ruaj në Supabase"}
                 </button>
               </>
             ) : (
-              <p>Aktivizo kamerën dhe kliko Analyze movement për rezultat.</p>
+              <div className="ai-empty-result">
+                <p>Aktivizo kamerën dhe kliko Analyze movement për rezultat.</p>
+                <div className="ai-result-metrics">
+                  <div><b>0/8</b><span>landmarks</span></div>
+                  <div><b>—</b><span>score</span></div>
+                </div>
+              </div>
             )}
           </div>
         </section>
