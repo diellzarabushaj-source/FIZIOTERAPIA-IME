@@ -1,55 +1,32 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { clinicalAlertEmailHtml, sendResendEmail } from "@/lib/resend-email";
+import { getAppUrl, sendAlertEmail } from "./email-notifications";
 
 type PatientWithPhysio = {
   id: string;
   first_name: string;
   last_name: string | null;
   diagnosis: string | null;
+  physio_id: string | null;
   profiles?: {
     id: string;
     email: string | null;
     full_name: string | null;
+    clinic_name: string | null;
   } | null;
 };
-
-function patientFullName(patient: PatientWithPhysio) {
-  return `${patient.first_name} ${patient.last_name || ""}`.trim();
-}
 
 async function getPatientWithPhysio(supabase: SupabaseClient, patientId: string) {
   const { data } = await supabase
     .from("patients")
-    .select("id,first_name,last_name,diagnosis,profiles!patients_physio_id_fkey(id,email,full_name)")
+    .select("id,first_name,last_name,diagnosis,physio_id,profiles!patients_physio_id_fkey(id,email,full_name,clinic_name)")
     .eq("id", patientId)
     .maybeSingle<PatientWithPhysio>();
 
   return data;
 }
 
-async function saveNotificationRecord(
-  supabase: SupabaseClient,
-  input: {
-    recipientProfileId?: string | null;
-    patientId: string;
-    type: string;
-    title: string;
-    body: string;
-    status: "sent" | "skipped" | "failed";
-    metadata?: Record<string, unknown>;
-  },
-) {
-  await supabase.from("notifications").insert({
-    recipient_profile_id: input.recipientProfileId || null,
-    patient_id: input.patientId,
-    type: input.type,
-    title: input.title,
-    body: input.body,
-    channel: "email",
-    status: input.status,
-    sent_at: input.status === "sent" ? new Date().toISOString() : null,
-    metadata: input.metadata || {},
-  });
+function patientFullName(patient: PatientWithPhysio) {
+  return `${patient.first_name} ${patient.last_name || ""}`.trim();
 }
 
 export async function notifyPhysioHighPain({
@@ -64,48 +41,30 @@ export async function notifyPhysioHighPain({
   comment?: string | null;
 }) {
   const patient = await getPatientWithPhysio(supabase, patientId);
-  const physioEmail = patient?.profiles?.email;
-  const title = `Dhimbje e lartë: ${painScore}/10`;
-  const body = `Pacienti ${patient ? patientFullName(patient) : ""} raportoi dhimbje ${painScore}/10 pas ushtrimit.${comment ? ` Koment: ${comment}` : ""}`;
+  if (!patient) return { ok: false, error: "Patient not found" };
 
-  if (!patient || !physioEmail) {
-    await saveNotificationRecord(supabase, {
-      patientId,
-      type: "high_pain",
-      title,
-      body,
-      status: "skipped",
-      metadata: { reason: "missing_patient_or_physio_email", painScore },
-    });
-    return;
-  }
+  const patientName = patientFullName(patient);
+  const physio = patient.profiles;
 
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://fizioterapia-ime.vercel.app";
-  const result = await sendResendEmail({
-    to: physioEmail,
-    subject: `[FizioPlan] ${title}`,
-    html: clinicalAlertEmailHtml({
-      title,
-      patientName: patientFullName(patient),
-      diagnosis: patient.diagnosis,
-      body,
-      ctaUrl: `${appUrl}/physiotherapist-portal`,
-    }),
-    text: body,
-    tags: [
-      { name: "type", value: "high_pain" },
-      { name: "patient", value: patient.id.replaceAll("-", "_") },
-    ],
-  });
-
-  await saveNotificationRecord(supabase, {
-    recipientProfileId: patient.profiles?.id,
-    patientId,
+  return sendAlertEmail({
+    supabase,
     type: "high_pain",
-    title,
-    body,
-    status: result.ok ? "sent" : result.skipped ? "skipped" : "failed",
-    metadata: { painScore, resend: result },
+    to: physio?.email,
+    patientId: patient.id,
+    physioId: patient.physio_id,
+    patientName,
+    subject: `Alarm dhimbje ${painScore}/10 · ${patientName}`,
+    title: "Pacienti raportoi dhimbje të lartë",
+    intro: "Një pacient raportoi dhimbje 7/10 ose më shumë pas ushtrimit. Rekomandohet kontroll nga fizioterapeuti.",
+    details: [
+      `Pacienti: ${patientName}`,
+      `Fizioterapeuti: ${physio?.full_name || "—"}`,
+      `Diagnoza/problemi: ${patient.diagnosis || "—"}`,
+      `Dhimbja: ${painScore}/10`,
+      `Koment: ${comment || "Pa koment"}`,
+    ],
+    ctaLabel: "Hap dashboard-in",
+    ctaUrl: `${getAppUrl()}/physiotherapist-portal`,
   });
 }
 
@@ -121,47 +80,29 @@ export async function notifyPhysioLowAiScore({
   feedback?: string | null;
 }) {
   const patient = await getPatientWithPhysio(supabase, patientId);
-  const physioEmail = patient?.profiles?.email;
-  const title = `AI score i ulët: ${score}%`;
-  const body = `Pacienti ${patient ? patientFullName(patient) : ""} ka AI score ${score}%. ${feedback || "Rekomandohet kontroll nga fizioterapeuti."}`;
+  if (!patient) return { ok: false, error: "Patient not found" };
 
-  if (!patient || !physioEmail) {
-    await saveNotificationRecord(supabase, {
-      patientId,
-      type: "low_ai_score",
-      title,
-      body,
-      status: "skipped",
-      metadata: { reason: "missing_patient_or_physio_email", score },
-    });
-    return;
-  }
+  const patientName = patientFullName(patient);
+  const physio = patient.profiles;
 
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://fizioterapia-ime.vercel.app";
-  const result = await sendResendEmail({
-    to: physioEmail,
-    subject: `[FizioPlan] ${title}`,
-    html: clinicalAlertEmailHtml({
-      title,
-      patientName: patientFullName(patient),
-      diagnosis: patient.diagnosis,
-      body,
-      ctaUrl: `${appUrl}/physiotherapist-portal`,
-    }),
-    text: body,
-    tags: [
-      { name: "type", value: "low_ai_score" },
-      { name: "patient", value: patient.id.replaceAll("-", "_") },
-    ],
-  });
-
-  await saveNotificationRecord(supabase, {
-    recipientProfileId: patient.profiles?.id,
-    patientId,
+  return sendAlertEmail({
+    supabase,
     type: "low_ai_score",
-    title,
-    body,
-    status: result.ok ? "sent" : result.skipped ? "skipped" : "failed",
-    metadata: { score, feedback, resend: result },
+    to: physio?.email,
+    patientId: patient.id,
+    physioId: patient.physio_id,
+    patientName,
+    subject: `AI score i ulët ${score}% · ${patientName}`,
+    title: "AI Movement Check tregoi score të ulët",
+    intro: "Pacienti bëri AI Movement Check dhe rezultati kërkon vëmendje nga fizioterapeuti.",
+    details: [
+      `Pacienti: ${patientName}`,
+      `Fizioterapeuti: ${physio?.full_name || "—"}`,
+      `Diagnoza/problemi: ${patient.diagnosis || "—"}`,
+      `AI score: ${score}%`,
+      `Feedback: ${feedback || "Pa feedback"}`,
+    ],
+    ctaLabel: "Shiko pacientin",
+    ctaUrl: `${getAppUrl()}/physiotherapist-portal`,
   });
 }
