@@ -4,7 +4,7 @@ import { currentUser } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 import { hasActivePhysioAccess } from "@/lib/billing";
 import { getClinicalProgramTemplate } from "@/lib/clinical-programs";
-import { createPatientCode, createPatientUsername, getSupabaseAdmin } from "@/lib/supabase-admin";
+import { createPatientUsername, createUniquePatientCode, getSupabaseAdmin } from "@/lib/supabase-admin";
 
 type Profile = {
   id: string;
@@ -174,7 +174,7 @@ export async function createPatientAction(formData: FormData) {
 
   if (!firstName) throw new Error("Patient first name is required.");
 
-  const patientCode = createPatientCode(firstName);
+  const patientCode = await createUniquePatientCode(supabase, firstName);
   const patientUsername = createPatientUsername(firstName, lastName, patientCode);
 
   const { data: patient, error: patientError } = await supabase
