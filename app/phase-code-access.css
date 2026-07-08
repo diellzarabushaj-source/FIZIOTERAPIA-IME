@@ -1,0 +1,143 @@
+.patient-code-input {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 900;
+  font-size: 20px;
+}
+
+.patient-access-card-page {
+  background:
+    radial-gradient(circle at 8% 0%, rgba(48, 181, 168, 0.14), transparent 32%),
+    radial-gradient(circle at 92% 4%, rgba(52, 199, 89, 0.14), transparent 32%),
+    var(--fi-bg);
+}
+
+.patient-access-card {
+  max-width: 680px;
+  margin: 0 auto 56px;
+  display: grid;
+  gap: 22px;
+  padding: clamp(26px, 5vw, 52px);
+  border-radius: 42px;
+  border: 1px solid rgba(230, 238, 248, 0.94);
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 34px 110px rgba(15, 32, 51, 0.12);
+  text-align: center;
+}
+
+.patient-access-card .brand-mark {
+  justify-content: center;
+}
+
+.patient-access-card h1 {
+  margin: 16px 0 8px;
+  font-size: clamp(42px, 6vw, 68px);
+  line-height: 0.95;
+  letter-spacing: -0.065em;
+}
+
+.patient-access-card p {
+  color: var(--fi-gray);
+}
+
+.patient-access-qr-box {
+  width: 260px;
+  height: 260px;
+  margin: 0 auto;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  border-radius: 34px;
+  background: #fff;
+  border: 1px solid var(--fi-line);
+  box-shadow: 0 18px 50px rgba(15, 32, 51, 0.08);
+}
+
+.patient-access-qr-box img {
+  width: 100%;
+  height: 100%;
+}
+
+.patient-access-code-box {
+  display: grid;
+  gap: 8px;
+  padding: 22px;
+  border-radius: 28px;
+  background: linear-gradient(135deg, #F7FFFB, #EAF8F1);
+  border: 1px solid rgba(48, 181, 168, 0.16);
+}
+
+.patient-access-code-box span,
+.patient-access-code-box small {
+  color: var(--fi-teal-dark);
+  font-weight: 900;
+}
+
+.patient-access-code-box strong {
+  color: var(--fi-ink);
+  font-size: clamp(36px, 8vw, 58px);
+  letter-spacing: 0.06em;
+}
+
+.patient-access-steps {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.patient-access-steps div {
+  display: grid;
+  gap: 8px;
+  padding: 14px;
+  border-radius: 20px;
+  background: #fff;
+  border: 1px solid var(--fi-line);
+}
+
+.patient-access-steps b {
+  color: var(--fi-teal-dark);
+}
+
+.patient-access-steps span {
+  color: var(--fi-gray);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.patient-access-note {
+  padding: 14px;
+  border-radius: 18px;
+  background: rgba(255, 149, 0, 0.10);
+  border: 1px solid rgba(255, 149, 0, 0.18);
+  color: #8A4B00 !important;
+  font-weight: 800;
+}
+
+@media print {
+  .no-print,
+  .site-footer {
+    display: none !important;
+  }
+
+  .patient-access-card-page {
+    background: #fff !important;
+  }
+
+  .patient-access-card {
+    box-shadow: none !important;
+    border: 0 !important;
+    margin: 0 auto !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .patient-access-steps {
+    grid-template-columns: 1fr;
+  }
+
+  .patient-access-qr-box {
+    width: min(260px, 100%);
+    height: auto;
+    aspect-ratio: 1 / 1;
+  }
+}
