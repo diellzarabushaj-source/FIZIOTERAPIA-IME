@@ -64,6 +64,7 @@ Implemented:
 - Saves plan_exercises.
 - Displays logs, pain score, AI score and alerts.
 - Adds private/default exercises.
+- Links each patient to a printable PDF report.
 
 ## 4. Patient app with Supabase
 
@@ -97,7 +98,7 @@ Implemented:
 - Uses MediaPipe Pose Landmarker in the browser.
 - Opens live camera with patient permission.
 - Detects body landmarks.
-- Calculates score 0–100 from visibility, posture stability, symmetry and alignment.
+- Calculates score 0-100 from visibility, posture stability, symmetry and alignment.
 - Creates feedback in Albanian.
 - Uses alert types: good, needs_attention, contact_physio.
 - Saves score, feedback and alert type to Supabase `ai_checks`.
@@ -145,15 +146,27 @@ Required next:
 
 ## 8. Reports PDF
 
-Required:
+Status: First print-ready PDF version implemented.
 
-- Patient progress PDF.
-- Pain trend.
-- Exercise adherence.
-- AI summary.
-- Physiotherapist note.
+Implemented:
+
+- Added `/reports/[patientId]` route for physiotherapists/admin.
+- Report checks Clerk login and patient ownership.
+- Loads patient profile, active plan, assigned exercises, pain logs and AI checks from Supabase.
+- Shows adherence percentage, pain average, latest pain, average AI score and clinical summary.
+- Shows exercise table, pain history and AI history.
+- Adds print CSS and a `Shkarko / Printo PDF` button so the browser can save the report as PDF.
+- Linked each patient row in the physio dashboard to its PDF report.
+
+Next improvements:
+
+- Add clinic logo/header as asset file.
+- Add real PDF file generation endpoint later if needed.
+- Add physiotherapist signature field.
 
 ## 9. Legal pages
+
+Next.
 
 Required:
 
