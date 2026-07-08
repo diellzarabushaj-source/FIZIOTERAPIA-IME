@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
+import { notifyPhysioHighPain, notifyPhysioLowAiScore } from "@/lib/clinical-notifications";
 
 const USERNAME_COOKIE = "fizioplan_patient_username";
 const CODE_COOKIE = "fizioplan_patient_code";
@@ -69,6 +70,15 @@ export async function completeExerciseAction(formData: FormData) {
     completed_at: new Date().toISOString(),
   });
 
+  if (painScore !== null && painScore >= 7) {
+    await notifyPhysioHighPain({
+      supabase,
+      patientId: patient.id,
+      painScore,
+      comment: comment || null,
+    });
+  }
+
   revalidatePath("/patient-dashboard");
 }
 
@@ -103,6 +113,15 @@ export async function saveAiCheckAction(formData: FormData) {
     alert_type: alertType,
     created_at: new Date().toISOString(),
   });
+
+  if (score < 60) {
+    await notifyPhysioLowAiScore({
+      supabase,
+      patientId: patient.id,
+      score,
+      feedback,
+    });
+  }
 
   revalidatePath("/patient-dashboard");
 }
