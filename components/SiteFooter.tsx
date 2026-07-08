@@ -19,6 +19,7 @@ const footerSections = [
       ["Launch Checklist", "/launch-checklist"],
       ["QA Checklist", "/qa-checklist"],
       ["Pilot Onboarding", "/pilot-onboarding"],
+      ["Pilot Feedback", "/pilot-feedback"],
     ],
   },
   {
