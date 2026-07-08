@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "eslint .",
     "preflight:routes": "node scripts/verify-route-files.mjs",
+    "check:env": "node scripts/check-env-readiness.mjs",
     "smoke:production": "node scripts/smoke-test-production.mjs",
     "smoke:report": "node scripts/render-smoke-report.mjs",
     "smoke:mobile-api": "node scripts/smoke-test-mobile-api.mjs",
