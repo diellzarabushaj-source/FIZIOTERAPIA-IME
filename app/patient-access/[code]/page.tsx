@@ -16,7 +16,7 @@ export default async function PatientAccessCardPage({ params }: PageProps) {
         <BrandMark />
         <div className="nav-actions">
           <a href="/physiotherapist-portal">Fizioterapeut Portal</a>
-          <button className="auth-button auth-button-secondary" type="button" onClick={undefined as never}>Print</button>
+          <a href="/patient-portal">Patient Portal</a>
         </div>
       </nav>
 
