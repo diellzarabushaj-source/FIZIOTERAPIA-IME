@@ -26,6 +26,7 @@ Applied in Supabase project `squgbcmzyaclafnioczq`:
   - ai_checks
   - physio_messages
   - subscriptions
+  - notifications
 - Added patient fields:
   - patient_username
   - notes
@@ -33,7 +34,7 @@ Applied in Supabase project `squgbcmzyaclafnioczq`:
   - is_default
   - owner_physio_id
   - status
-- Added indexes for physiotherapist, patient, plan, logs, messages and subscriptions.
+- Added indexes for physiotherapist, patient, plan, logs, messages, subscriptions and notifications.
 - Seeded default owner profile for Dr. Diellza.
 - Seeded starter exercise library:
   - Glute bridge
@@ -44,7 +45,7 @@ Applied in Supabase project `squgbcmzyaclafnioczq`:
 Access model:
 
 - Owner/admin can view and manage platform data.
-- Physiotherapist can view and manage only their own patients, plans, exercises, logs and messages.
+- Physiotherapist can view and manage only their own patients, plans, exercises, logs, messages and notifications.
 - Default exercises are visible to physiotherapists.
 - Private exercises are visible only to the physiotherapist that created them.
 - Patient app uses username + code flow and reads real plan data.
@@ -109,26 +110,38 @@ Next improvements:
 - Add side-view/full-body camera instructions.
 - Add clinical review queue for low AI scores.
 
-## 6. Stripe subscriptions
+## 6. Subscriptions & Billing
 
-Next.
+Status: Manual/local-bank model planned.
 
-Required:
+Required later:
 
-- Provider plans.
-- Checkout.
-- Webhooks.
-- Subscription status.
-- Lock/unlock dashboard.
+- Basic / Professional / Premium plans.
+- Trial status.
+- Manual paid/unpaid status.
+- Invoice reference.
+- Local bank integration later.
+- Lock/unlock dashboard based on subscription status.
 
 ## 7. Notifications
 
-Required:
+Status: Resend email alerts implemented.
 
+Implemented:
+
+- Added `notifications` table in Supabase.
+- Added Resend email helper.
+- Added clinical email templates.
+- Sends email to physiotherapist when patient reports pain 7/10 or higher.
+- Sends email to physiotherapist when AI score is below 60%.
+- Saves notification status as sent, skipped or failed.
+
+Required next:
+
+- Show notification inbox inside physio dashboard.
+- In-app notifications.
 - Patient reminders.
-- Physio alerts for pain > 7.
-- AI score alerts.
-- Non-adherence alerts.
+- Push notifications in mobile app.
 
 ## 8. Reports PDF
 
