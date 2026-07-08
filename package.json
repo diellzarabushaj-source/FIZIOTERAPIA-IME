@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "preflight:routes": "node scripts/verify-route-files.mjs",
     "smoke:production": "node scripts/smoke-test-production.mjs"
   },
   "dependencies": {
