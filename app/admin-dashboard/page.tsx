@@ -1,5 +1,6 @@
 import { currentUser } from "@clerk/nextjs/server";
 import { AuthControls } from "@/components/AuthControls";
+import { BrandMark } from "@/components/BrandMark";
 
 const defaultAdminEmail = "diellzarabushaj@gmail.com";
 
@@ -12,10 +13,10 @@ const defaultExercises = [
 ];
 
 const physios = [
-  ["Alketa Rabushaj", "alketa@example.com", "Active", "42", "49 EUR", "Good"],
+  ["Alketa Rabushaj", "alketa@example.com", "Active", "42", "29.90 EUR", "Good"],
   ["Fizio Center", "center@example.com", "Trial", "12", "0 EUR", "Trial ends in 6 days"],
-  ["Therapy Pro", "therapy@example.com", "Unpaid", "8", "49 EUR", "Payment required"],
-  ["Rehab Clinic", "rehab@example.com", "Active", "31", "99 EUR", "High usage"]
+  ["Therapy Pro", "therapy@example.com", "Unpaid", "8", "29.90 EUR", "Payment required"],
+  ["Rehab Clinic", "rehab@example.com", "Active", "31", "29.90 EUR", "High usage"]
 ];
 
 const platformSettings = [
@@ -44,13 +45,11 @@ export default async function AdminDashboardPage() {
   return (
     <main className="page admin-dashboard-page">
       <nav className="top-nav">
-        <a className="brand-link" href="/">
-          <span className="brand-logo">FP</span>
-          <span>FizioPlan Admin</span>
-        </a>
+        <BrandMark />
         <div className="nav-actions">
           <a href="/physiotherapist-dashboard">Fizioterapist Dashboard</a>
           <a href="/patient-dashboard">Patient Dashboard</a>
+          <a href="/admin-billing">Billing</a>
           <AuthControls />
         </div>
       </nav>
@@ -84,7 +83,7 @@ export default async function AdminDashboardPage() {
             </div>
             <div className="today-card">
               <span>MRR</span>
-              <strong>1.240</strong>
+              <strong>718</strong>
               <small>EUR / muaj</small>
             </div>
           </section>
@@ -171,7 +170,7 @@ export default async function AdminDashboardPage() {
                   <label className="label">Email</label>
                   <input className="input" defaultValue="newphysio@example.com" />
                   <label className="label">Plan</label>
-                  <input className="input" defaultValue="Professional · 49 EUR" />
+                  <input className="input" defaultValue="Fizioterapeut Monthly · 29.90 EUR" />
                   <button className="button">Dergo invite</button>
                 </div>
               </section>
@@ -180,10 +179,10 @@ export default async function AdminDashboardPage() {
                 <div className="dashboard-card">
                   <h2>Revenue</h2>
                   <div className="kpis">
-                    <div className="kpi">MRR<strong>1.240 EUR</strong></div>
-                    <div className="kpi">ARR<strong>14.880 EUR</strong></div>
+                    <div className="kpi">MRR<strong>718 EUR</strong></div>
+                    <div className="kpi">ARR<strong>8.616 EUR</strong></div>
                   </div>
-                  <p>Stripe/checkout do te lidhet ne fazen tjeter per subscriptions.</p>
+                  <p>Billing është manual/local-bank. Admini aktivizon +1 muaj pas pagesës.</p>
                 </div>
 
                 <div className="dashboard-card wide">
