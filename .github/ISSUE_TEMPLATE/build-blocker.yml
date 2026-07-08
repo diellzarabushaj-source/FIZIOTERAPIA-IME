@@ -1,0 +1,66 @@
+name: Build blocker
+
+description: Report a build, TypeScript, or Vercel deployment blocker.
+
+title: "[P0/P1 Build] "
+
+labels:
+  - build
+  - blocker
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this when `npm run build`, GitHub Actions, or Vercel deployment fails.
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      options:
+        - P0 blocker
+        - P1 high
+        - P2 medium
+        - P3 polish
+    validations:
+      required: true
+
+  - type: input
+    id: command
+    attributes:
+      label: Command that failed
+      placeholder: npm run build
+    validations:
+      required: true
+
+  - type: textarea
+    id: output
+    attributes:
+      label: Exact error output
+      description: Paste the exact terminal/Vercel/GitHub Actions error.
+      render: shell
+    validations:
+      required: true
+
+  - type: textarea
+    id: suspected-files
+    attributes:
+      label: Suspected files
+      placeholder: |
+        app/pilot-launch/page.tsx
+        components/SiteFooter.tsx
+    validations:
+      required: false
+
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      value: |
+        - npm run build passes
+        - Vercel deployment is READY
+        - public smoke routes return 200
+        - no product/safety rules changed
+    validations:
+      required: true
