@@ -1,0 +1,91 @@
+name: Route failure
+
+description: Report a production, preview, or local route that returns 404/500 or renders wrong content.
+
+title: "[Route] "
+
+labels:
+  - route
+  - qa
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this after running `npm run smoke:production` or testing routes manually.
+
+  - type: dropdown
+    id: environment
+    attributes:
+      label: Environment
+      options:
+        - production
+        - preview
+        - local
+    validations:
+      required: true
+
+  - type: input
+    id: route
+    attributes:
+      label: Route
+      placeholder: /pilot-launch
+    validations:
+      required: true
+
+  - type: input
+    id: url
+    attributes:
+      label: Full URL
+      placeholder: https://fizioterapia-ime.vercel.app/pilot-launch
+    validations:
+      required: true
+
+  - type: dropdown
+    id: status
+    attributes:
+      label: HTTP status or visible problem
+      options:
+        - 404
+        - 500
+        - redirect loop
+        - blank page
+        - wrong content
+        - layout broken
+        - auth issue
+        - other
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      value: |
+        1. Open route
+        2. Observe result
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected result
+      placeholder: Public route should return 200 and show BrandMark + footer.
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual result
+      placeholder: Returned 404.
+    validations:
+      required: true
+
+  - type: textarea
+    id: notes
+    attributes:
+      label: Notes / screenshot / logs
+    validations:
+      required: false
