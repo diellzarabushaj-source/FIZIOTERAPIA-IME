@@ -31,14 +31,13 @@ export default function PatientHandoutPage() {
           <a href="/patient-portal">Patient Portal</a>
           <a href="/camera-consent">Camera Consent</a>
           <a href="/medical-disclaimer">Disclaimer</a>
-          <button className="button secondary" onClick={undefined as never}>Print</button>
         </div>
       </nav>
 
       <section className="handout-sheet">
         <div className="handout-header">
           <BrandMark />
-          <span className="badge">Patient handout</span>
+          <span className="badge">Patient handout · print/PDF ready</span>
         </div>
 
         <h1>Si me përdorë Fizioterapia ime si pacient</h1>
