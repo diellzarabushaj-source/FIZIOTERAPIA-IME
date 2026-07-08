@@ -1,10 +1,9 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { BrandMark } from "@/components/BrandMark";
-import { getSupabaseAdmin } from "@/lib/supabase-admin";
+import { getSupabaseAdmin, normalizePatientCode } from "@/lib/supabase-admin";
 import { MovementCheckClient } from "./MovementCheckClient";
 
-const USERNAME_COOKIE = "fizioplan_patient_username";
 const CODE_COOKIE = "fizioplan_patient_code";
 
 export default async function AiCheckPage({ searchParams }: { searchParams?: Promise<{ planExerciseId?: string }> }) {
@@ -29,17 +28,15 @@ export default async function AiCheckPage({ searchParams }: { searchParams?: Pro
   }
 
   const cookieStore = await cookies();
-  const username = cookieStore.get(USERNAME_COOKIE)?.value?.toLowerCase();
-  const code = cookieStore.get(CODE_COOKIE)?.value?.toUpperCase();
+  const code = normalizePatientCode(cookieStore.get(CODE_COOKIE)?.value || "");
 
-  if (!username || !code) {
+  if (!code) {
     redirect("/patient-portal");
   }
 
   const { data: patient } = await supabase
     .from("patients")
     .select("id")
-    .eq("patient_username", username)
     .eq("patient_code", code)
     .eq("status", "active")
     .maybeSingle();
