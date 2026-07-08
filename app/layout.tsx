@@ -3,6 +3,7 @@ import { ClerkProvider } from "@clerk/nextjs";
 import "./globals.css";
 import "./brand.css";
 import "./phase3.css";
+import "./phase4.css";
 
 export const metadata: Metadata = {
   title: "Fizioterapia ime – Digital physiotherapy platform",
