@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
 import "./globals.css";
+import "./brand.css";
 
 export const metadata: Metadata = {
-  title: "FizioPlan – Fizioterapia Ime",
-  description: "Platforme SaaS per fizioterapi me pacient, fizioterapeut dhe owner dashboard."
+  title: "Fizioterapia ime – Digital physiotherapy platform",
+  description: "Platformë SaaS për fizioterapi me patient app, physiotherapist dashboard, AI Movement Check dhe billing 29.90 EUR/muaj."
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
