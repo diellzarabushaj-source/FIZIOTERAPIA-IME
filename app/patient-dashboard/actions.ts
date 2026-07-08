@@ -3,7 +3,7 @@
 import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { getSupabaseAdmin } from "@/lib/supabase-admin";
+import { getSupabaseAdmin, normalizePatientCode } from "@/lib/supabase-admin";
 import { notifyPhysioHighPain, notifyPhysioLowAiScore } from "@/lib/clinical-notifications";
 
 const USERNAME_COOKIE = "fizioplan_patient_username";
@@ -14,15 +14,13 @@ async function getCurrentPatient() {
   if (!supabase) throw new Error("Supabase server key is missing.");
 
   const cookieStore = await cookies();
-  const username = cookieStore.get(USERNAME_COOKIE)?.value?.toLowerCase();
-  const code = cookieStore.get(CODE_COOKIE)?.value?.toUpperCase();
+  const code = normalizePatientCode(cookieStore.get(CODE_COOKIE)?.value || "");
 
-  if (!username || !code) return null;
+  if (!code) return null;
 
   const { data: patient } = await supabase
     .from("patients")
     .select("id,patient_username,patient_code,status")
-    .eq("patient_username", username)
     .eq("patient_code", code)
     .eq("status", "active")
     .maybeSingle();
