@@ -1,38 +1,42 @@
 # FizioPlan Mobile App
 
-Initial Expo React Native patient app for FizioPlan / Fizioterapia Ime.
+Expo React Native patient app for FizioPlan / Fizioterapia Ime.
 
-## Preview on phone
+This folder contains the cleaned mobile prototype imported from the Replit `Patient-Helper` work and adapted as a standalone Expo app inside the main GitHub repository.
 
-1. Open a terminal.
-2. Go to this folder:
+## Included flow
+
+- Patient login with code `ARB-4821`
+- 14-day physiotherapy plan overview
+- Exercise cards and exercise detail screen
+- AI Movement Check preparation screen
+- Mock camera analysis with countdown
+- AI result with score, feedback and clinical disclaimer
+- Pain score 0-10 safety step
+- Warning if pain score is 7 or higher
+- Supabase save helper for `ai_checks` and `exercise_logs`
+
+## Preview on phone with Expo Go
 
 ```bash
 cd apps/mobile-app
-```
-
-3. Install packages:
-
-```bash
 npm install
-```
-
-4. Start Expo:
-
-```bash
 npx expo start
 ```
 
-5. Install Expo Go on your iPhone or Android.
-6. Scan the QR code.
+Then install **Expo Go** on iPhone or Android and scan the QR code.
 
-## Env variables
+## Environment variables
 
-Create `.env` from `.env.example` and add:
+Create `.env` from `.env.example`:
 
 ```bash
 EXPO_PUBLIC_SUPABASE_URL=https://squgbcmzyaclafnioczq.supabase.co
-EXPO_PUBLIC_SUPABASE_ANON_KEY=your_anon_key_here
+EXPO_PUBLIC_SUPABASE_ANON_KEY=your_publishable_or_anon_key_here
 ```
 
-Do not commit real secret keys.
+Use only the Supabase publishable/anon key.
+
+## Clinical safety
+
+The AI flow is only a movement-quality feedback placeholder. It does not replace the physiotherapist.
