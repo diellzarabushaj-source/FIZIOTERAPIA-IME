@@ -8,7 +8,7 @@ const CODE_COOKIE = "fizioplan_patient_code";
 
 export default async function AiCheckPage({ searchParams }: { searchParams?: Promise<{ planExerciseId?: string }> }) {
   const params = await searchParams;
-  const planExerciseId = params?.planExerciseId;
+  let planExerciseId = params?.planExerciseId;
   const supabase = getSupabaseAdmin();
 
   if (!supabase) {
@@ -58,6 +58,17 @@ export default async function AiCheckPage({ searchParams }: { searchParams?: Pro
     if (!assignedExercise) {
       redirect("/patient-dashboard");
     }
+  } else {
+    const { data: firstAiExercise } = await supabase
+      .from("plan_exercises")
+      .select("id,plans!inner(patient_id),exercise_library!inner(ai_enabled)")
+      .eq("plans.patient_id", patient.id)
+      .eq("exercise_library.ai_enabled", true)
+      .order("day_number", { ascending: true })
+      .limit(1)
+      .maybeSingle();
+
+    planExerciseId = firstAiExercise?.id;
   }
 
   return (
@@ -72,7 +83,16 @@ export default async function AiCheckPage({ searchParams }: { searchParams?: Pro
           <a href="/patient-portal">Patient Portal</a>
         </div>
       </nav>
-      <MovementCheckClient planExerciseId={planExerciseId} />
+      {!planExerciseId ? (
+        <section className="hero">
+          <span className="badge">AI Movement Check</span>
+          <h1>Nuk ka ushtrim me AI aktiv.</h1>
+          <p>Fizioterapeuti duhet të caktojë një ushtrim me AI check aktiv në planin e pacientit.</p>
+          <a className="button" href="/patient-dashboard">Kthehu te dashboard</a>
+        </section>
+      ) : (
+        <MovementCheckClient planExerciseId={planExerciseId} />
+      )}
     </main>
   );
 }
