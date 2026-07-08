@@ -13,6 +13,7 @@ const publicRoutes = [
   "/qa-checklist",
   "/pilot-onboarding",
   "/pilot-launch",
+  "/pilot-readiness",
   "/patient-handout",
   "/pilot-feedback",
   "/patient-portal",
@@ -26,6 +27,7 @@ const publicRoutes = [
 const expectedContent = {
   "/": "Fizioterapia ime",
   "/pilot-launch": "Paketa finale",
+  "/pilot-readiness": "Final gate para pilotit",
   "/patient-handout": "Si me përdorë Fizioterapia ime",
   "/pilot-feedback": "Feedback form",
   "/qa-checklist": "Final testing script",
