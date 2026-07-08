@@ -77,7 +77,6 @@ Implemented:
 - Loads assigned exercises from plan_exercises and exercise_library.
 - Saves exercise completion to exercise_logs.
 - Saves pain score to exercise_logs.
-- Saves AI check demo result to ai_checks.
 - Shows physiotherapist messages from physio_messages.
 - Shows progress, latest pain and latest AI score.
 
@@ -85,22 +84,34 @@ Next improvements:
 
 - Move the same Supabase flow into the Expo mobile app.
 - Add per-exercise detail pages.
-- Add proper AI camera flow.
 - Add push reminders.
 
 ## 5. AI Movement Check real
 
-Next.
+Status: First real camera version implemented.
 
-Required:
+Implemented:
 
-- MediaPipe Pose Landmarker.
-- Per-exercise scoring rules.
-- Score 0–100.
-- Feedback only, no diagnosis.
-- Store score, alert type and feedback.
+- Added `/ai-check` route.
+- Uses MediaPipe Pose Landmarker in the browser.
+- Opens live camera with patient permission.
+- Detects body landmarks.
+- Calculates score 0–100 from visibility, posture stability, symmetry and alignment.
+- Creates feedback in Albanian.
+- Uses alert types: good, needs_attention, contact_physio.
+- Saves score, feedback and alert type to Supabase `ai_checks`.
+- If no planExerciseId is provided, auto-selects the first AI-enabled exercise in the patient plan.
+
+Next improvements:
+
+- Add per-exercise scoring rules for each exercise.
+- Add repetition counting.
+- Add side-view/full-body camera instructions.
+- Add clinical review queue for low AI scores.
 
 ## 6. Stripe subscriptions
+
+Next.
 
 Required:
 
