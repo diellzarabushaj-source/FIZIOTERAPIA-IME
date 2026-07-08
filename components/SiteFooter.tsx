@@ -19,6 +19,7 @@ const footerSections = [
       ["Launch Checklist", "/launch-checklist"],
       ["QA Checklist", "/qa-checklist"],
       ["Pilot Launch", "/pilot-launch"],
+      ["Pilot Readiness", "/pilot-readiness"],
       ["Patient Handout", "/patient-handout"],
       ["Pilot Onboarding", "/pilot-onboarding"],
       ["Pilot Feedback", "/pilot-feedback"],
