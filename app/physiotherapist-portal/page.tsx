@@ -1,6 +1,7 @@
 import { currentUser } from "@clerk/nextjs/server";
 import { AuthControls } from "@/components/AuthControls";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
+import { getBillingStatusLabel, hasActivePhysioAccess, PHYSIO_MONTHLY_PRICE_LABEL } from "@/lib/billing";
 import { addExerciseToPlanAction, createPatientAction, createPrivateExerciseAction } from "./actions";
 
 type PatientRow = {
@@ -34,6 +35,16 @@ type ProfileRow = {
   status: string | null;
 };
 
+type SubscriptionRow = {
+  id: string;
+  plan_name: string | null;
+  price: number | string | null;
+  currency: string | null;
+  status: string | null;
+  current_period_end: string | null;
+  invoice_reference: string | null;
+};
+
 async function getPhysioData() {
   const supabase = getSupabaseAdmin();
   const user = await currentUser();
@@ -43,6 +54,7 @@ async function getPhysioData() {
     return {
       configured: Boolean(supabase),
       profile: null,
+      subscription: null as SubscriptionRow | null,
       patients: [] as PatientRow[],
       exercises: [] as ExerciseRow[],
       logs: [],
@@ -61,6 +73,7 @@ async function getPhysioData() {
     return {
       configured: true,
       profile: null,
+      subscription: null as SubscriptionRow | null,
       patients: [] as PatientRow[],
       exercises: [] as ExerciseRow[],
       logs: [],
@@ -70,6 +83,14 @@ async function getPhysioData() {
   }
 
   const isAdmin = profile.role === "owner" || profile.role === "admin";
+
+  const { data: subscription } = await supabase
+    .from("subscriptions")
+    .select("id,plan_name,price,currency,status,current_period_end,invoice_reference")
+    .eq("physio_id", profile.id)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle<SubscriptionRow>();
 
   const patientQuery = supabase
     .from("patients")
@@ -111,6 +132,7 @@ async function getPhysioData() {
   return {
     configured: true,
     profile,
+    subscription: subscription || null,
     patients: patients || [],
     exercises: exercises || [],
     logs: logs || [],
@@ -134,11 +156,17 @@ function getPatientStats(patientId: string, logs: any[], aiChecks: any[]) {
   };
 }
 
+function formatDate(value?: string | null) {
+  if (!value) return "—";
+  return new Date(value).toLocaleDateString("sq-AL");
+}
+
 export default async function PhysiotherapistPortalPage() {
   const clerkConfigured = Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY && process.env.CLERK_SECRET_KEY);
   const user = clerkConfigured ? await currentUser() : null;
   const displayName = user?.firstName || user?.primaryEmailAddress?.emailAddress || "Fizioterapeut";
-  const { configured, profile, patients, exercises, logs, aiChecks, error } = await getPhysioData();
+  const { configured, profile, subscription, patients, exercises, logs, aiChecks, error } = await getPhysioData();
+  const accessActive = hasActivePhysioAccess(profile?.role, subscription);
   const defaultExercises = exercises.filter((exercise) => exercise.is_default);
   const privateExercises = exercises.filter((exercise) => !exercise.is_default);
   const activePatients = patients.filter((patient) => patient.status !== "inactive");
@@ -162,11 +190,11 @@ export default async function PhysiotherapistPortalPage() {
       </nav>
 
       <section className="hero">
-        <span className="badge">Fizioterapist Portal · Real Supabase data</span>
+        <span className="badge">Fizioterapist Portal · {PHYSIO_MONTHLY_PRICE_LABEL}</span>
         <h1>Dashboard funksional për fizioterapeutin.</h1>
         <p>I kyçur si: <b>{displayName}</b></p>
         <p>
-          Ky panel lexon pacientë, ushtrime, plane, pain logs, AI checks dhe gjeneron raporte PDF nga Supabase.
+          Qasja për fizioterapeutë kushton <b>{PHYSIO_MONTHLY_PRICE_LABEL}</b>. Pa pagesë aktive dashboard-i bllokohet.
         </p>
         {!clerkConfigured && <div className="role-warning">Clerk keys mungojnë në Vercel.</div>}
         {!configured && <div className="role-warning">SUPABASE_SERVICE_ROLE_KEY mungon në Vercel.</div>}
@@ -176,152 +204,179 @@ export default async function PhysiotherapistPortalPage() {
       <section className="dashboard-kpis">
         <div className="kpi-card">
           <span>Pacientë aktivë</span>
-          <strong>{activePatients.length}</strong>
+          <strong>{accessActive ? activePatients.length : "—"}</strong>
           <small>{profile?.clinic_name || "Fizioterapia ime"}</small>
         </div>
         <div className="kpi-card">
           <span>Ushtrime në bibliotekë</span>
-          <strong>{exercises.length}</strong>
+          <strong>{accessActive ? exercises.length : "—"}</strong>
           <small>{defaultExercises.length} default · {privateExercises.length} private</small>
         </div>
         <div className="kpi-card">
-          <span>Alerts dhimbje</span>
-          <strong>{painAlerts}</strong>
-          <small>dhimbje 7/10+</small>
+          <span>Billing</span>
+          <strong>{getBillingStatusLabel(subscription)}</strong>
+          <small>{subscription?.current_period_end ? `Deri: ${formatDate(subscription.current_period_end)}` : PHYSIO_MONTHLY_PRICE_LABEL}</small>
         </div>
         <div className="kpi-card">
-          <span>AI score mesatar</span>
-          <strong>{aiAverage ? `${aiAverage}%` : "—"}</strong>
-          <small>nga kontrollet e fundit</small>
+          <span>Çmimi</span>
+          <strong>29.90</strong>
+          <small>EUR / muaj</small>
         </div>
       </section>
 
-      <section className="grid" style={{ marginTop: 20 }}>
-        <form action={createPatientAction} className="card green">
-          <h2>Shto pacient real</h2>
-          <p>Sistemi gjeneron automatikisht username + kod për pacientin.</p>
-          <label className="label">Emri</label>
-          <input className="input" name="firstName" placeholder="Arber" required />
-          <label className="label">Mbiemri</label>
-          <input className="input" name="lastName" placeholder="Krasniqi" />
-          <label className="label">Telefoni</label>
-          <input className="input" name="phone" placeholder="+383..." />
-          <label className="label">Mosha</label>
-          <input className="input" name="age" type="number" min="1" max="120" placeholder="45" />
-          <label className="label">Diagnoza / problemi</label>
-          <input className="input" name="diagnosis" placeholder="Lumbosciatica" />
-          <label className="label">Titulli i planit</label>
-          <input className="input" name="planTitle" defaultValue="Program rehabilitimi 14 ditë" />
-          <button className="button" type="submit">Ruaj pacientin + planin</button>
-        </form>
-
-        <div className="card" style={{ gridColumn: "span 2" }}>
-          <div className="section-header-row">
-            <div>
-              <h2>Pacientët aktivë</h2>
-              <p>Këta pacientë janë të ruajtur realisht në Supabase.</p>
+      {!accessActive && (
+        <section className="grid" style={{ marginTop: 20 }}>
+          <div className="card green" style={{ gridColumn: "span 2" }}>
+            <span className="badge">Qasja e bllokuar</span>
+            <h2>Pagesa mujore kërkohet për akses.</h2>
+            <p>
+              Për me përdorë dashboard-in, fizioterapeuti duhet të ketë subscription aktiv prej <b>29.90 EUR / muaj</b>.
+              Pagesa bëhet manualisht tani; më vonë lidhet me bankë lokale.
+            </p>
+            <div className="generated-box">
+              Statusi aktual: <b>{getBillingStatusLabel(subscription)}</b><br />
+              Çmimi: <b>{PHYSIO_MONTHLY_PRICE_LABEL}</b><br />
+              Invoice/reference: <b>{subscription?.invoice_reference || "caktohet nga admini"}</b>
             </div>
-            <span className="badge">{activePatients.length} total</span>
           </div>
-          <table className="table">
-            <thead><tr><th>Username</th><th>Kodi</th><th>Pacient</th><th>Diagnoza</th><th>Plan</th><th>Done</th><th>Dhimbje</th><th>AI</th><th>Raport</th></tr></thead>
-            <tbody>
-              {activePatients.length === 0 && <tr><td colSpan={9}>Ende nuk ka pacientë realë. Shto pacientin e parë nga forma majtas.</td></tr>}
-              {activePatients.map((patient) => {
-                const stats = getPatientStats(patient.id, logs, aiChecks);
-                const name = `${patient.first_name} ${patient.last_name || ""}`.trim();
-                return (
-                  <tr key={patient.id}>
-                    <td>{patient.patient_username || "—"}</td>
-                    <td><b>{patient.patient_code}</b></td>
-                    <td>{name}</td>
-                    <td>{patient.diagnosis || "—"}</td>
-                    <td>{patient.plans?.[0]?.title || "—"}</td>
-                    <td>{stats.completed}</td>
-                    <td>{stats.painAlert ? <b style={{ color: "#9A3412" }}>{stats.latestPain}/10</b> : stats.latestPain}</td>
-                    <td>{stats.aiAlert ? <b style={{ color: "#9A3412" }}>{stats.latestAi}</b> : stats.latestAi}</td>
-                    <td><a className="button secondary" href={`/reports/${patient.id}`}>PDF</a></td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      </section>
+          <div className="card blue">
+            <h2>Si aktivizohet</h2>
+            <p>Fizioterapeuti paguan 29.90 EUR. Admini pastaj e shënon subscription si active dhe cakton periudhën mujore.</p>
+            <p>Derisa pagesa nuk është aktive, nuk mund të krijojë pacientë, plane ose ushtrime.</p>
+          </div>
+        </section>
+      )}
 
-      <section className="grid" style={{ marginTop: 20 }}>
-        <div className="card blue" style={{ gridColumn: "span 2" }}>
-          <div className="section-header-row">
-            <div>
-              <h2>Exercise Library</h2>
-              <p>Default exercises vijnë nga admini. Private exercises i krijon fizioterapeuti.</p>
+      {accessActive && (
+        <>
+          <section className="grid" style={{ marginTop: 20 }}>
+            <form action={createPatientAction} className="card green">
+              <h2>Shto pacient real</h2>
+              <p>Sistemi gjeneron automatikisht username + kod për pacientin.</p>
+              <label className="label">Emri</label>
+              <input className="input" name="firstName" placeholder="Arber" required />
+              <label className="label">Mbiemri</label>
+              <input className="input" name="lastName" placeholder="Krasniqi" />
+              <label className="label">Telefoni</label>
+              <input className="input" name="phone" placeholder="+383..." />
+              <label className="label">Mosha</label>
+              <input className="input" name="age" type="number" min="1" max="120" placeholder="45" />
+              <label className="label">Diagnoza / problemi</label>
+              <input className="input" name="diagnosis" placeholder="Lumbosciatica" />
+              <label className="label">Titulli i planit</label>
+              <input className="input" name="planTitle" defaultValue="Program rehabilitimi 14 ditë" />
+              <button className="button" type="submit">Ruaj pacientin + planin</button>
+            </form>
+
+            <div className="card" style={{ gridColumn: "span 2" }}>
+              <div className="section-header-row">
+                <div>
+                  <h2>Pacientët aktivë</h2>
+                  <p>Këta pacientë janë të ruajtur realisht në Supabase.</p>
+                </div>
+                <span className="badge">{activePatients.length} total</span>
+              </div>
+              <table className="table">
+                <thead><tr><th>Username</th><th>Kodi</th><th>Pacient</th><th>Diagnoza</th><th>Plan</th><th>Done</th><th>Dhimbje</th><th>AI</th><th>Raport</th></tr></thead>
+                <tbody>
+                  {activePatients.length === 0 && <tr><td colSpan={9}>Ende nuk ka pacientë realë. Shto pacientin e parë nga forma majtas.</td></tr>}
+                  {activePatients.map((patient) => {
+                    const stats = getPatientStats(patient.id, logs, aiChecks);
+                    const name = `${patient.first_name} ${patient.last_name || ""}`.trim();
+                    return (
+                      <tr key={patient.id}>
+                        <td>{patient.patient_username || "—"}</td>
+                        <td><b>{patient.patient_code}</b></td>
+                        <td>{name}</td>
+                        <td>{patient.diagnosis || "—"}</td>
+                        <td>{patient.plans?.[0]?.title || "—"}</td>
+                        <td>{stats.completed}</td>
+                        <td>{stats.painAlert ? <b style={{ color: "#9A3412" }}>{stats.latestPain}/10</b> : stats.latestPain}</td>
+                        <td>{stats.aiAlert ? <b style={{ color: "#9A3412" }}>{stats.latestAi}</b> : stats.latestAi}</td>
+                        <td><a className="button secondary" href={`/reports/${patient.id}`}>PDF</a></td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
             </div>
-            <span className="badge">Supabase</span>
-          </div>
+          </section>
 
-          <h3>Default nga admin</h3>
-          <table className="table">
-            <thead><tr><th>Ushtrimi</th><th>Kategoria</th><th>Diagnoza</th><th>AI</th><th>Status</th></tr></thead>
-            <tbody>{defaultExercises.map((exercise) => <tr key={exercise.id}><td>{exercise.name}</td><td>{exercise.category || "—"}</td><td>{exercise.diagnosis || "—"}</td><td>{exercise.ai_enabled ? "Aktiv" : "Jo"}</td><td>{exercise.status}</td></tr>)}</tbody>
-          </table>
+          <section className="grid" style={{ marginTop: 20 }}>
+            <div className="card blue" style={{ gridColumn: "span 2" }}>
+              <div className="section-header-row">
+                <div>
+                  <h2>Exercise Library</h2>
+                  <p>Default exercises vijnë nga admini. Private exercises i krijon fizioterapeuti.</p>
+                </div>
+                <span className="badge">Supabase</span>
+              </div>
 
-          <h3 style={{ marginTop: 20 }}>Ushtrime private</h3>
-          <table className="table">
-            <thead><tr><th>Ushtrimi</th><th>Kategoria</th><th>Diagnoza</th><th>AI</th><th>Status</th></tr></thead>
-            <tbody>
-              {privateExercises.length === 0 && <tr><td colSpan={5}>Ende nuk ka ushtrime private.</td></tr>}
-              {privateExercises.map((exercise) => <tr key={exercise.id}><td>{exercise.name}</td><td>{exercise.category || "—"}</td><td>{exercise.diagnosis || "—"}</td><td>{exercise.ai_enabled ? "Aktiv" : "Jo"}</td><td>{exercise.status}</td></tr>)}
-            </tbody>
-          </table>
-        </div>
+              <h3>Default nga admin</h3>
+              <table className="table">
+                <thead><tr><th>Ushtrimi</th><th>Kategoria</th><th>Diagnoza</th><th>AI</th><th>Status</th></tr></thead>
+                <tbody>{defaultExercises.map((exercise) => <tr key={exercise.id}><td>{exercise.name}</td><td>{exercise.category || "—"}</td><td>{exercise.diagnosis || "—"}</td><td>{exercise.ai_enabled ? "Aktiv" : "Jo"}</td><td>{exercise.status}</td></tr>)}</tbody>
+              </table>
 
-        <form action={createPrivateExerciseAction} className="card">
-          <h2>Shto ushtrim</h2>
-          <p>Owner e shton si default. Fizioterapeuti normal e shton si private.</p>
-          <label className="label">Emri i ushtrimit</label>
-          <input className="input" name="name" placeholder="Bird dog" required />
-          <label className="label">Kategoria</label>
-          <input className="input" name="category" placeholder="Stabilizim" />
-          <label className="label">Diagnoza</label>
-          <input className="input" name="diagnosis" placeholder="Low back pain" />
-          <label className="label">Instruksioni klinik</label>
-          <textarea className="input" name="instructions" rows={5} placeholder="Mbaje trungun stabil dhe mos e shpejto lëvizjen." />
-          <label className="label"><input type="checkbox" name="aiEnabled" /> AI check aktiv</label>
-          <button className="button" type="submit">Ruaj ushtrimin</button>
-        </form>
-      </section>
+              <h3 style={{ marginTop: 20 }}>Ushtrime private</h3>
+              <table className="table">
+                <thead><tr><th>Ushtrimi</th><th>Kategoria</th><th>Diagnoza</th><th>AI</th><th>Status</th></tr></thead>
+                <tbody>
+                  {privateExercises.length === 0 && <tr><td colSpan={5}>Ende nuk ka ushtrime private.</td></tr>}
+                  {privateExercises.map((exercise) => <tr key={exercise.id}><td>{exercise.name}</td><td>{exercise.category || "—"}</td><td>{exercise.diagnosis || "—"}</td><td>{exercise.ai_enabled ? "Aktiv" : "Jo"}</td><td>{exercise.status}</td></tr>)}
+                </tbody>
+              </table>
+            </div>
 
-      <section className="grid" style={{ marginTop: 20 }}>
-        <form action={addExerciseToPlanAction} className="card" style={{ gridColumn: "span 2" }}>
-          <h2>Cakto ushtrim në plan</h2>
-          <p>Zgjidh pacientin dhe ushtrimin. Ruhet direkt në plan_exercises.</p>
-          <label className="label">Pacienti</label>
-          <select className="input" name="patientId" required>
-            <option value="">Zgjidh pacientin</option>
-            {activePatients.map((patient) => <option key={patient.id} value={patient.id}>{patient.first_name} {patient.last_name || ""} · {patient.patient_code}</option>)}
-          </select>
-          <label className="label">Ushtrimi</label>
-          <select className="input" name="exerciseId" required>
-            <option value="">Zgjidh ushtrimin</option>
-            {exercises.map((exercise) => <option key={exercise.id} value={exercise.id}>{exercise.name} · {exercise.category || "Pa kategori"}</option>)}
-          </select>
-          <div className="kpis">
-            <div><label className="label">Sete</label><input className="input" name="sets" type="number" defaultValue={2} min={1} /></div>
-            <div><label className="label">Reps</label><input className="input" name="reps" type="number" defaultValue={10} min={1} /></div>
-            <div><label className="label">Dita</label><input className="input" name="dayNumber" type="number" defaultValue={1} min={1} max={60} /></div>
-            <div><label className="label">Status</label><div className="generated-box">Aktiv</div></div>
-          </div>
-          <label className="label">Instruksione</label>
-          <textarea className="input" name="instructions" rows={4} placeholder="Kryeje ngadalë dhe me kontroll." />
-          <button className="button" type="submit">Ruaj në plan</button>
-        </form>
+            <form action={createPrivateExerciseAction} className="card">
+              <h2>Shto ushtrim</h2>
+              <p>Owner e shton si default. Fizioterapeuti normal e shton si private.</p>
+              <label className="label">Emri i ushtrimit</label>
+              <input className="input" name="name" placeholder="Bird dog" required />
+              <label className="label">Kategoria</label>
+              <input className="input" name="category" placeholder="Stabilizim" />
+              <label className="label">Diagnoza</label>
+              <input className="input" name="diagnosis" placeholder="Low back pain" />
+              <label className="label">Instruksioni klinik</label>
+              <textarea className="input" name="instructions" rows={5} placeholder="Mbaje trungun stabil dhe mos e shpejto lëvizjen." />
+              <label className="label"><input type="checkbox" name="aiEnabled" /> AI check aktiv</label>
+              <button className="button" type="submit">Ruaj ushtrimin</button>
+            </form>
+          </section>
 
-        <div className="card green">
-          <h2>Raporte PDF</h2>
-          <p>Te lista e pacientëve kliko “PDF” për raportin e progresit: adherence, dhimbje, AI score dhe përmbledhje klinike.</p>
-          <p>Faqja hapet si raport print-ready; pastaj klikon “Shkarko / Printo PDF”.</p>
-        </div>
-      </section>
+          <section className="grid" style={{ marginTop: 20 }}>
+            <form action={addExerciseToPlanAction} className="card" style={{ gridColumn: "span 2" }}>
+              <h2>Cakto ushtrim në plan</h2>
+              <p>Zgjidh pacientin dhe ushtrimin. Ruhet direkt në plan_exercises.</p>
+              <label className="label">Pacienti</label>
+              <select className="input" name="patientId" required>
+                <option value="">Zgjidh pacientin</option>
+                {activePatients.map((patient) => <option key={patient.id} value={patient.id}>{patient.first_name} {patient.last_name || ""} · {patient.patient_code}</option>)}
+              </select>
+              <label className="label">Ushtrimi</label>
+              <select className="input" name="exerciseId" required>
+                <option value="">Zgjidh ushtrimin</option>
+                {exercises.map((exercise) => <option key={exercise.id} value={exercise.id}>{exercise.name} · {exercise.category || "Pa kategori"}</option>)}
+              </select>
+              <div className="kpis">
+                <div><label className="label">Sete</label><input className="input" name="sets" type="number" defaultValue={2} min={1} /></div>
+                <div><label className="label">Reps</label><input className="input" name="reps" type="number" defaultValue={10} min={1} /></div>
+                <div><label className="label">Dita</label><input className="input" name="dayNumber" type="number" defaultValue={1} min={1} max={60} /></div>
+                <div><label className="label">Status</label><div className="generated-box">Aktiv</div></div>
+              </div>
+              <label className="label">Instruksione</label>
+              <textarea className="input" name="instructions" rows={4} placeholder="Kryeje ngadalë dhe me kontroll." />
+              <button className="button" type="submit">Ruaj në plan</button>
+            </form>
+
+            <div className="card green">
+              <h2>Raporte PDF</h2>
+              <p>Te lista e pacientëve kliko “PDF” për raportin e progresit: adherence, dhimbje, AI score dhe përmbledhje klinike.</p>
+              <p>Faqja hapet si raport print-ready; pastaj klikon “Shkarko / Printo PDF”.</p>
+            </div>
+          </section>
+        </>
+      )}
     </main>
   );
 }
