@@ -2,7 +2,8 @@ import { currentUser } from "@clerk/nextjs/server";
 import { AuthControls } from "@/components/AuthControls";
 
 export default async function OwnerHiddenPage() {
-  const user = await currentUser();
+  const clerkConfigured = Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY && process.env.CLERK_SECRET_KEY);
+  const user = clerkConfigured ? await currentUser() : null;
   const role = (user?.publicMetadata?.role as string | undefined) || "not-set";
   const isAdmin = role === "admin" || role === "owner";
 
@@ -24,7 +25,12 @@ export default async function OwnerHiddenPage() {
         <h1>Panel i fshehur per pronarin</h1>
         <p>Kjo faqe nuk shfaqet ne landing page dhe kerkon hyrje me Clerk.</p>
         <p><b>Role:</b> {role}</p>
-        {!isAdmin && (
+        {!clerkConfigured && (
+          <div className="role-warning">
+            Clerk eshte vendosur ne kod, por admin protection aktivizohet pasi te shtohen Environment Variables ne Vercel.
+          </div>
+        )}
+        {clerkConfigured && !isAdmin && (
           <div className="role-warning">
             Llogaria eshte e kyçur, por ende nuk ka role <b>admin</b> ose <b>owner</b> ne Clerk Dashboard.
             Per production, cakto publicMetadata.role = "admin" ose "owner" per pronarin.
