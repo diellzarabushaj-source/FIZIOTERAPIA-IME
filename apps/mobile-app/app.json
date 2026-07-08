@@ -1,21 +1,33 @@
 {
   "expo": {
-    "name": "FizioPlan",
-    "slug": "fizioplan-mobile-app",
-    "version": "0.2.0",
+    "name": "Fizioterapia ime",
+    "slug": "fizioterapia-ime-mobile",
+    "version": "1.0.0",
     "orientation": "portrait",
-    "scheme": "fizioplan",
+    "scheme": "fizioterapiaime",
     "userInterfaceStyle": "light",
     "platforms": ["ios", "android"],
+    "privacy": "unlisted",
+    "description": "Fizioterapia ime është app për pacientë që marrin plan ushtrimesh nga fizioterapeuti, raportojnë dhimbjen dhe përdorin AI Movement Check si feedback për lëvizjen.",
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.fizioplan.patient"
+      "bundleIdentifier": "com.fizioterapiaime.patient",
+      "buildNumber": "1",
+      "infoPlist": {
+        "NSCameraUsageDescription": "Kamera përdoret për AI Movement Check për të dhënë feedback mbi cilësinë e lëvizjes gjatë ushtrimeve. Videoja nuk përdoret për diagnozë.",
+        "NSMicrophoneUsageDescription": "Mikrofoni nuk përdoret për funksionet kryesore të app-it.",
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
-      "package": "com.fizioplan.patient"
+      "package": "com.fizioterapiaime.patient",
+      "versionCode": 1,
+      "permissions": ["CAMERA", "POST_NOTIFICATIONS"]
     },
     "extra": {
-      "supabaseUrl": "https://squgbcmzyaclafnioczq.supabase.co"
+      "supabaseUrl": "https://squgbcmzyaclafnioczq.supabase.co",
+      "appName": "Fizioterapia ime",
+      "monthlyPhysioPrice": "29.90 EUR"
     }
   }
 }
