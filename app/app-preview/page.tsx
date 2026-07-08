@@ -1,318 +1,398 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import type { CSSProperties } from "react";
 
-type Screen = "login" | "plan" | "exercise" | "ai-prep" | "ai-checking" | "ai-result" | "pain" | "warning" | "saved";
+type Screen = "login" | "overview" | "exercise" | "assessment" | "result" | "pain" | "warning" | "saved";
 
 type Exercise = {
   id: string;
   name: string;
-  meta: string;
+  category: string;
+  dosage: string;
   duration: string;
-  ai: boolean;
+  assessment: boolean;
   instructions: string;
+};
+
+const patient = {
+  code: "ARB-4821",
+  name: "Arbër Rexha",
+  diagnosis: "Lumbosciatica",
+  physiotherapist: "Alketa Rabushaj",
+  plan: "Program rehabilitimi 14 ditë",
+  day: 3,
+  totalDays: 14,
 };
 
 const exercises: Exercise[] = [
   {
     id: "ex-1",
     name: "Glute bridge",
-    meta: "3 sete × 12 përsëritje",
+    category: "Stabilizim lumbopelvik",
+    dosage: "3 sete × 12 përsëritje",
     duration: "5 min",
-    ai: true,
-    instructions: "Shtrihu në shpinë, përkul gjunjët dhe ngriti ijet ngadalë. Mbaje legenin stabil dhe mos e shpejto lëvizjen."
+    assessment: true,
+    instructions:
+      "Shtrihuni në shpinë me gjunjët e përkulur. Ngrini ijet ngadalë, mbani legenin stabil dhe zbritni me kontroll. Ndaloni nëse dhimbja rritet ndjeshëm.",
   },
   {
     id: "ex-2",
     name: "Cat cow",
-    meta: "2 sete × 10 përsëritje",
+    category: "Mobilitet i shtyllës kurrizore",
+    dosage: "2 sete × 10 përsëritje",
     duration: "4 min",
-    ai: true,
-    instructions: "Fillo me katër këmbë. Lëvize shpinën ngadalë nga pozicioni i maces në pozicionin e lopës pa dhimbje të fortë."
+    assessment: true,
+    instructions:
+      "Nga pozicioni me katër pika mbështetëse, lëvizni shpinën ngadalë nga fleksioni në ekstenzion. Frymëmarrja duhet të jetë e qetë dhe lëvizja pa nxitim.",
   },
   {
     id: "ex-3",
     name: "Piriformis stretch",
-    meta: "3 × 30 sekonda",
+    category: "Shtrirje terapeutike",
+    dosage: "3 × 30 sekonda",
     duration: "6 min",
-    ai: false,
-    instructions: "Kryqëzo këmbën mbi gjurin tjetër dhe tërhiq butësisht drejt gjoksit derisa të ndjesh shtrirje të kontrolluar."
+    assessment: false,
+    instructions:
+      "Kryqëzoni këmbën mbi gjurin tjetër dhe tërhiqeni butësisht drejt gjoksit. Duhet të ndjeni shtrirje të lehtë, jo dhimbje të fortë.",
   },
   {
     id: "ex-4",
     name: "Pelvic tilt",
-    meta: "2 sete × 12 përsëritje",
+    category: "Kontroll motorik",
+    dosage: "2 sete × 12 përsëritje",
     duration: "4 min",
-    ai: true,
-    instructions: "Shtype lehtë pjesën e poshtme të shpinës drejt dyshemesë. Lëvizja duhet të jetë e vogël dhe e kontrolluar."
+    assessment: true,
+    instructions:
+      "Shtrihuni në shpinë dhe aktivizoni muskujt abdominalë për ta afruar pjesën lumbale drejt dyshemesë. Lëvizja është e vogël dhe e kontrolluar.",
   },
   {
     id: "ex-5",
     name: "Bird dog",
-    meta: "2 sete × 8 secila anë",
+    category: "Stabilitet dinamik",
+    dosage: "2 sete × 8 secila anë",
     duration: "7 min",
-    ai: true,
-    instructions: "Nga pozicioni me katër këmbë, zgjat dorën dhe këmbën e kundërt. Mbaje trupin stabil dhe mos e lako shpinën."
-  }
+    assessment: true,
+    instructions:
+      "Nga pozicioni me katër pika mbështetëse, zgjatni dorën dhe këmbën e kundërt. Trungu duhet të mbetet stabil pa rotacion të tepërt.",
+  },
+];
+
+const resultFeedback = [
+  "Kontrolli i trungut është i mirë gjatë fazës së ngritjes.",
+  "Rekomandohet ritëm më i ngadalshëm në fazën e zbritjes.",
+  "Mbani legenin në pozicion neutral gjatë përsëritjeve të fundit.",
 ];
 
 export default function AppPreviewPage() {
   const [screen, setScreen] = useState<Screen>("login");
-  const [code, setCode] = useState("ARB-4821");
+  const [code, setCode] = useState(patient.code);
   const [error, setError] = useState("");
-  const [selectedId, setSelectedId] = useState("ex-1");
+  const [selectedId, setSelectedId] = useState(exercises[0].id);
   const [completed, setCompleted] = useState<string[]>(["ex-2"]);
   const [painScore, setPainScore] = useState<number | null>(null);
 
-  const selected = useMemo(() => exercises.find((item) => item.id === selectedId) ?? exercises[0], [selectedId]);
+  const selected = useMemo(() => exercises.find((exercise) => exercise.id === selectedId) ?? exercises[0], [selectedId]);
   const progress = Math.round((completed.length / exercises.length) * 100);
 
-  function login() {
-    if (code.trim().toUpperCase() !== "ARB-4821") {
-      setError("Kodi nuk u gjet. Për demo përdor ARB-4821.");
+  function handleLogin() {
+    if (code.trim().toUpperCase() !== patient.code) {
+      setError("Kodi nuk u gjet. Për demonstrim përdorni kodin ARB-4821.");
       return;
     }
+
     setError("");
-    setScreen("plan");
+    setScreen("overview");
   }
 
-  function openExercise(item: Exercise) {
-    setSelectedId(item.id);
+  function openExercise(exercise: Exercise) {
+    setSelectedId(exercise.id);
     setPainScore(null);
     setScreen("exercise");
   }
 
-  function finish(score?: number) {
-    if (score !== undefined) setPainScore(score);
-    setCompleted((old) => Array.from(new Set([...old, selected.id])));
-    if ((score ?? painScore ?? 0) >= 7) {
-      setScreen("warning");
-    } else {
-      setScreen("saved");
-    }
+  function completeWithPain(score: number) {
+    setPainScore(score);
+    setCompleted((items) => Array.from(new Set([...items, selected.id])));
+    setScreen(score >= 7 ? "warning" : "saved");
   }
 
   return (
-    <main style={styles.shell}>
-      <section style={styles.phone}>
-        <header style={styles.header} onClick={() => setScreen(screen === "login" ? "login" : "plan")}>
+    <main style={styles.page}>
+      <section style={styles.device}>
+        <header style={styles.topBar} onClick={() => setScreen(screen === "login" ? "login" : "overview")}>
           <div style={styles.logo}>FP</div>
           <div>
-            <b style={styles.brand}>FizioPlan</b>
-            <p style={styles.mutedTiny}>Fizioterapia Ime · mobile preview</p>
+            <div style={styles.brand}>FizioPlan</div>
+            <div style={styles.caption}>Patient rehabilitation portal</div>
           </div>
         </header>
 
         {screen === "login" && (
-          <div>
-            <div style={styles.heroBlue}>
-              <div style={styles.logoBig}>FP</div>
-              <h1 style={styles.heroTitle}>Fizioterapia Ime</h1>
-              <p style={styles.heroText}>Platformë rehabilitimi për pacientin</p>
+          <section>
+            <div style={styles.loginHero}>
+              <div style={styles.clinicMark}>FP</div>
+              <div style={styles.loginLabel}>Fizioterapia Ime</div>
+              <h1 style={styles.loginTitle}>Qasje e sigurt për pacientin</h1>
+              <p style={styles.loginText}>Vendosni kodin e dhënë nga fizioterapeuti për të hapur planin personal të rehabilitimit.</p>
             </div>
-            <div style={styles.cardLifted}>
-              <h2 style={styles.title}>Hyr me kodin e pacientit</h2>
-              <p style={styles.text}>Kodi merret nga fizioterapeuti juaj. Pacienti nuk krijon plan vetë.</p>
-              <input style={styles.input} value={code} onChange={(e) => setCode(e.target.value)} />
-              {error && <p style={styles.error}>{error}</p>}
-              <button style={styles.primaryButton} onClick={login}>Hyr në plan</button>
-              <p style={styles.helper}>Demo code: ARB-4821</p>
+
+            <div style={styles.cardOverlap}>
+              <label style={styles.label}>Kodi i pacientit</label>
+              <input style={styles.input} value={code} onChange={(event) => setCode(event.target.value)} />
+              {error && <div style={styles.error}>{error}</div>}
+              <button style={styles.primaryButton} onClick={handleLogin}>Hap planin</button>
+              <p style={styles.helper}>Demo: ARB-4821</p>
             </div>
-          </div>
+          </section>
         )}
 
-        {screen === "plan" && (
-          <div>
-            <div style={styles.planHeader}>
+        {screen === "overview" && (
+          <section>
+            <div style={styles.patientHeader}>
               <div>
-                <p style={styles.whiteSmall}>Mirë se vini,</p>
-                <h2 style={styles.whiteTitle}>Arbër Rexha</h2>
-                <p style={styles.whiteText}>Plani juaj 14 ditë – Lumbosciatica</p>
+                <p style={styles.whiteCaption}>Pacienti</p>
+                <h1 style={styles.patientName}>{patient.name}</h1>
+                <p style={styles.whiteText}>{patient.diagnosis}</p>
               </div>
-              <span style={styles.dayBadge}>Dita 3/14</span>
+              <div style={styles.dayBox}>Dita {patient.day}/{patient.totalDays}</div>
             </div>
-            <div style={styles.progressCard}>
+
+            <div style={styles.summaryCard}>
               <div style={styles.rowBetween}>
-                <b>Ushtrime të kryera sot</b>
-                <b style={{ color: "#2D9E5F" }}>{progress}%</b>
+                <div>
+                  <b style={styles.summaryTitle}>{patient.plan}</b>
+                  <p style={styles.summarySub}>Fizioterapeut: {patient.physiotherapist}</p>
+                </div>
+                <strong style={styles.progressNumber}>{progress}%</strong>
               </div>
               <div style={styles.progressTrack}><div style={{ ...styles.progressFill, width: `${progress}%` }} /></div>
-              <p style={styles.helper}>{completed.length}/{exercises.length} ushtrime të kryera</p>
             </div>
-            <div style={styles.calendarRow}>{[1,2,3,4,5,6,7].map((day) => <span key={day} style={day === 3 ? styles.calendarActive : styles.calendar}>{day}</span>)}</div>
-            <h3 style={styles.sectionTitle}>Ushtrimet për sot</h3>
-            {exercises.map((item) => {
-              const done = completed.includes(item.id);
+
+            <div style={styles.calendarRow}>
+              {[1, 2, 3, 4, 5, 6, 7].map((day) => (
+                <div key={day} style={day === patient.day ? styles.calendarActive : styles.calendarItem}>{day}</div>
+              ))}
+            </div>
+
+            <div style={styles.sectionHeader}>
+              <h2 style={styles.sectionTitle}>Ushtrimet e sotme</h2>
+              <span style={styles.statusPill}>{completed.length}/{exercises.length}</span>
+            </div>
+
+            {exercises.map((exercise) => {
+              const done = completed.includes(exercise.id);
               return (
-                <button key={item.id} style={{ ...styles.exerciseCard, ...(done ? styles.exerciseDone : {}) }} onClick={() => openExercise(item)}>
-                  <span style={{ ...styles.exerciseIcon, ...(done ? styles.exerciseIconDone : {}) }}>{done ? "✓" : "↗"}</span>
-                  <span style={{ flex: 1, textAlign: "left" }}>
-                    <b>{item.name}</b><br />
-                    <small style={styles.muted}>{item.meta} · {item.duration}</small><br />
-                    {item.ai && <small style={styles.aiMini}>AI check aktiv</small>}
+                <button key={exercise.id} style={{ ...styles.exerciseRow, ...(done ? styles.exerciseDone : {}) }} onClick={() => openExercise(exercise)}>
+                  <span style={{ ...styles.exerciseStatus, ...(done ? styles.exerciseStatusDone : {}) }}>{done ? "✓" : ""}</span>
+                  <span style={styles.exerciseContent}>
+                    <b style={styles.exerciseName}>{exercise.name}</b>
+                    <span style={styles.exerciseMeta}>{exercise.category}</span>
+                    <span style={styles.exerciseDosage}>{exercise.dosage} · {exercise.duration}</span>
                   </span>
-                  <span style={styles.chevron}>›</span>
+                  <span style={exercise.assessment ? styles.assessmentBadge : styles.plainBadge}>{exercise.assessment ? "Assessment" : "Standard"}</span>
                 </button>
               );
             })}
-          </div>
+          </section>
         )}
 
         {screen === "exercise" && (
-          <div>
-            <button style={styles.back} onClick={() => setScreen("plan")}>‹ Kthehu te plani</button>
-            <div style={styles.card}>
-              <p style={styles.eyebrow}>Ushtrimi</p>
-              <h2 style={styles.title}>{selected.name}</h2>
-              <div style={styles.videoBox}>▶<span>Video udhëzuese</span></div>
-              <div style={styles.infoPill}><small>Sete</small><b>{selected.meta}</b></div>
-              <div style={styles.infoPill}><small>Koha</small><b>{selected.duration}</b></div>
-              <p style={styles.text}>{selected.instructions}</p>
-              <button style={styles.primaryButton} onClick={() => setScreen("ai-prep")}>Kontrollo lëvizjen me kamerë</button>
-              <button style={styles.secondaryButton} onClick={() => setScreen("pain")}>E përfundova ushtrimin</button>
+          <section>
+            <button style={styles.backButton} onClick={() => setScreen("overview")}>Kthehu te plani</button>
+            <div style={styles.screenCard}>
+              <p style={styles.screenLabel}>Detajet e ushtrimit</p>
+              <h1 style={styles.screenTitle}>{selected.name}</h1>
+              <div style={styles.videoPanel}>
+                <div style={styles.videoPlay}>▶</div>
+                <span>Video udhëzuese</span>
+              </div>
+              <div style={styles.infoGrid}>
+                <Info label="Kategoria" value={selected.category} />
+                <Info label="Dozimi" value={selected.dosage} />
+                <Info label="Kohëzgjatja" value={selected.duration} />
+              </div>
+              <p style={styles.instructions}>{selected.instructions}</p>
+              <button style={styles.primaryButton} onClick={() => setScreen("assessment")}>Kontrollo lëvizjen</button>
+              <button style={styles.secondaryButton} onClick={() => setScreen("pain")}>Shëno si të kryer</button>
             </div>
-          </div>
+          </section>
         )}
 
-        {screen === "ai-prep" && (
-          <div>
-            <button style={styles.back} onClick={() => setScreen("exercise")}>‹ Kthehu te ushtrimi</button>
-            <div style={styles.card}>
-              <p style={styles.eyebrow}>AI Movement Check</p>
-              <h2 style={styles.title}>Përgatitu për kontrollin me kamerë</h2>
-              <div style={styles.cameraPrep}>📱<p>Telefoni duhet të shohë trupin qartë.</p></div>
-              <Instruction text="Vendose telefonin në një vend stabil." />
-              <Instruction text="Trupi duhet të shihet qartë në ekran." />
-              <Instruction text="Bëje ushtrimin ngadalë dhe me kontroll." />
-              <div style={styles.safety}>AI mat vetëm cilësinë e lëvizjes. Nuk diagnostikon dhe nuk ndryshon planin.</div>
-              <button style={styles.primaryButton} onClick={() => setScreen("ai-checking")}>Fillo kontrollin</button>
+        {screen === "assessment" && (
+          <section>
+            <button style={styles.backButton} onClick={() => setScreen("exercise")}>Kthehu te ushtrimi</button>
+            <div style={styles.screenCard}>
+              <p style={styles.screenLabel}>Movement assessment</p>
+              <h1 style={styles.screenTitle}>Përgatitja për kontroll</h1>
+              <div style={styles.prepPanel}>
+                <div style={styles.deviceStand} />
+                <p style={styles.instructions}>Vendoseni telefonin në një sipërfaqe stabile. Trupi duhet të shihet qartë në ekran para fillimit të ushtrimit.</p>
+              </div>
+              <Checklist text="Mbani distancë të mjaftueshme nga kamera." />
+              <Checklist text="Kryeni ushtrimin me ritëm të ngadalshëm." />
+              <Checklist text="Në rast dhimbjeje të fortë, ndërpriteni ushtrimin." />
+              <div style={styles.safetyNote}>Ky kontroll vlerëson cilësinë e lëvizjes. Nuk është diagnozë dhe nuk zëvendëson fizioterapeutin.</div>
+              <button style={styles.primaryButton} onClick={() => setScreen("result")}>Start assessment</button>
             </div>
-          </div>
+          </section>
         )}
 
-        {screen === "ai-checking" && (
-          <div style={styles.darkScreen}>
-            <p style={styles.darkSmall}>{selected.name}</p>
-            <div style={styles.cameraFrame}>
-              <div style={styles.bodyGuide}><div style={styles.head}/><div style={styles.bodyLine}/><div style={styles.armLine}/><div style={styles.legLine}/></div>
-              <div style={styles.scanLine}/>
+        {screen === "result" && (
+          <section>
+            <div style={styles.resultPanel}>
+              <p style={styles.screenLabel}>Assessment result</p>
+              <div style={styles.scoreCircle}>82%</div>
+              <h1 style={styles.screenTitle}>Lëvizje e kontrolluar</h1>
+              <div style={styles.resultStatus}>Status: stabil</div>
+              {resultFeedback.map((item) => <Checklist key={item} text={item} />)}
+              <div style={styles.safetyNote}>Vendimi klinik mbetet përgjegjësi e fizioterapeutit.</div>
+              <button style={styles.primaryButton} onClick={() => setScreen("pain")}>Raporto dhimbjen</button>
             </div>
-            <p style={styles.countdownHint}>Duke analizuar lëvizjen...</p>
-            <h1 style={styles.countdown}>3 · 2 · 1</h1>
-            <button style={styles.primaryButton} onClick={() => setScreen("ai-result")}>Shfaq rezultatin</button>
-          </div>
-        )}
-
-        {screen === "ai-result" && (
-          <div style={styles.resultCard}>
-            <p style={styles.eyebrow}>Rezultati i AI</p>
-            <h1 style={styles.score}>82%</h1>
-            <h2 style={styles.title}>Lëvizje e mirë</h2>
-            <Instruction text="Mbaje legenin më stabil gjatë ngritjes." />
-            <Instruction text="Mos e shpejto lëvizjen." />
-            <Instruction text="Nëse dhimbja rritet, ndalo dhe kontakto fizioterapeutin." />
-            <div style={styles.safety}>Ky feedback nuk e zëvendëson vlerësimin e fizioterapeutit.</div>
-            <button style={styles.primaryButton} onClick={() => setScreen("pain")}>Raporto dhimbjen</button>
-          </div>
+          </section>
         )}
 
         {screen === "pain" && (
-          <div style={styles.card}>
-            <p style={styles.eyebrow}>Siguria</p>
-            <h2 style={styles.title}>Sa dhimbje pate gjatë ushtrimit?</h2>
-            <p style={styles.text}>Zgjedh 0–10. Nëse dhimbja është 7 ose më shumë, ndalo ushtrimin.</p>
-            <div style={styles.painGrid}>{Array.from({ length: 11 }, (_, i) => <button key={i} style={styles.painButton} onClick={() => finish(i)}>{i}</button>)}</div>
-          </div>
+          <section>
+            <div style={styles.screenCard}>
+              <p style={styles.screenLabel}>Raportim i sigurisë</p>
+              <h1 style={styles.screenTitle}>Dhimbja gjatë ushtrimit</h1>
+              <p style={styles.instructions}>Zgjidhni nivelin e dhimbjes nga 0 deri në 10 pas përfundimit të ushtrimit.</p>
+              <div style={styles.painGrid}>
+                {Array.from({ length: 11 }, (_, score) => (
+                  <button key={score} style={styles.painButton} onClick={() => completeWithPain(score)}>{score}</button>
+                ))}
+              </div>
+            </div>
+          </section>
         )}
 
         {screen === "warning" && (
-          <div style={styles.warningCard}>
-            <h1>⚠️</h1>
-            <h2 style={styles.title}>Ndalo ushtrimin</h2>
-            <p style={styles.text}>Dhimbja është {painScore}/10. Kontakto fizioterapeutin para se të vazhdosh.</p>
-            <button style={styles.primaryButton} onClick={() => setScreen("plan")}>Kthehu te plani</button>
-          </div>
+          <section>
+            <div style={styles.warningCard}>
+              <p style={styles.warningLabel}>Kujdes klinik</p>
+              <h1 style={styles.screenTitle}>Ndërpriteni ushtrimin</h1>
+              <p style={styles.instructions}>Dhimbja e raportuar është {painScore}/10. Kontaktoni fizioterapeutin para se të vazhdoni me këtë ushtrim.</p>
+              <button style={styles.primaryButton} onClick={() => setScreen("overview")}>Kthehu te plani</button>
+            </div>
+          </section>
         )}
 
         {screen === "saved" && (
-          <div style={styles.card}>
-            <h1 style={styles.savedIcon}>✓</h1>
-            <h2 style={styles.title}>U ruajt kontrolli</h2>
-            <p style={styles.text}>Rezultati u ruajt në demo mode.</p>
-            <button style={styles.primaryButton} onClick={() => setScreen("plan")}>Kthehu te plani</button>
-          </div>
+          <section>
+            <div style={styles.screenCard}>
+              <div style={styles.savedMark}>✓</div>
+              <h1 style={styles.screenTitle}>Ushtrimi u regjistrua</h1>
+              <p style={styles.instructions}>Progresi dhe raportimi i dhimbjes u ruajtën për kontroll nga fizioterapeuti.</p>
+              <button style={styles.primaryButton} onClick={() => setScreen("overview")}>Kthehu te plani</button>
+            </div>
+          </section>
         )}
       </section>
     </main>
   );
 }
 
-function Instruction({ text }: { text: string }) {
-  return <div style={styles.instruction}><b>✓</b><span>{text}</span></div>;
+function Checklist({ text }: { text: string }) {
+  return (
+    <div style={styles.checkRow}>
+      <span style={styles.checkDot}>✓</span>
+      <span>{text}</span>
+    </div>
+  );
 }
 
-const styles: Record<string, React.CSSProperties> = {
-  shell: { minHeight: "100vh", padding: 16, background: "linear-gradient(180deg,#F5FAFD,#EAF5FB)", display: "grid", placeItems: "start center" },
-  phone: { width: "min(430px, 100%)", minHeight: "calc(100vh - 32px)", background: "#F5FAFD", borderRadius: 34, padding: 18, boxShadow: "0 24px 80px rgba(19,65,98,.18)", overflow: "hidden" },
-  header: { display: "flex", alignItems: "center", gap: 12, marginBottom: 18, cursor: "pointer" },
-  logo: { width: 46, height: 46, borderRadius: 16, background: "#2C6EAB", color: "white", display: "grid", placeItems: "center", fontWeight: 900 },
-  brand: { fontSize: 22, color: "#102033" },
-  mutedTiny: { margin: 0, fontSize: 13, color: "#6B7A90" },
-  heroBlue: { background: "#2C6EAB", borderRadius: 30, padding: 28, textAlign: "center", marginBottom: -18 },
-  logoBig: { width: 76, height: 76, borderRadius: 38, background: "white", color: "#2C6EAB", display: "grid", placeItems: "center", fontSize: 28, fontWeight: 900, margin: "0 auto 14px" },
-  heroTitle: { color: "white", fontSize: 30, margin: 0 },
-  heroText: { color: "rgba(255,255,255,.82)", margin: "8px 0 0" },
-  card: { background: "white", borderRadius: 26, padding: 22, border: "1px solid #DCEAF2", boxShadow: "0 10px 28px rgba(19,65,98,.08)" },
-  cardLifted: { background: "white", borderRadius: 26, padding: 22, border: "1px solid #DCEAF2", boxShadow: "0 12px 30px rgba(19,65,98,.12)" },
-  title: { color: "#102033", fontSize: 27, lineHeight: "32px", letterSpacing: -0.5, margin: "0 0 10px" },
-  text: { color: "#496175", fontSize: 16, lineHeight: "24px", margin: "0 0 16px" },
-  input: { width: "100%", border: "2px solid #D1E5F8", borderRadius: 16, padding: 16, fontSize: 18, fontWeight: 800, marginBottom: 12 },
-  error: { color: "#EF4444", background: "#FEF2F2", border: "1px solid #FCA5A5", borderRadius: 12, padding: 12 },
-  primaryButton: { width: "100%", border: 0, background: "#2D9E5F", color: "white", borderRadius: 18, padding: "17px 18px", fontSize: 17, fontWeight: 900, cursor: "pointer", marginTop: 10 },
-  secondaryButton: { width: "100%", border: 0, background: "#E8F4FD", color: "#2C6EAB", borderRadius: 18, padding: "17px 18px", fontSize: 17, fontWeight: 900, cursor: "pointer", marginTop: 10 },
-  helper: { color: "#6B7A90", textAlign: "center", fontSize: 13, margin: "10px 0 0" },
-  planHeader: { background: "#2C6EAB", borderRadius: 28, padding: 22, display: "flex", justifyContent: "space-between", gap: 14, marginBottom: 14 },
-  whiteSmall: { color: "rgba(255,255,255,.82)", margin: 0 },
-  whiteTitle: { color: "white", fontSize: 25, margin: "2px 0" },
-  whiteText: { color: "rgba(255,255,255,.82)", fontSize: 14, margin: "6px 0 0" },
-  dayBadge: { alignSelf: "flex-start", padding: "9px 12px", borderRadius: 999, background: "rgba(255,255,255,.18)", color: "white", fontWeight: 900, fontSize: 12 },
-  progressCard: { background: "white", borderRadius: 22, padding: 18, border: "1px solid #DCEAF2", marginBottom: 14 },
-  rowBetween: { display: "flex", justifyContent: "space-between", alignItems: "center" },
-  progressTrack: { height: 11, background: "#EAF2F7", borderRadius: 999, overflow: "hidden", marginTop: 12 },
-  progressFill: { height: "100%", background: "#2D9E5F" },
-  calendarRow: { display: "flex", gap: 8, marginBottom: 20 },
-  calendar: { width: 42, height: 42, borderRadius: 15, background: "white", border: "1px solid #DCEAF2", display: "grid", placeItems: "center", color: "#6B7A90", fontWeight: 800 },
-  calendarActive: { width: 42, height: 42, borderRadius: 15, background: "#2C6EAB", display: "grid", placeItems: "center", color: "white", fontWeight: 900 },
-  sectionTitle: { color: "#102033", fontSize: 20, margin: "0 0 12px" },
-  exerciseCard: { width: "100%", display: "flex", alignItems: "center", gap: 14, background: "white", borderRadius: 20, padding: 16, border: "1.5px solid #DCEAF2", marginBottom: 12, cursor: "pointer" },
-  exerciseDone: { background: "#F0FFF4", borderColor: "#BBF7D0" },
-  exerciseIcon: { width: 48, height: 48, borderRadius: 24, background: "#2C6EAB", color: "white", display: "grid", placeItems: "center", fontWeight: 900 },
-  exerciseIconDone: { background: "#2D9E5F" },
-  muted: { color: "#6B7A90" },
-  aiMini: { color: "#2C6EAB", fontWeight: 900 },
-  chevron: { fontSize: 34, color: "#9AAABD" },
-  back: { background: "transparent", border: 0, color: "#2C6EAB", fontWeight: 900, marginBottom: 14, fontSize: 16, cursor: "pointer" },
-  eyebrow: { color: "#2C6EAB", fontSize: 13, fontWeight: 900, textTransform: "uppercase", letterSpacing: 1, margin: "0 0 8px" },
-  videoBox: { height: 190, borderRadius: 24, background: "#E8F4FD", display: "grid", placeItems: "center", color: "#2C6EAB", fontSize: 48, fontWeight: 900, marginBottom: 16 },
-  infoPill: { background: "#F5F8FA", borderRadius: 14, padding: 13, border: "1px solid #E2EBF5", marginBottom: 10, display: "grid", gap: 3 },
-  cameraPrep: { background: "#E8F4FD", borderRadius: 24, padding: 24, textAlign: "center", fontSize: 58, marginBottom: 16 },
-  instruction: { display: "flex", gap: 10, background: "#F8FCFF", borderRadius: 15, padding: 13, border: "1px solid #E2EBF5", marginBottom: 9, color: "#102033" },
-  safety: { background: "#FFFBEB", borderRadius: 15, padding: 13, border: "1px solid #FDE68A", color: "#8A5C09", fontSize: 13, lineHeight: "19px", marginTop: 8 },
-  darkScreen: { background: "#080F1A", borderRadius: 28, padding: 18, minHeight: 620, display: "grid", placeItems: "center", color: "white" },
-  darkSmall: { color: "rgba(255,255,255,.72)" },
-  cameraFrame: { width: "100%", height: 310, borderRadius: 26, border: "2px solid rgba(98,214,164,.6)", background: "#0D1E32", display: "grid", placeItems: "center", position: "relative", overflow: "hidden" },
-  bodyGuide: { position: "relative", width: 150, height: 210, display: "grid", justifyItems: "center" },
-  head: { width: 42, height: 42, borderRadius: "50%", border: "3px solid rgba(255,255,255,.78)" },
-  bodyLine: { width: 4, height: 82, background: "rgba(255,255,255,.78)", borderRadius: 999, marginTop: 8 },
-  armLine: { position: "absolute", width: 118, height: 4, background: "rgba(255,255,255,.58)", borderRadius: 999, top: 62, transform: "rotate(-8deg)" },
-  legLine: { position: "absolute", width: 118, height: 4, background: "rgba(255,255,255,.58)", borderRadius: 999, bottom: 48, transform: "rotate(22deg)" },
-  scanLine: { position: "absolute", left: 0, right: 0, top: "48%", height: 3, background: "#62D6A4", opacity: .86 },
-  countdownHint: { color: "rgba(255,255,255,.72)", fontSize: 16, margin: 0 },
-  countdown: { color: "white", fontSize: 48, margin: 0 },
-  resultCard: { background: "white", borderRadius: 28, padding: 22, border: "1px solid #BBF7D0" },
-  score: { fontSize: 78, color: "#2D9E5F", margin: 0, letterSpacing: -3 },
-  painGrid: { display: "flex", flexWrap: "wrap", gap: 10, justifyContent: "center" },
-  painButton: { width: 54, height: 54, borderRadius: 18, background: "#E8F4FD", border: "1px solid #D1E5F8", color: "#2C6EAB", fontSize: 20, fontWeight: 900, cursor: "pointer" },
-  warningCard: { background: "#FEF2F2", borderRadius: 28, padding: 22, border: "1px solid #FCA5A5" },
-  savedIcon: { width: 70, height: 70, borderRadius: "50%", background: "#2D9E5F", color: "white", display: "grid", placeItems: "center", margin: "0 0 16px" }
+function Info({ label, value }: { label: string; value: string }) {
+  return (
+    <div style={styles.infoBox}>
+      <span>{label}</span>
+      <strong>{value}</strong>
+    </div>
+  );
+}
+
+const styles: Record<string, CSSProperties> = {
+  page: {
+    minHeight: "100vh",
+    background: "linear-gradient(180deg, #EDF4F8 0%, #F8FBFD 100%)",
+    padding: 18,
+    display: "flex",
+    justifyContent: "center",
+    color: "#162433",
+  },
+  device: {
+    width: "min(430px, 100%)",
+    minHeight: "calc(100vh - 36px)",
+    background: "#F7FAFC",
+    border: "1px solid #D6E2EA",
+    borderRadius: 32,
+    padding: 18,
+    boxShadow: "0 22px 70px rgba(19, 45, 65, 0.16)",
+  },
+  topBar: { display: "flex", alignItems: "center", gap: 12, marginBottom: 18, cursor: "pointer" },
+  logo: { width: 42, height: 42, borderRadius: 12, display: "grid", placeItems: "center", background: "#174A73", color: "#FFFFFF", fontWeight: 800, letterSpacing: -0.5 },
+  brand: { fontSize: 20, fontWeight: 800, color: "#162433", lineHeight: 1.1 },
+  caption: { fontSize: 12, color: "#6D7E8D", marginTop: 2 },
+  loginHero: { background: "linear-gradient(145deg, #174A73, #1F6B96)", borderRadius: 26, padding: 26, textAlign: "center", color: "#FFFFFF", marginBottom: -16 },
+  clinicMark: { width: 70, height: 70, borderRadius: 18, margin: "0 auto 16px", display: "grid", placeItems: "center", background: "rgba(255,255,255,0.12)", border: "1px solid rgba(255,255,255,0.24)", fontWeight: 900, fontSize: 24 },
+  loginLabel: { fontSize: 14, color: "rgba(255,255,255,0.78)", marginBottom: 8 },
+  loginTitle: { fontSize: 30, lineHeight: "34px", margin: "0 0 10px", letterSpacing: -1.2 },
+  loginText: { color: "rgba(255,255,255,0.82)", lineHeight: "22px", fontSize: 15, margin: 0 },
+  cardOverlap: { background: "#FFFFFF", borderRadius: 22, padding: 22, border: "1px solid #DCE7EE", boxShadow: "0 12px 28px rgba(19,45,65,0.10)" },
+  label: { display: "block", color: "#526879", fontSize: 13, fontWeight: 700, marginBottom: 8 },
+  input: { width: "100%", border: "1.5px solid #C8D8E3", borderRadius: 14, background: "#FFFFFF", color: "#162433", padding: "15px 14px", fontSize: 18, fontWeight: 800, letterSpacing: 1.2, outline: "none" },
+  error: { color: "#9A3412", background: "#FFF7ED", border: "1px solid #FED7AA", borderRadius: 12, padding: 12, marginTop: 12, fontSize: 14 },
+  primaryButton: { width: "100%", border: 0, borderRadius: 14, background: "#18724E", color: "#FFFFFF", padding: "15px 18px", fontSize: 16, fontWeight: 800, cursor: "pointer", marginTop: 14 },
+  secondaryButton: { width: "100%", border: "1px solid #C8D8E3", borderRadius: 14, background: "#EEF5F8", color: "#174A73", padding: "15px 18px", fontSize: 16, fontWeight: 800, cursor: "pointer", marginTop: 10 },
+  helper: { textAlign: "center", color: "#6D7E8D", fontSize: 13, margin: "10px 0 0" },
+  patientHeader: { borderRadius: 24, padding: 22, background: "#174A73", color: "#FFFFFF", display: "flex", justifyContent: "space-between", gap: 14, marginBottom: 14 },
+  whiteCaption: { margin: 0, color: "rgba(255,255,255,0.70)", fontSize: 13, fontWeight: 700 },
+  patientName: { margin: "3px 0 6px", fontSize: 27, letterSpacing: -0.7 },
+  whiteText: { margin: 0, color: "rgba(255,255,255,0.78)", fontSize: 14 },
+  dayBox: { alignSelf: "flex-start", border: "1px solid rgba(255,255,255,0.2)", background: "rgba(255,255,255,0.12)", color: "#FFFFFF", padding: "8px 11px", borderRadius: 999, fontSize: 12, fontWeight: 800 },
+  summaryCard: { background: "#FFFFFF", border: "1px solid #DCE7EE", borderRadius: 20, padding: 16, marginBottom: 14 },
+  rowBetween: { display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 },
+  summaryTitle: { display: "block", color: "#162433", fontSize: 15 },
+  summarySub: { color: "#6D7E8D", fontSize: 13, margin: "4px 0 0" },
+  progressNumber: { color: "#18724E", fontSize: 22 },
+  progressTrack: { height: 9, background: "#E6EEF3", borderRadius: 999, overflow: "hidden", marginTop: 12 },
+  progressFill: { height: "100%", background: "#18724E" },
+  calendarRow: { display: "flex", gap: 8, marginBottom: 18 },
+  calendarItem: { width: 41, height: 41, borderRadius: 13, display: "grid", placeItems: "center", background: "#FFFFFF", border: "1px solid #DCE7EE", color: "#6D7E8D", fontWeight: 800 },
+  calendarActive: { width: 41, height: 41, borderRadius: 13, display: "grid", placeItems: "center", background: "#174A73", color: "#FFFFFF", fontWeight: 900 },
+  sectionHeader: { display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 },
+  sectionTitle: { margin: 0, color: "#162433", fontSize: 19, letterSpacing: -0.4 },
+  statusPill: { background: "#E8F2F7", color: "#174A73", borderRadius: 999, padding: "6px 10px", fontSize: 12, fontWeight: 800 },
+  exerciseRow: { width: "100%", border: "1px solid #DCE7EE", background: "#FFFFFF", borderRadius: 18, padding: 14, display: "flex", alignItems: "center", gap: 12, marginBottom: 10, cursor: "pointer", textAlign: "left" },
+  exerciseDone: { borderColor: "#BBD9CB", background: "#F4FBF7" },
+  exerciseStatus: { width: 36, height: 36, borderRadius: 12, background: "#E8F2F7", border: "1px solid #C8D8E3", display: "grid", placeItems: "center", color: "#18724E", fontWeight: 900, flex: "0 0 auto" },
+  exerciseStatusDone: { background: "#18724E", color: "#FFFFFF", borderColor: "#18724E" },
+  exerciseContent: { flex: 1, display: "grid", gap: 2 },
+  exerciseName: { fontSize: 16, color: "#162433" },
+  exerciseMeta: { fontSize: 12, color: "#174A73", fontWeight: 700 },
+  exerciseDosage: { fontSize: 12, color: "#6D7E8D" },
+  assessmentBadge: { borderRadius: 999, background: "#EDF6FA", color: "#174A73", padding: "6px 9px", fontSize: 11, fontWeight: 800 },
+  plainBadge: { borderRadius: 999, background: "#F1F4F6", color: "#6D7E8D", padding: "6px 9px", fontSize: 11, fontWeight: 800 },
+  backButton: { background: "transparent", border: 0, color: "#174A73", fontWeight: 800, margin: "0 0 12px", padding: 0, cursor: "pointer" },
+  screenCard: { background: "#FFFFFF", border: "1px solid #DCE7EE", borderRadius: 22, padding: 20, boxShadow: "0 8px 20px rgba(19,45,65,0.06)" },
+  screenLabel: { margin: "0 0 8px", color: "#174A73", fontSize: 12, fontWeight: 900, textTransform: "uppercase", letterSpacing: 0.8 },
+  screenTitle: { margin: "0 0 14px", color: "#162433", fontSize: 26, lineHeight: "31px", letterSpacing: -0.8 },
+  videoPanel: { height: 184, border: "1px solid #D6E2EA", background: "#EEF5F8", borderRadius: 20, marginBottom: 14, display: "grid", placeItems: "center", color: "#174A73", fontWeight: 800, gap: 6 },
+  videoPlay: { width: 52, height: 52, borderRadius: 26, display: "grid", placeItems: "center", background: "#FFFFFF", boxShadow: "0 8px 20px rgba(23,74,115,0.12)" },
+  infoGrid: { display: "grid", gap: 9, marginBottom: 14 },
+  infoBox: { border: "1px solid #DCE7EE", background: "#F8FBFD", borderRadius: 13, padding: 12, display: "grid", gap: 4, color: "#6D7E8D", fontSize: 12 },
+  instructions: { margin: "0 0 10px", color: "#4F6475", fontSize: 15, lineHeight: "23px" },
+  prepPanel: { border: "1px solid #DCE7EE", background: "#F8FBFD", borderRadius: 18, padding: 18, marginBottom: 14, display: "grid", justifyItems: "center", gap: 12 },
+  deviceStand: { width: 74, height: 116, borderRadius: 18, border: "6px solid #174A73", background: "linear-gradient(180deg,#E8F2F7,#FFFFFF)", boxShadow: "0 10px 22px rgba(23,74,115,.12)" },
+  checkRow: { display: "flex", alignItems: "flex-start", gap: 10, border: "1px solid #DCE7EE", background: "#FFFFFF", borderRadius: 13, padding: 12, marginBottom: 9, color: "#334B5C", fontSize: 14, lineHeight: "20px" },
+  checkDot: { width: 20, height: 20, borderRadius: 10, background: "#E5F3EC", color: "#18724E", display: "grid", placeItems: "center", fontWeight: 900, flex: "0 0 auto" },
+  safetyNote: { border: "1px solid #E8D7AA", background: "#FFF9EA", color: "#74521A", borderRadius: 13, padding: 12, fontSize: 13, lineHeight: "19px", marginTop: 10 },
+  resultPanel: { background: "#FFFFFF", border: "1px solid #BBD9CB", borderRadius: 22, padding: 20, boxShadow: "0 8px 20px rgba(19,45,65,0.06)" },
+  scoreCircle: { width: 116, height: 116, borderRadius: 58, display: "grid", placeItems: "center", marginBottom: 16, background: "#E5F3EC", color: "#18724E", fontSize: 32, fontWeight: 900, border: "1px solid #BBD9CB" },
+  resultStatus: { display: "inline-flex", alignSelf: "flex-start", borderRadius: 999, background: "#E5F3EC", color: "#18724E", padding: "7px 11px", fontSize: 13, fontWeight: 800, marginBottom: 14 },
+  painGrid: { display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10 },
+  painButton: { height: 48, border: "1px solid #C8D8E3", borderRadius: 14, background: "#FFFFFF", color: "#174A73", fontSize: 18, fontWeight: 900, cursor: "pointer" },
+  warningCard: { background: "#FFF7ED", border: "1px solid #FED7AA", borderRadius: 22, padding: 20 },
+  warningLabel: { color: "#9A3412", textTransform: "uppercase", letterSpacing: 0.8, fontSize: 12, fontWeight: 900, margin: "0 0 8px" },
+  savedMark: { width: 64, height: 64, borderRadius: 32, display: "grid", placeItems: "center", background: "#18724E", color: "#FFFFFF", fontSize: 32, fontWeight: 900, marginBottom: 16 },
 };
