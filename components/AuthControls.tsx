@@ -8,8 +8,8 @@ export function AuthControls() {
   if (!clerkConfigured) {
     return (
       <div className="auth-controls">
-        <a className="auth-button auth-button-secondary" href="/sign-in">Hyr</a>
-        <a className="auth-button" href="/sign-up">Krijo llogari</a>
+        <a className="auth-button auth-button-secondary" href="/physiotherapist-portal">Hyr</a>
+        <a className="auth-button" href="/support">Kërko qasje</a>
       </div>
     );
   }
