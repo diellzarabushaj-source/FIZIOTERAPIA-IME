@@ -4,6 +4,26 @@ Production URL:
 
 - `https://fizioterapia-ime.vercel.app`
 
+## Automated smoke test
+
+Run after a fresh Vercel deployment:
+
+```bash
+npm run smoke:production
+```
+
+Optional custom URL:
+
+```bash
+SMOKE_BASE_URL="https://your-preview-url.vercel.app" npm run smoke:production
+```
+
+The script checks public routes only and fails if any route returns a non-200 status or misses required page text.
+
+Script file:
+
+- `scripts/smoke-test-production.mjs`
+
 ## Current smoke test result
 
 Date: 2026-07-08
@@ -20,7 +40,7 @@ The latest GitHub routes from Phase 16 are not live yet at the time of this chec
 - `/pilot-launch` → 404 on production
 - `/patient-handout` → pending production deployment
 
-This means Vercel production is still serving an older deployment. It should be redeployed from the latest GitHub commits before Codex work continues.
+This means Vercel production is still serving an older deployment. It should be redeployed from the latest GitHub commits before pilot testing continues.
 
 ## Routes to smoke test after redeploy
 
@@ -88,6 +108,10 @@ Treat these as P0/P1 before pilot:
 - Footer points to routes that are not deployed.
 - Vercel build fails.
 
-## Required pre-Codex action
+## Required action
 
-Trigger or wait for a fresh Vercel deployment from the latest GitHub commits, then rerun this smoke test.
+Trigger or wait for a fresh Vercel deployment from the latest GitHub commits, then run:
+
+```bash
+npm run smoke:production
+```
