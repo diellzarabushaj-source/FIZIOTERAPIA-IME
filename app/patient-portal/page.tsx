@@ -1,9 +1,10 @@
 import { BrandMark } from "@/components/BrandMark";
 import { patientLoginAction } from "./actions";
 
-export default async function PatientPortalPage({ searchParams }: { searchParams?: Promise<{ error?: string }> }) {
+export default async function PatientPortalPage({ searchParams }: { searchParams?: Promise<{ error?: string; code?: string }> }) {
   const params = await searchParams;
   const error = params?.error;
+  const code = params?.code || "";
 
   return (
     <main className="page patient-login-page">
@@ -18,16 +19,16 @@ export default async function PatientPortalPage({ searchParams }: { searchParams
 
       <section className="patient-login-hero">
         <div className="patient-login-copy">
-          <span className="badge">Patient Portal · Hyrje me kod</span>
-          <h1>Plani yt i fizioterapisë, në një vend të thjeshtë.</h1>
+          <span className="badge">Patient Portal · Vetëm me kod</span>
+          <h1>Hyr thjesht me kodin personal.</h1>
           <p>
-            Pacienti nuk krijon plan vetë. Fizioterapeuti e gjeneron username-in dhe kodin personal,
-            pastaj pacienti sheh ushtrimet, progresin, dhimbjen dhe AI Movement Check.
+            Pacienti nuk krijon llogari dhe nuk shkruan username. Fizioterapeuti gjeneron një kod unik për një pacient.
+            Pacienti e shkruan kodin ose skanon QR code dhe hyn direkt në planin e vet.
           </p>
           <div className="patient-login-highlights">
-            <div><strong>01</strong><span>Merr kodin nga fizioterapeuti</span></div>
-            <div><strong>02</strong><span>Hyn në planin personal</span></div>
-            <div><strong>03</strong><span>Raporton dhimbjen 0–10</span></div>
+            <div><strong>01</strong><span>Merr kodin unik nga fizioterapeuti</span></div>
+            <div><strong>02</strong><span>Shkruaje kodin ose skano QR</span></div>
+            <div><strong>03</strong><span>Hyn në planin personal</span></div>
           </div>
         </div>
 
@@ -35,15 +36,13 @@ export default async function PatientPortalPage({ searchParams }: { searchParams
           <BrandMark compact />
           <div>
             <span className="mini-badge">Qasje e sigurt</span>
-            <h2>Hyr në dashboard</h2>
-            <p>Shkruaj username-in dhe kodin që ta ka dhënë fizioterapeuti.</p>
+            <h2>Hyr me kod</h2>
+            <p>Shkruaj vetëm kodin që ta ka dhënë fizioterapeuti. Asgjë tjetër.</p>
           </div>
-          <label className="label">Username i pacientit</label>
-          <input className="input" name="username" placeholder="p.sh. arber-krasniqi-4821" required />
           <label className="label">Kodi i pacientit</label>
-          <input className="input" name="code" placeholder="p.sh. ARB-4821" required />
-          {error === "invalid" && <div className="role-warning">Username ose kodi nuk është i saktë.</div>}
-          {error === "missing" && <div className="role-warning">Shkruaj username dhe kodin e pacientit.</div>}
+          <input className="input patient-code-input" name="code" defaultValue={code} placeholder="p.sh. ARB-482193" required />
+          {error === "invalid" && <div className="role-warning">Kodi nuk është i saktë ose nuk është aktiv.</div>}
+          {error === "missing" && <div className="role-warning">Shkruaj kodin e pacientit.</div>}
           <button className="button" type="submit">Hyr në dashboard</button>
         </form>
       </section>
@@ -62,8 +61,13 @@ export default async function PatientPortalPage({ searchParams }: { searchParams
         <div className="patient-info-grid">
           <article>
             <span className="mini-badge">Për pacientë</span>
-            <h2>Qasje me username + kod</h2>
-            <p>Pacienti hyn pa krijuar llogari. Qasja lidhet me planin që e ka krijuar fizioterapeuti.</p>
+            <h2>Qasje vetëm me kod</h2>
+            <p>Pacienti nuk ka username/password. Kodi unik e lidh direkt me planin që e ka krijuar fizioterapeuti.</p>
+          </article>
+          <article>
+            <span className="mini-badge">QR Code</span>
+            <h2>Skano dhe hyr</h2>
+            <p>Fizioterapeuti mund t’ia japë pacientit QR code. QR hap linkun e kodit dhe pacienti hyn direkt.</p>
           </article>
           <article>
             <span className="mini-badge">Siguri klinike</span>
@@ -74,11 +78,6 @@ export default async function PatientPortalPage({ searchParams }: { searchParams
             <span className="mini-badge">AI Movement Check</span>
             <h2>Feedback, jo diagnozë</h2>
             <p>AI jep vetëm feedback për cilësinë e lëvizjes dhe nuk e zëvendëson fizioterapeutin.</p>
-          </article>
-          <article>
-            <span className="mini-badge">Real data</span>
-            <h2>Supabase + plan real</h2>
-            <p>Plani, ushtrimet, logs, dhimbja, mesazhet dhe AI score ruhen në databazë.</p>
           </article>
         </div>
       </section>
