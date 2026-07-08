@@ -9,9 +9,10 @@
     "android": "expo start --android",
     "web": "expo start --web",
     "typecheck": "tsc --noEmit",
-    "build:preview": "eas build --profile preview --platform all",
-    "build:ios": "eas build --profile production --platform ios",
-    "build:android": "eas build --profile production --platform android",
+    "generate:assets": "node scripts/generate-assets.mjs",
+    "build:preview": "npm run generate:assets && eas build --profile preview --platform all",
+    "build:ios": "npm run generate:assets && eas build --profile production --platform ios",
+    "build:android": "npm run generate:assets && eas build --profile production --platform android",
     "submit:ios": "eas submit --platform ios",
     "submit:android": "eas submit --platform android"
   },
@@ -25,6 +26,7 @@
   },
   "devDependencies": {
     "@types/react": "~19.0.10",
+    "sharp": "^0.34.1",
     "typescript": "~5.8.3"
   }
 }
