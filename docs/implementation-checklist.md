@@ -16,38 +16,18 @@ Status: Foundation applied.
 Applied in Supabase project `squgbcmzyaclafnioczq`:
 
 - RLS enabled on core public tables.
-- Policies created for:
-  - profiles
-  - patients
-  - exercise_library
-  - plans
-  - plan_exercises
-  - exercise_logs
-  - ai_checks
-  - physio_messages
-  - subscriptions
-  - notifications
-- Added patient fields:
-  - patient_username
-  - notes
-- Added exercise library fields:
-  - is_default
-  - owner_physio_id
-  - status
-- Added indexes for physiotherapist, patient, plan, logs, messages, subscriptions and notifications.
+- Policies created for profiles, patients, exercise_library, plans, plan_exercises, exercise_logs, ai_checks, physio_messages, subscriptions and notifications.
+- Added patient fields: patient_username, notes.
+- Added exercise library fields: is_default, owner_physio_id, status.
+- Added monthly billing fields to subscriptions.
 - Seeded default owner profile for Dr. Diellza.
-- Seeded starter exercise library:
-  - Glute bridge
-  - Cat cow
-  - Piriformis stretch
-  - Pelvic tilt
+- Seeded starter exercise library: Glute bridge, Cat cow, Piriformis stretch, Pelvic tilt.
 
 Access model:
 
 - Owner/admin can view and manage platform data.
 - Physiotherapist can view and manage only their own patients, plans, exercises, logs, messages and notifications.
-- Default exercises are visible to physiotherapists.
-- Private exercises are visible only to the physiotherapist that created them.
+- Physiotherapist dashboard access requires active monthly subscription.
 - Patient app uses username + code flow and reads real plan data.
 
 ## 3. Physio dashboard functional
@@ -65,6 +45,7 @@ Implemented:
 - Displays logs, pain score, AI score and alerts.
 - Adds private/default exercises.
 - Links each patient to a printable PDF report.
+- Locks access if subscription is not active.
 
 ## 4. Patient app with Supabase
 
@@ -113,16 +94,23 @@ Next improvements:
 
 ## 6. Subscriptions & Billing
 
-Status: Manual/local-bank model planned.
+Status: Manual/local-bank model implemented for MVP.
 
-Required later:
+Implemented:
 
-- Basic / Professional / Premium plans.
-- Trial status.
-- Manual paid/unpaid status.
-- Invoice reference.
-- Local bank integration later.
-- Lock/unlock dashboard based on subscription status.
+- Access price: 29.90 EUR per month for each physiotherapist.
+- Stripe is not required now.
+- Added `/admin-billing` owner page.
+- Admin can activate +1 month manually after payment.
+- Admin can suspend a subscription.
+- Dashboard is locked for unpaid/suspended/expired physiotherapist accounts.
+- Owner/admin access remains active.
+
+Later:
+
+- Add local bank integration.
+- Add automated invoice numbers.
+- Add payment confirmation emails.
 
 ## 7. Notifications
 
@@ -130,7 +118,7 @@ Status: Resend email alerts implemented.
 
 Implemented:
 
-- Added `notifications` table in Supabase.
+- Added notification logs in Supabase.
 - Added Resend email helper.
 - Added clinical email templates.
 - Sends email to physiotherapist when patient reports pain 7/10 or higher.
@@ -166,15 +154,19 @@ Next improvements:
 
 ## 9. Legal pages
 
-Next.
+Status: First legal page drafts implemented.
 
-Required:
+Implemented:
 
-- Privacy Policy.
-- Terms of Use.
-- Medical disclaimer.
-- Camera consent.
-- Data deletion request.
+- `/privacy`
+- `/terms`
+- `/medical-disclaimer`
+- `/camera-consent`
+- `/data-deletion`
+
+Important:
+
+- These are MVP drafts and must be reviewed by a legal/privacy professional before public launch.
 
 ## 10. App Store / Play Store
 
