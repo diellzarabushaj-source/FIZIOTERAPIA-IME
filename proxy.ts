@@ -1,21 +1,25 @@
 import { NextResponse, type NextProxy } from "next/server";
-import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
+import { clerkMiddleware } from "@clerk/nextjs/server";
 
 const isClerkConfigured = Boolean(
   process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY && process.env.CLERK_SECRET_KEY,
 );
 
-const isProtectedRoute = createRouteMatcher([
-  "/physio(.*)",
-  "/owner-hidden(.*)",
-  "/physiotherapist-portal(.*)",
-  "/physiotherapist-dashboard(.*)",
-  "/admin-hidden(.*)",
-  "/admin-dashboard(.*)",
-]);
+const protectedRoutePrefixes = [
+  "/physio",
+  "/owner-hidden",
+  "/physiotherapist-portal",
+  "/physiotherapist-dashboard",
+  "/admin-hidden",
+  "/admin-dashboard",
+];
+
+function isProtectedPath(pathname: string) {
+  return protectedRoutePrefixes.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));
+}
 
 const protectedProxy = clerkMiddleware(async (auth, req) => {
-  if (isProtectedRoute(req)) {
+  if (isProtectedPath(req.nextUrl.pathname)) {
     await auth.protect();
   }
 });
