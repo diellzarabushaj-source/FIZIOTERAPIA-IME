@@ -11,6 +11,7 @@ const isProtectedRoute = createRouteMatcher([
   "/physiotherapist-portal(.*)",
   "/physiotherapist-dashboard(.*)",
   "/admin-hidden(.*)",
+  "/admin-dashboard(.*)",
 ]);
 
 const protectedMiddleware = clerkMiddleware(async (auth, req) => {
