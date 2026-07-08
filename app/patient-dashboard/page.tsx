@@ -70,6 +70,17 @@ type Message = {
   created_at: string | null;
 };
 
+type DashboardData = {
+  patient: Patient;
+  physio: { full_name?: string | null; clinic_name?: string | null } | null;
+  activePlan: Plan | null;
+  planExercises: PlanExercise[];
+  logs: ExerciseLog[];
+  aiChecks: AiCheck[];
+  messages: Message[];
+  error: null;
+};
+
 async function getPatientDashboardData() {
   const supabase = getSupabaseAdmin();
   if (!supabase) return { error: "SUPABASE_SERVICE_ROLE_KEY mungon në Vercel." };
@@ -191,7 +202,8 @@ export default async function PatientDashboardPage() {
     );
   }
 
-  const { patient, physio, activePlan, planExercises, logs, aiChecks, messages } = data;
+  const dashboard = data as DashboardData;
+  const { patient, physio, activePlan, planExercises, logs, aiChecks, messages } = dashboard;
   const patientName = `${patient.first_name} ${patient.last_name || ""}`.trim();
   const completedToday = planExercises.filter((exercise) => findLatestLog(logs, exercise.id)?.completed).length;
   const progress = planExercises.length ? Math.round((completedToday / planExercises.length) * 100) : 0;
