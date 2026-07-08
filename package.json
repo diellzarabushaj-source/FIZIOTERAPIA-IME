@@ -6,12 +6,12 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
+    "lint": "eslint .",
     "preflight:routes": "node scripts/verify-route-files.mjs",
     "smoke:production": "node scripts/smoke-test-production.mjs",
     "smoke:report": "node scripts/render-smoke-report.mjs",
     "smoke:mobile-api": "node scripts/smoke-test-mobile-api.mjs",
-    "mobile:typecheck": "cd apps/mobile-app && npm install && npm run typecheck"
+    "mobile:typecheck": "npm install --prefix apps/mobile-app --no-audit --no-fund && npm run typecheck --prefix apps/mobile-app"
   },
   "dependencies": {
     "@clerk/nextjs": "latest",
