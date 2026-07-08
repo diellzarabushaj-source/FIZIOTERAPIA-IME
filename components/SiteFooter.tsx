@@ -12,7 +12,7 @@ const footerSections = [
     ],
   },
   {
-    title: "Launch & support",
+    title: "Clinic launch",
     links: [
       ["Support Center", "/support"],
       ["Clinic Use Guide", "/clinic-use"],
@@ -24,6 +24,11 @@ const footerSections = [
       ["Pilot Communications", "/pilot-communications"],
       ["Mobile Submission", "/mobile-submission"],
       ["Final Handoff", "/final-handoff"],
+    ],
+  },
+  {
+    title: "Patient resources",
+    links: [
       ["Patient Handout", "/patient-handout"],
       ["Pilot Onboarding", "/pilot-onboarding"],
       ["Pilot Feedback", "/pilot-feedback"],
@@ -39,21 +44,11 @@ const footerSections = [
       ["Data Deletion", "/data-deletion"],
     ],
   },
-  {
-    title: "Admin",
-    links: [
-      ["Admin Dashboard", "/admin-dashboard"],
-      ["Admin Billing", "/admin-billing"],
-      ["Admin Feedback", "/admin-feedback"],
-      ["Pilot Decision", "/pilot-decision"],
-      ["Reports", "/reports/demo"],
-    ],
-  },
 ];
 
 export function SiteFooter() {
   return (
-    <footer className="site-footer">
+    <footer className="site-footer premium-footer">
       <div className="site-footer-shell">
         <div className="footer-brand-card">
           <BrandMark />

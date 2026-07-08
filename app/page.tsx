@@ -1,52 +1,79 @@
+import {
+  Activity,
+  ArrowRight,
+  BarChart3,
+  Camera,
+  CheckCircle2,
+  ClipboardList,
+  CreditCard,
+  FileText,
+  KeyRound,
+  ShieldCheck,
+  Stethoscope,
+  UsersRound,
+} from "lucide-react";
 import { AuthControls } from "@/components/AuthControls";
 import { BrandMark } from "@/components/BrandMark";
 
 const flow = [
-  ["01", "Fizioterapeuti krijon planin", "Pacienti merr username + kod personal."],
-  ["02", "Pacienti e ndjek në app", "Ushtrime, video, progres dhe dhimbje 0–10."],
-  ["03", "AI kontrollon lëvizjen", "Feedback për cilësinë e lëvizjes, jo diagnozë."],
-  ["04", "Fizioterapeuti monitoron", "Alerts, adherence, raporte dhe rikontroll."],
+  ["01", "Krijo pacientin dhe planin", "Fizioterapeuti zgjedh template klinik, cakton ushtrime dhe gjeneron kod unik."],
+  ["02", "Pacienti hyn pa llogari", "Kodi ose QR e çon pacientin direkt te plani personal dhe udhëzimet ditore."],
+  ["03", "Monitoro progresin në shtëpi", "Adherence, dhimbja 0-10, AI score dhe raportet mblidhen në dashboard."],
+  ["04", "Vepro vetëm kur duhet", "Alerts e nxjerrin në pah dhimbjen e lartë, AI score të ulët ose mos-kryerjen e ushtrimeve."],
 ];
 
 const features = [
-  ["Për pacientë", "Plan i thjeshtë ditor", "Pacienti sheh vetëm ushtrimet e caktuara nga fizioterapeuti dhe i shënon si të kryera."],
-  ["Për fizioterapeutë", "Dashboard klinik", "Krijo pacientë, plane, ushtrime private dhe përcill progresin në kohë reale."],
-  ["Për klinika", "Menaxhim më i pastër", "Admin/owner kontrollon subscription, bibliotekën e ushtrimeve dhe raportet."],
+  { Icon: KeyRound, eyebrow: "Patient access", title: "Hyrje vetëm me kod", text: "Pa username/password për pacientin. Një kod unik lidhet me një plan të caktuar nga fizioterapeuti." },
+  { Icon: ClipboardList, eyebrow: "Plan builder", title: "Programe klinike të gatshme", text: "Template për diagnoza të zakonshme, ushtrime, dozime dhe safety notes që mund të përshtaten shpejt." },
+  { Icon: Camera, eyebrow: "AI check", title: "Feedback për lëvizjen", text: "AI Movement Check jep score dhe feedback teknik, pa diagnostikuar dhe pa ndryshuar planin." },
+  { Icon: BarChart3, eyebrow: "Monitoring", title: "Dashboard për prioritetet", text: "Fizioterapeuti sheh pacientët, dhimbjen, adherence, AI score, QR dhe raportet PDF në një vend." },
+  { Icon: CreditCard, eyebrow: "Billing", title: "Qasje me abonim", text: "MVP përdor billing manual: 29.90 EUR / muaj për fizioterapeut, aktivizuar nga admini." },
+  { Icon: ShieldCheck, eyebrow: "Clinical safety", title: "Rregulla të qarta sigurie", text: "Dhimbje 7/10 ose më shumë do të thotë ndalo ushtrimin dhe kontakto fizioterapeutin." },
 ];
 
 const stats = [
-  ["29.90€", "për fizioterapeut / muaj"],
-  ["7/10", "dhimbje = ndalo ushtrimin"],
-  ["AI", "feedback për lëvizje"],
+  ["29.90 EUR", "abonim mujor për fizioterapeut"],
+  ["7/10", "prag sigurie për ndalje"],
+  ["PDF", "raporte progresi për rikontroll"],
+];
+
+const previewRows = [
+  ["Arta Gashi", "Lumbosciatica", "68%", "4/10"],
+  ["Mira Berisha", "Shoulder rehab", "44%", "7/10"],
+  ["Ilir Krasniqi", "Post-op knee", "82%", "3/10"],
 ];
 
 export default function HomePage() {
   return (
-    <main className="page landing-page">
+    <main className="page landing-page premium-homepage">
       <nav className="top-nav landing-nav">
         <BrandMark />
         <div className="nav-actions">
-          <a href="#how">Si funksionon</a>
-          <a href="#ai">AI</a>
+          <a href="#features">Funksionet</a>
+          <a href="#workflow">Workflow</a>
           <a href="#pricing">Çmimi</a>
           <a href="/faq">FAQ</a>
           <AuthControls />
         </div>
       </nav>
 
-      <section className="landing-hero">
-        <div className="landing-hero-copy">
-          <span className="badge">Platformë moderne për fizioterapi digjitale</span>
-          <h1>Lëviz më mirë, me plan të krijuar nga fizioterapeuti yt.</h1>
-          <p>
-            Fizioterapia ime lidh pacientin me fizioterapeutin përmes planeve të personalizuara,
-            progresit ditor, raporteve dhe AI Movement Check për cilësinë e lëvizjes.
-          </p>
-          <div className="portal-actions">
-            <a className="button" href="/physiotherapist-portal">Hyr si fizioterapeut</a>
-            <a className="button secondary" href="/patient-portal">Hyr si pacient</a>
+      <section className="landing-hero premium-hero-grid">
+        <div className="landing-hero-copy premium-copy-stack">
+          <div className="premium-eyebrow-row">
+            <span className="badge"><Stethoscope className="premium-button-icon" aria-hidden="true" />Premium SaaS për fizioterapi digjitale</span>
+            <span className="mini-badge">Pilot-ready MVP</span>
           </div>
-          <div className="landing-proof">
+          <h1 className="premium-hero-title">Menaxho pacientët, planet dhe progresin pas vizitës.</h1>
+          <p className="premium-lead">
+            Fizioterapia ime i jep fizioterapeutit një dashboard klinik për plane ushtrimesh, qasje me kod për pacientin,
+            AI Movement Check, alerts dhe raporte PDF, pa ia lënë pacientit vendimmarrjen klinike.
+          </p>
+          <div className="portal-actions premium-cta-row">
+            <a className="button" href="/physiotherapist-portal"><Activity className="premium-button-icon" aria-hidden="true" />Hyr si fizioterapeut</a>
+            <a className="button secondary" href="/patient-portal"><KeyRound className="premium-button-icon" aria-hidden="true" />Hyr si pacient</a>
+            <a className="button secondary" href="/clinic-use"><FileText className="premium-button-icon" aria-hidden="true" />Clinic guide</a>
+          </div>
+          <div className="premium-proof-grid">
             {stats.map(([value, label]) => (
               <div key={value}>
                 <strong>{value}</strong>
@@ -56,119 +83,134 @@ export default function HomePage() {
           </div>
         </div>
 
-        <div className="landing-showcase" aria-label="Fizioterapia ime product preview">
-          <div className="showcase-phone">
-            <div className="phone-notch" />
-            <div className="phone-app-logo"><BrandMark compact /></div>
-            <span className="mini-badge">Plani sot</span>
-            <h2>Lumbosciatica · Dita 3</h2>
-            <div className="progress-line"><span style={{ width: "68%" }} /></div>
-            {[
-              ["Glute bridge", "3 sete × 12", "AI"],
-              ["Cat cow", "2 sete × 10", "Done"],
-              ["Piriformis stretch", "3 × 30 sek", "Sot"],
-            ].map(([name, dose, status]) => (
-              <div className="phone-exercise" key={name}>
-                <div>
-                  <b>{name}</b>
-                  <small>{dose}</small>
+        <div className="premium-product-preview" aria-label="Fizioterapia ime product preview">
+          <div className="premium-screenshot-panel">
+            <div className="premium-screenshot-topbar">
+              <div className="premium-window-controls" aria-hidden="true"><span /><span /><span /></div>
+              <b>Physio dashboard</b>
+              <span className="status-success"><CheckCircle2 className="premium-button-icon" aria-hidden="true" />Live workflow</span>
+            </div>
+            <div className="premium-dashboard-body">
+              <div className="premium-dashboard-sidebar">
+                <span><BarChart3 className="premium-button-icon" aria-hidden="true" />Overview</span>
+                <span><UsersRound className="premium-button-icon" aria-hidden="true" />Pacientët</span>
+                <span><ClipboardList className="premium-button-icon" aria-hidden="true" />Plane</span>
+                <span><ShieldCheck className="premium-button-icon" aria-hidden="true" />Alerts</span>
+              </div>
+              <div className="premium-dashboard-main">
+                <div className="premium-stat-grid">
+                  <div className="premium-stat-card"><span>Pacientë</span><strong>18</strong><small>aktivë</small></div>
+                  <div className="premium-stat-card"><span>AI score</span><strong>82%</strong><small>mesatare</small></div>
+                  <div className="premium-stat-card"><span>Alerts</span><strong>3</strong><small>për kontroll</small></div>
                 </div>
-                <em>{status}</em>
+                {previewRows.map(([name, diagnosis, progress, pain]) => (
+                  <div className="premium-patient-row" key={name}>
+                    <div><b>{name}</b><br /><small>{diagnosis}</small></div>
+                    <div><small>Progres</small><br /><b>{progress}</b></div>
+                    <div><small>Dhimbje</small><br /><b>{pain}</b></div>
+                    <span className={pain === "7/10" ? "status-warning" : "status-success"}>{pain === "7/10" ? "Alert" : "OK"}</span>
+                  </div>
+                ))}
               </div>
-            ))}
-            <button className="phone-cta">Kontrollo lëvizjen</button>
+            </div>
           </div>
 
-          <div className="dashboard-preview-card">
-            <div className="preview-header">
-              <span />
-              <span />
-              <span />
-            </div>
-            <h3>Physio dashboard</h3>
-            <div className="preview-kpis">
-              <div><b>18</b><small>Pacientë</small></div>
-              <div><b>82%</b><small>AI score</small></div>
-              <div><b>3</b><small>Alerts</small></div>
-            </div>
-            <div className="preview-row"><span>Arta Gashi</span><b>Progres 68%</b></div>
-            <div className="preview-row"><span>ARB-4821</span><b>Dhimbje 4/10</b></div>
-            <div className="preview-row"><span>Raport PDF</span><b>Gati</b></div>
+          <div className="premium-phone-mini" aria-label="Patient plan preview">
+            <div className="phone-notch" />
+            <BrandMark compact />
+            <span className="mini-badge">Plani sot</span>
+            <h3>Lumbosciatica · Dita 3</h3>
+            <div className="premium-progress"><span style={{ width: "68%" }} /></div>
+            <div className="premium-phone-task"><b>Glute bridge</b><span>3 sete x 12</span><em>AI</em></div>
+            <div className="premium-phone-task"><b>Cat cow</b><span>2 sete x 10</span><em>Done</em></div>
           </div>
         </div>
       </section>
 
-      <section className="landing-section landing-feature-grid" id="features">
-        {features.map(([eyebrow, title, text]) => (
-          <article className="landing-feature-card" key={title}>
-            <span className="mini-badge">{eyebrow}</span>
-            <h2>{title}</h2>
-            <p>{text}</p>
-          </article>
-        ))}
-      </section>
-
-      <section className="landing-section split-section" id="how">
-        <div>
-          <span className="badge">Workflow klinik</span>
-          <h2>Proces i thjeshtë, por i kontrolluar nga profesionisti.</h2>
-          <p>
-            Pacienti nuk krijon plan vetë. Çdo plan nis nga fizioterapeuti dhe AI shërben vetëm si kontroll ndihmës për lëvizje.
-          </p>
+      <section className="landing-section" id="features">
+        <div className="premium-section-header">
+          <div>
+            <span className="badge"><ShieldCheck className="premium-button-icon" aria-hidden="true" />MVP i ndërtuar për klinika</span>
+            <h2>Jo vetëm faqe marketingu, por rrjedhë pune për përdorim real.</h2>
+          </div>
+          <p>Çdo pjesë është menduar për fizioterapeutin që do kontroll, qartësi dhe më pak punë manuale pas vizitës.</p>
         </div>
-        <div className="flow-stack">
-          {flow.map(([step, title, text]) => (
-            <div className="flow-item" key={step}>
-              <strong>{step}</strong>
-              <div>
-                <h3>{title}</h3>
-                <p>{text}</p>
-              </div>
-            </div>
+        <div className="grid premium-card-grid">
+          {features.map(({ Icon, eyebrow, title, text }) => (
+            <article className="card premium-feature-card" key={title}>
+              <div className="premium-icon-tile"><Icon className="premium-icon" aria-hidden="true" /></div>
+              <span className="mini-badge">{eyebrow}</span>
+              <h3>{title}</h3>
+              <p>{text}</p>
+            </article>
           ))}
         </div>
       </section>
 
-      <section className="landing-section ai-section" id="ai">
-        <div className="ai-copy">
-          <span className="badge">AI Movement Check</span>
-          <h2>AI e sheh lëvizjen, fizioterapeuti merr vendimin.</h2>
-          <p>
-            Kamera përdoret për feedback bazik mbi stabilitetin, ritmin dhe kontrollin e lëvizjes.
-            Nuk jep diagnozë, nuk cakton terapi dhe nuk e zëvendëson fizioterapeutin.
-          </p>
-          <div className="safety-pill">Dhimbje 7/10 ose më shumë = ndalo ushtrimin dhe kontakto fizioterapeutin.</div>
-        </div>
-        <div className="ai-score-card">
-          <span>AI score</span>
-          <strong>82%</strong>
-          <p>Lëvizje e kontrolluar. Mbaje ritmin më të ngadalshëm në fazën e kthimit.</p>
+      <section className="landing-section" id="workflow">
+        <div className="premium-workflow-grid">
+          <div className="premium-workflow-card">
+            <span className="badge"><ClipboardList className="premium-button-icon" aria-hidden="true" />Workflow klinik</span>
+            <h2>Pacienti ndjek planin. Fizioterapeuti mban kontrollin.</h2>
+            <div className="premium-step-list">
+              {flow.map(([step, title, text]) => (
+                <div className="premium-step" key={step}>
+                  <strong>{step}</strong>
+                  <div>
+                    <h3>{title}</h3>
+                    <p>{text}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="premium-safety-card">
+            <span className="badge"><Camera className="premium-button-icon" aria-hidden="true" />AI Movement Check</span>
+            <h2>AI mat cilësinë e lëvizjes. Vendimin e merr fizioterapeuti.</h2>
+            <p>
+              Kamera përdoret vetëm për feedback bazik mbi stabilitetin, ritmin dhe kontrollin e lëvizjes.
+              Nuk jep diagnozë, nuk cakton terapi dhe nuk e ndryshon planin.
+            </p>
+            <ul className="premium-safety-list">
+              <li><CheckCircle2 className="premium-button-icon" aria-hidden="true" />Score dhe feedback për teknikë.</li>
+              <li><CheckCircle2 className="premium-button-icon" aria-hidden="true" />Alerts kur dhimbja ose AI score kërkojnë kontroll.</li>
+              <li><CheckCircle2 className="premium-button-icon" aria-hidden="true" />Video nuk ruhet në MVP; ruhet vetëm rezultati dhe feedback-u.</li>
+            </ul>
+          </div>
         </div>
       </section>
 
-      <section className="landing-section pricing-section" id="pricing">
-        <div>
-          <span className="badge">Çmimi për MVP</span>
-          <h2>Qasje për fizioterapeutë me 29.90 EUR / muaj.</h2>
-          <p>
-            Për versionin e parë pagesa është manuale/local-bank. Admini e aktivizon qasjen mujore nga paneli i billing.
-          </p>
-        </div>
-        <div className="price-card">
-          <span>Fizioterapeut Monthly</span>
-          <strong>29.90€</strong>
-          <small>EUR / muaj</small>
-          <a className="button" href="/physiotherapist-portal">Fillo tani</a>
+      <section className="landing-section" id="pricing">
+        <div className="premium-pricing-grid">
+          <div className="premium-workflow-card">
+            <span className="badge"><CreditCard className="premium-button-icon" aria-hidden="true" />Çmimi për MVP</span>
+            <h2>Qasje për fizioterapeutë me 29.90 EUR / muaj.</h2>
+            <p>
+              Për versionin e parë pagesa është manuale/local-bank. Admini e aktivizon qasjen mujore nga paneli i billing,
+              ndërsa fizioterapeuti përdor portalin vetëm kur qasja është aktive.
+            </p>
+            <div className="portal-actions premium-cta-row">
+              <a className="button" href="/physiotherapist-portal">Fillo si fizioterapeut <ArrowRight className="premium-button-icon" aria-hidden="true" /></a>
+              <a className="button secondary" href="/faq">Lexo FAQ</a>
+            </div>
+          </div>
+          <div className="price-card">
+            <span>Fizioterapeut Monthly</span>
+            <strong>29.90€</strong>
+            <small>EUR / muaj</small>
+            <a className="button" href="/physiotherapist-portal">Hyr në portal</a>
+          </div>
         </div>
       </section>
 
       <section className="landing-section final-cta">
         <BrandMark compact />
-        <h2>Një app më i qartë për pacientin. Një dashboard më i fortë për fizioterapeutin.</h2>
-        <div className="portal-actions">
-          <a className="button" href="/patient-portal">Hyr si pacient</a>
-          <a className="button secondary" href="/physiotherapist-portal">Hyr si fizioterapeut</a>
-          <a className="button secondary" href="/faq">Lexo FAQ</a>
+        <h2>Një dashboard më i fortë për fizioterapeutin. Një plan më i qartë për pacientin.</h2>
+        <div className="portal-actions premium-cta-row">
+          <a className="button" href="/physiotherapist-portal">Hyr si fizioterapeut</a>
+          <a className="button secondary" href="/patient-portal">Hyr si pacient</a>
+          <a className="button secondary" href="/pilot-readiness">Pilot readiness</a>
         </div>
       </section>
     </main>

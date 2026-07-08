@@ -15,6 +15,7 @@
     "@clerk/nextjs": "latest",
     "@mediapipe/tasks-vision": "latest",
     "@supabase/supabase-js": "latest",
+    "lucide-react": "latest",
     "next": "latest",
     "qrcode": "latest",
     "react": "latest",
