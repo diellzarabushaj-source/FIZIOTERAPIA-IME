@@ -1,5 +1,5 @@
--- Phase 13: Pilot feedback table
--- Execute this in Supabase SQL Editor before using /pilot-feedback.
+-- Phase 13/14: Pilot feedback table + admin triage fields
+-- Execute this in Supabase SQL Editor before using /pilot-feedback and /admin-feedback.
 
 create table if not exists public.pilot_feedback (
   id uuid primary key default gen_random_uuid(),
@@ -19,13 +19,22 @@ create table if not exists public.pilot_feedback (
   safety_concern text,
   would_use_with_real_patient text,
   notes text,
-  source text not null default 'pilot-feedback-page'
+  source text not null default 'pilot-feedback-page',
+  triage_status text not null default 'new',
+  priority text not null default 'P2 medium',
+  triage_notes text,
+  triaged_at timestamptz
 );
+
+alter table public.pilot_feedback
+  add column if not exists triage_status text not null default 'new',
+  add column if not exists priority text not null default 'P2 medium',
+  add column if not exists triage_notes text,
+  add column if not exists triaged_at timestamptz;
 
 alter table public.pilot_feedback enable row level security;
 
--- Keep feedback private by default. The app inserts through the server with SUPABASE_SERVICE_ROLE_KEY.
--- Admin can review feedback in Supabase dashboard or through a future admin page.
+-- Keep feedback private by default. The app inserts and admin reviews through the server with SUPABASE_SERVICE_ROLE_KEY.
 
 drop policy if exists "pilot_feedback_private_no_public_select" on public.pilot_feedback;
 create policy "pilot_feedback_private_no_public_select"
@@ -38,3 +47,9 @@ create index if not exists pilot_feedback_created_at_idx
 
 create index if not exists pilot_feedback_role_idx
   on public.pilot_feedback (role);
+
+create index if not exists pilot_feedback_triage_status_idx
+  on public.pilot_feedback (triage_status);
+
+create index if not exists pilot_feedback_priority_idx
+  on public.pilot_feedback (priority);
