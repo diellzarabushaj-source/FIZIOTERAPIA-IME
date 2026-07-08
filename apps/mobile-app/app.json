@@ -2,12 +2,13 @@
   "expo": {
     "name": "FizioPlan",
     "slug": "fizioplan-mobile-app",
-    "version": "0.1.0",
+    "version": "0.2.0",
     "orientation": "portrait",
     "scheme": "fizioplan",
     "userInterfaceStyle": "light",
     "platforms": ["ios", "android"],
     "ios": {
+      "supportsTablet": false,
       "bundleIdentifier": "com.fizioplan.patient"
     },
     "android": {
