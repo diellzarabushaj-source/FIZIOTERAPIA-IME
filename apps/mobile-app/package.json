@@ -1,0 +1,16 @@
+{
+  "name": "fizioplan-mobile-app",
+  "version": "0.1.0",
+  "private": true,
+  "main": "expo/AppEntry",
+  "dependencies": {
+    "expo": "~53.0.0",
+    "expo-status-bar": "~2.2.3",
+    "react": "19.0.0",
+    "react-native": "0.79.0"
+  },
+  "devDependencies": {
+    "typescript": "~5.8.3",
+    "@types/react": "~19.0.10"
+  }
+}
