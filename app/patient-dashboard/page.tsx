@@ -1,5 +1,6 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { BrandMark } from "@/components/BrandMark";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import { completeExerciseAction, patientLogoutAction, saveAiCheckAction } from "./actions";
 
@@ -189,7 +190,7 @@ export default async function PatientDashboardPage() {
     return (
       <main className="page patient-dashboard-page">
         <nav className="top-nav">
-          <a className="brand-link" href="/"><span className="brand-logo">FP</span><span>FizioPlan</span></a>
+          <BrandMark />
           <div className="nav-actions"><a href="/patient-portal">Patient Portal</a></div>
         </nav>
         <section className="hero">
@@ -214,10 +215,7 @@ export default async function PatientDashboardPage() {
   return (
     <main className="page patient-dashboard-page">
       <nav className="top-nav">
-        <a className="brand-link" href="/">
-          <span className="brand-logo">FP</span>
-          <span>FizioPlan</span>
-        </a>
+        <BrandMark />
         <div className="nav-actions">
           <a href="/patient-portal">Patient Portal</a>
           <a href="/app-preview">Mobile preview</a>
