@@ -35,7 +35,7 @@
       }
     },
     "extra": {
-      "supabaseUrl": "https://squgbcmzyaclafnioczq.supabase.co",
+      "apiBaseUrl": "https://fizioterapia-ime.vercel.app",
       "appName": "Fizioterapia ime",
       "monthlyPhysioPrice": "29.90 EUR"
     }
