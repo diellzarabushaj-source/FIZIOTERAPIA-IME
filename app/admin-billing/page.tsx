@@ -1,6 +1,7 @@
 import { currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { AuthControls } from "@/components/AuthControls";
+import { BrandMark } from "@/components/BrandMark";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import { getBillingStatusLabel, hasActivePhysioAccess, PHYSIO_MONTHLY_PRICE_LABEL } from "@/lib/billing";
 import { activateSubscriptionAction, suspendSubscriptionAction } from "./actions";
@@ -58,10 +59,7 @@ export default async function AdminBillingPage() {
   return (
     <main className="page">
       <nav className="top-nav">
-        <a className="brand-link" href="/admin-dashboard">
-          <span className="brand-logo">FI</span>
-          <span>Fizioterapia ime Billing</span>
-        </a>
+        <BrandMark href="/admin-dashboard" />
         <div className="nav-actions">
           <a href="/admin-dashboard">Admin</a>
           <a href="/physiotherapist-portal">Physio portal</a>
