@@ -1,0 +1,20 @@
+{
+  "expo": {
+    "name": "FizioPlan",
+    "slug": "fizioplan-mobile-app",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "scheme": "fizioplan",
+    "userInterfaceStyle": "light",
+    "platforms": ["ios", "android"],
+    "ios": {
+      "bundleIdentifier": "com.fizioplan.patient"
+    },
+    "android": {
+      "package": "com.fizioplan.patient"
+    },
+    "extra": {
+      "supabaseUrl": "https://squgbcmzyaclafnioczq.supabase.co"
+    }
+  }
+}
