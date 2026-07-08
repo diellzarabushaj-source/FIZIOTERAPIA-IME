@@ -23,6 +23,7 @@ const footerSections = [
       ["Pilot Runbook", "/pilot-runbook"],
       ["Pilot Communications", "/pilot-communications"],
       ["Mobile Submission", "/mobile-submission"],
+      ["Final Handoff", "/final-handoff"],
       ["Patient Handout", "/patient-handout"],
       ["Pilot Onboarding", "/pilot-onboarding"],
       ["Pilot Feedback", "/pilot-feedback"],
