@@ -38,6 +38,7 @@ const footerSections = [
       ["Admin Dashboard", "/admin-dashboard"],
       ["Admin Billing", "/admin-billing"],
       ["Admin Feedback", "/admin-feedback"],
+      ["Pilot Decision", "/pilot-decision"],
       ["Reports", "/reports/demo"],
     ],
   },
