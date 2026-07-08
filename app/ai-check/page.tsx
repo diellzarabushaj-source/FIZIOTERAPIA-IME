@@ -1,5 +1,6 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { BrandMark } from "@/components/BrandMark";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import { MovementCheckClient } from "./MovementCheckClient";
 
@@ -13,12 +14,12 @@ export default async function AiCheckPage({ searchParams }: { searchParams?: Pro
 
   if (!supabase) {
     return (
-      <main className="page patient-dashboard-page">
+      <main className="page patient-dashboard-page ai-check-page">
         <nav className="top-nav">
-          <a className="brand-link" href="/"><span className="brand-logo">FP</span><span>FizioPlan</span></a>
+          <BrandMark />
           <div className="nav-actions"><a href="/patient-dashboard">Patient Dashboard</a></div>
         </nav>
-        <section className="hero">
+        <section className="ai-empty-state">
           <span className="badge">AI Movement Check</span>
           <h1>Konfigurimi mungon.</h1>
           <div className="role-warning">SUPABASE_SERVICE_ROLE_KEY mungon në Vercel.</div>
@@ -72,20 +73,18 @@ export default async function AiCheckPage({ searchParams }: { searchParams?: Pro
   }
 
   return (
-    <main className="page patient-dashboard-page">
-      <nav className="top-nav">
-        <a className="brand-link" href="/">
-          <span className="brand-logo">FP</span>
-          <span>FizioPlan</span>
-        </a>
+    <main className="page patient-dashboard-page ai-check-page">
+      <nav className="top-nav ai-nav">
+        <BrandMark />
         <div className="nav-actions">
           <a href="/patient-dashboard">Patient Dashboard</a>
           <a href="/patient-portal">Patient Portal</a>
+          <a href="/camera-consent">Camera consent</a>
         </div>
       </nav>
       {!planExerciseId ? (
-        <section className="hero">
-          <span className="badge">AI Movement Check</span>
+        <section className="ai-empty-state">
+          <span className="badge">Google MediaPipe · AI Movement Check</span>
           <h1>Nuk ka ushtrim me AI aktiv.</h1>
           <p>Fizioterapeuti duhet të caktojë një ushtrim me AI check aktiv në planin e pacientit.</p>
           <a className="button" href="/patient-dashboard">Kthehu te dashboard</a>
