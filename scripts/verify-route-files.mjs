@@ -12,6 +12,7 @@ const requiredPublicRoutes = [
   "/qa-checklist",
   "/pilot-onboarding",
   "/pilot-launch",
+  "/pilot-readiness",
   "/patient-handout",
   "/pilot-feedback",
   "/patient-portal",
