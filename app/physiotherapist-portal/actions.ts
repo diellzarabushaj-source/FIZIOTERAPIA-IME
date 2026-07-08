@@ -14,6 +14,10 @@ type Profile = {
   status: string | null;
 };
 
+function isAdminRole(role?: string | null) {
+  return role === "owner" || role === "admin";
+}
+
 async function requireProfile() {
   const supabase = getSupabaseAdmin();
   if (!supabase) {
@@ -29,7 +33,8 @@ async function requireProfile() {
   }
 
   const fullName = user.fullName || user.firstName || email;
-  const role = email === "diellzarabushaj@gmail.com" ? "owner" : "physio";
+  const adminEmail = (process.env.ADMIN_EMAIL || "diellzarabushaj@gmail.com").toLowerCase();
+  const role = email === adminEmail ? "owner" : "physio";
 
   const { data: existing } = await supabase
     .from("profiles")
@@ -82,6 +87,44 @@ async function requirePaidAccess(profile: Profile) {
   if (!hasActivePhysioAccess(profile.role, subscription)) {
     throw new Error("Qasja është e bllokuar. Fizioterapeuti duhet të paguajë 29.90 EUR / muaj për të përdorur dashboard-in.");
   }
+}
+
+async function requireOwnedPatient(patientId: string, profile: Profile) {
+  const supabase = getSupabaseAdmin();
+  if (!supabase) throw new Error("Missing Supabase service key.");
+
+  const query = supabase
+    .from("patients")
+    .select("id,physio_id")
+    .eq("id", patientId)
+    .eq("status", "active");
+
+  if (!isAdminRole(profile.role)) {
+    query.eq("physio_id", profile.id);
+  }
+
+  const { data: patient } = await query.maybeSingle();
+  if (!patient) throw new Error("Patient not found or not assigned to your account.");
+  return patient;
+}
+
+async function requireAccessibleExercise(exerciseId: string, profile: Profile) {
+  const supabase = getSupabaseAdmin();
+  if (!supabase) throw new Error("Missing Supabase service key.");
+
+  const query = supabase
+    .from("exercise_library")
+    .select("id,is_default,owner_physio_id,status")
+    .eq("id", exerciseId)
+    .eq("status", "published");
+
+  if (!isAdminRole(profile.role)) {
+    query.or(`is_default.eq.true,owner_physio_id.eq.${profile.id}`);
+  }
+
+  const { data: exercise } = await query.maybeSingle();
+  if (!exercise) throw new Error("Exercise not found or not available for your account.");
+  return exercise;
 }
 
 export async function createPatientAction(formData: FormData) {
@@ -211,16 +254,22 @@ export async function addExerciseToPlanAction(formData: FormData) {
 
   if (!patientId || !exerciseId) throw new Error("Patient and exercise are required.");
 
-  const { data: existingPlan } = await supabase
+  const patient = await requireOwnedPatient(patientId, profile);
+  await requireAccessibleExercise(exerciseId, profile);
+
+  const planQuery = supabase
     .from("plans")
     .select("id")
     .eq("patient_id", patientId)
-    .eq("physio_id", profile.id)
     .eq("status", "active")
     .order("created_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
+    .limit(1);
 
+  if (!isAdminRole(profile.role)) {
+    planQuery.eq("physio_id", profile.id);
+  }
+
+  const { data: existingPlan } = await planQuery.maybeSingle();
   let planId = existingPlan?.id;
 
   if (!planId) {
@@ -232,7 +281,7 @@ export async function addExerciseToPlanAction(formData: FormData) {
       .from("plans")
       .insert({
         patient_id: patientId,
-        physio_id: profile.id,
+        physio_id: patient.physio_id || profile.id,
         title: "Program rehabilitimi 14 ditë",
         start_date: today.toISOString().slice(0, 10),
         end_date: end.toISOString().slice(0, 10),
