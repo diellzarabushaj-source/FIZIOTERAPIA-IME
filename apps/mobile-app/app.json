@@ -9,6 +9,12 @@
     "platforms": ["ios", "android"],
     "privacy": "unlisted",
     "description": "Fizioterapia ime është app për pacientë që marrin plan ushtrimesh nga fizioterapeuti, raportojnë dhimbjen dhe përdorin AI Movement Check si feedback për lëvizjen.",
+    "icon": "./assets/generated/app-icon.png",
+    "splash": {
+      "image": "./assets/generated/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#F7FBF9"
+    },
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.fizioterapiaime.patient",
@@ -22,7 +28,11 @@
     "android": {
       "package": "com.fizioterapiaime.patient",
       "versionCode": 1,
-      "permissions": ["CAMERA", "POST_NOTIFICATIONS"]
+      "permissions": ["CAMERA", "POST_NOTIFICATIONS"],
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/generated/adaptive-icon-foreground.png",
+        "backgroundColor": "#F7FBF9"
+      }
     },
     "extra": {
       "supabaseUrl": "https://squgbcmzyaclafnioczq.supabase.co",
