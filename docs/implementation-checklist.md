@@ -13,8 +13,6 @@ Status: Done for MVP.
 
 Status: Foundation applied.
 
-Applied in Supabase project `squgbcmzyaclafnioczq`:
-
 - RLS enabled on core public tables.
 - Policies created for profiles, patients, exercise_library, plans, plan_exercises, exercise_logs, ai_checks, physio_messages, subscriptions and notifications.
 - Added patient fields: patient_username, notes.
@@ -23,18 +21,9 @@ Applied in Supabase project `squgbcmzyaclafnioczq`:
 - Seeded default owner profile for Dr. Diellza.
 - Seeded starter exercise library: Glute bridge, Cat cow, Piriformis stretch, Pelvic tilt.
 
-Access model:
-
-- Owner/admin can view and manage platform data.
-- Physiotherapist can view and manage only their own patients, plans, exercises, logs, messages and notifications.
-- Physiotherapist dashboard access requires active monthly subscription.
-- Patient app uses username + code flow and reads real plan data.
-
 ## 3. Physio dashboard functional
 
 Status: First real-data version implemented.
-
-Implemented:
 
 - Reads real patients from Supabase.
 - Creates patient from dashboard.
@@ -51,8 +40,6 @@ Implemented:
 
 Status: First real-data web version implemented.
 
-Implemented:
-
 - Login with patient_username + patient_code.
 - Secure patient session using httpOnly cookies.
 - Loads patient profile from Supabase.
@@ -63,17 +50,9 @@ Implemented:
 - Shows physiotherapist messages from physio_messages.
 - Shows progress, latest pain and latest AI score.
 
-Next improvements:
-
-- Move the same Supabase flow into the Expo mobile app.
-- Add per-exercise detail pages.
-- Add push reminders.
-
 ## 5. AI Movement Check real
 
 Status: First real camera version implemented.
-
-Implemented:
 
 - Added `/ai-check` route.
 - Uses MediaPipe Pose Landmarker in the browser.
@@ -83,20 +62,10 @@ Implemented:
 - Creates feedback in Albanian.
 - Uses alert types: good, needs_attention, contact_physio.
 - Saves score, feedback and alert type to Supabase `ai_checks`.
-- If no planExerciseId is provided, auto-selects the first AI-enabled exercise in the patient plan.
-
-Next improvements:
-
-- Add per-exercise scoring rules for each exercise.
-- Add repetition counting.
-- Add side-view/full-body camera instructions.
-- Add clinical review queue for low AI scores.
 
 ## 6. Subscriptions & Billing
 
 Status: Manual/local-bank model implemented for MVP.
-
-Implemented:
 
 - Access price: 29.90 EUR per month for each physiotherapist.
 - Stripe is not required now.
@@ -106,17 +75,9 @@ Implemented:
 - Dashboard is locked for unpaid/suspended/expired physiotherapist accounts.
 - Owner/admin access remains active.
 
-Later:
-
-- Add local bank integration.
-- Add automated invoice numbers.
-- Add payment confirmation emails.
-
 ## 7. Notifications
 
 Status: Resend email alerts implemented.
-
-Implemented:
 
 - Added notification logs in Supabase.
 - Added Resend email helper.
@@ -125,18 +86,9 @@ Implemented:
 - Sends email to physiotherapist when AI score is below 60%.
 - Saves notification status as sent, skipped or failed.
 
-Required next:
-
-- Show notification inbox inside physio dashboard.
-- In-app notifications.
-- Patient reminders.
-- Push notifications in mobile app.
-
 ## 8. Reports PDF
 
 Status: First print-ready PDF version implemented.
-
-Implemented:
 
 - Added `/reports/[patientId]` route for physiotherapists/admin.
 - Report checks Clerk login and patient ownership.
@@ -146,17 +98,9 @@ Implemented:
 - Adds print CSS and a `Shkarko / Printo PDF` button so the browser can save the report as PDF.
 - Linked each patient row in the physio dashboard to its PDF report.
 
-Next improvements:
-
-- Add clinic logo/header as asset file.
-- Add real PDF file generation endpoint later if needed.
-- Add physiotherapist signature field.
-
 ## 9. Legal pages
 
 Status: First legal page drafts implemented.
-
-Implemented:
 
 - `/privacy`
 - `/terms`
@@ -164,16 +108,29 @@ Implemented:
 - `/camera-consent`
 - `/data-deletion`
 
-Important:
-
-- These are MVP drafts and must be reviewed by a legal/privacy professional before public launch.
+Important: These are MVP drafts and must be reviewed by a legal/privacy professional before public launch.
 
 ## 10. App Store / Play Store
 
-Required:
+Status: First store-prep version implemented.
 
-- App icon.
-- Splash screen.
-- EAS builds.
-- TestFlight.
-- Google Play internal testing.
+- Mobile app renamed to `Fizioterapia ime`.
+- iOS bundle ID prepared: `com.fizioterapiaime.patient`.
+- Android package prepared: `com.fizioterapiaime.patient`.
+- Expo app config prepared for iOS/Android.
+- Camera permission text added for AI Movement Check.
+- EAS build configuration added in `apps/mobile-app/eas.json`.
+- Build scripts added: preview, iOS, Android, submit.
+- Store listing draft added in `apps/mobile-app/store-listing.md`.
+- App privacy/data safety draft added in `apps/mobile-app/app-privacy.md`.
+
+Still required before real submission:
+
+- App icon 1024 × 1024 PNG.
+- Android adaptive icon.
+- Splash screen PNG.
+- iPhone screenshots.
+- Android screenshots.
+- Apple Developer account.
+- Google Play Developer account.
+- Final legal/privacy review.
