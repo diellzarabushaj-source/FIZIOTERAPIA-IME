@@ -8,6 +8,8 @@ const isClerkConfigured = Boolean(
 const isProtectedRoute = createRouteMatcher([
   "/physio(.*)",
   "/owner-hidden(.*)",
+  "/physiotherapist-portal(.*)",
+  "/admin-hidden(.*)",
 ]);
 
 const protectedMiddleware = clerkMiddleware(async (auth, req) => {
