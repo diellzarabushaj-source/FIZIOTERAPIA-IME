@@ -18,6 +18,8 @@ const footerSections = [
       ["Clinic Use Guide", "/clinic-use"],
       ["Launch Checklist", "/launch-checklist"],
       ["QA Checklist", "/qa-checklist"],
+      ["Pilot Launch", "/pilot-launch"],
+      ["Patient Handout", "/patient-handout"],
       ["Pilot Onboarding", "/pilot-onboarding"],
       ["Pilot Feedback", "/pilot-feedback"],
     ],
