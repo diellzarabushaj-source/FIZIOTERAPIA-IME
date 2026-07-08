@@ -47,9 +47,9 @@ export default async function PhysiotherapistDashboardPage() {
         </div>
       </nav>
 
-      <section className="physio-shell">
-        <aside className="physio-sidebar">
-          <div className="physio-avatar">AR</div>
+      <section className="patient-shell">
+        <aside className="patient-sidebar">
+          <div className="patient-avatar">AR</div>
           <h2>{displayName}</h2>
           <p>Fizioterapeut · Dashboard</p>
           <div className="side-menu">
@@ -61,8 +61,8 @@ export default async function PhysiotherapistDashboardPage() {
           </div>
         </aside>
 
-        <div className="physio-main">
-          <section id="overview" className="dashboard-hero physio-hero-panel">
+        <div className="patient-main">
+          <section id="overview" className="dashboard-hero">
             <div>
               <span className="badge">Fizioterapist Dashboard</span>
               <h1>Menaxho pacientët, planet dhe ushtrimet.</h1>
