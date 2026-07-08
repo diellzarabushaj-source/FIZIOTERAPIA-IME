@@ -104,6 +104,11 @@ Added:
 - homepage uses the reusable BrandMark component
 - FAQ page uses the reusable BrandMark component
 - legal pages use the reusable BrandMark component
+- patient portal uses the reusable BrandMark component
+- patient dashboard uses the reusable BrandMark component
+- admin dashboard uses the reusable BrandMark component
+- admin billing uses the reusable BrandMark component
+- admin dashboard pricing copy is aligned to `29.90 EUR / month`
 
 ## Figma implementation
 
@@ -122,7 +127,7 @@ It includes:
 
 ## Next steps in Phase 1
 
-1. Replace remaining old `brand-logo` text blocks with `BrandMark`.
+1. Replace remaining old `brand-logo` text blocks in secondary/demo pages with `BrandMark`.
 2. Export real PNG app icon 1024 x 1024 from Figma.
 3. Export real PNG splash screen from Figma.
 4. Prepare Android adaptive icon assets.
