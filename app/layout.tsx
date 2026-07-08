@@ -8,10 +8,12 @@ export const metadata: Metadata = {
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
+  const clerkConfigured = Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY);
+
   return (
     <html lang="sq">
       <body>
-        <ClerkProvider>{children}</ClerkProvider>
+        {clerkConfigured ? <ClerkProvider>{children}</ClerkProvider> : children}
       </body>
     </html>
   );
