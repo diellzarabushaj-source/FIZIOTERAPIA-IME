@@ -1,6 +1,6 @@
 # Phase 1 — Brand foundation
 
-Status: Started and connected to code.
+Status: In progress and connected to code.
 
 ## Goal
 
@@ -81,6 +81,18 @@ Implementation:
 - `components/BrandMark.tsx`
 - `app/brand.css`
 
+## Assets created
+
+- `public/brand-mark.svg`
+- `public/app-icon.svg`
+- `public/splash.svg`
+
+These SVG assets are used as scalable brand source files for web and handoff. For real App Store / Play Store submission, export PNG versions from Figma:
+
+- `apps/mobile-app/assets/icon.png` — 1024 x 1024
+- `apps/mobile-app/assets/splash.png`
+- Android adaptive icon foreground/background PNG
+
 ## GitHub implementation
 
 Added:
@@ -88,14 +100,30 @@ Added:
 - `components/BrandMark.tsx`
 - `app/brand.css`
 - imported `brand.css` in `app/layout.tsx`
-- homepage now uses the reusable BrandMark component
-- legal pages now use the reusable BrandMark component
+- connected SVG icons in Next metadata
+- homepage uses the reusable BrandMark component
+- FAQ page uses the reusable BrandMark component
+- legal pages use the reusable BrandMark component
+
+## Figma implementation
+
+Added page:
+
+`01A — Phase 1 Brand Foundation`
+
+It includes:
+
+- logo concept
+- color tokens
+- typography
+- spacing/radius
+- shadows
+- GitHub mapping
 
 ## Next steps in Phase 1
 
-1. Add real SVG/logo asset export.
-2. Create app icon PNG 1024x1024.
-3. Create splash screen asset.
-4. Replace all old `brand-logo` text blocks with `BrandMark`.
-5. Add brand usage rules to Figma and README.
-6. Prepare Android adaptive icon assets.
+1. Replace remaining old `brand-logo` text blocks with `BrandMark`.
+2. Export real PNG app icon 1024 x 1024 from Figma.
+3. Export real PNG splash screen from Figma.
+4. Prepare Android adaptive icon assets.
+5. Add final brand usage rules to README.
