@@ -1,0 +1,173 @@
+.report-nav {
+  max-width: 1180px;
+}
+
+.report-page {
+  background:
+    radial-gradient(circle at 4% 2%, rgba(48, 181, 168, 0.12), transparent 30%),
+    radial-gradient(circle at 96% 4%, rgba(52, 199, 89, 0.12), transparent 28%),
+    var(--fi-bg);
+}
+
+.report-sheet {
+  max-width: 1120px;
+  margin: 0 auto 48px;
+  padding: clamp(24px, 4vw, 44px);
+  border-radius: 38px;
+  border: 1px solid rgba(230, 238, 248, 0.94);
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 28px 90px rgba(15, 32, 51, 0.10);
+}
+
+.report-cover {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 220px;
+  gap: 24px;
+  align-items: center;
+  padding-bottom: 26px;
+  border-bottom: 1px solid var(--fi-line);
+}
+
+.report-cover h1 {
+  max-width: 780px;
+  margin: 16px 0;
+  font-size: clamp(42px, 5vw, 70px);
+  line-height: 0.96;
+  letter-spacing: -0.065em;
+}
+
+.report-cover p {
+  max-width: 720px;
+  color: #526575;
+}
+
+.report-date-card {
+  min-height: 180px;
+  padding: 24px;
+  display: grid;
+  align-content: center;
+  gap: 8px;
+  text-align: center;
+  border-radius: 28px;
+  background: linear-gradient(135deg, #F7FFFB 0%, #EAF8F1 100%);
+  border: 1px solid rgba(48, 181, 168, 0.16);
+}
+
+.report-date-card span,
+.report-date-card small {
+  color: var(--fi-teal-dark);
+  font-weight: 900;
+}
+
+.report-date-card strong {
+  font-size: 26px;
+  letter-spacing: -0.04em;
+  color: var(--fi-ink);
+}
+
+.report-kpis {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 24px;
+}
+
+.report-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  margin-top: 20px;
+}
+
+.report-grid.two-wide {
+  grid-template-columns: 1fr;
+}
+
+.report-summary-card,
+.report-clinical-note {
+  padding: 24px;
+  border-radius: 30px;
+  border: 1px solid rgba(230, 238, 248, 0.94);
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 16px 46px rgba(15, 32, 51, 0.06);
+}
+
+.report-summary-card.wide {
+  margin-top: 20px;
+}
+
+.report-clinical-note {
+  margin-top: 20px;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(52, 199, 89, 0.12), transparent 30%),
+    rgba(247, 255, 251, 0.92);
+}
+
+.report-summary-card h2,
+.report-clinical-note h2 {
+  font-size: 26px;
+  letter-spacing: -0.035em;
+}
+
+.report-page .table td:first-child {
+  color: var(--fi-gray);
+  font-weight: 800;
+}
+
+.admin-dashboard-page .top-nav,
+.admin-billing-page .top-nav {
+  max-width: 1280px;
+}
+
+.admin-dashboard-page .dashboard-hero,
+.admin-billing-hero {
+  border-radius: 34px;
+  background:
+    radial-gradient(circle at 92% 8%, rgba(52, 199, 89, 0.16), transparent 32%),
+    rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(230, 238, 248, 0.94);
+  box-shadow: 0 24px 78px rgba(15, 32, 51, 0.08);
+}
+
+.admin-billing-page .dashboard-card,
+.admin-dashboard-page .dashboard-card {
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(230, 238, 248, 0.94);
+  box-shadow: 0 18px 56px rgba(15, 32, 51, 0.07);
+}
+
+.admin-billing-page .table form {
+  display: grid;
+  gap: 8px;
+}
+
+@media (max-width: 980px) {
+  .report-cover,
+  .report-kpis,
+  .report-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .report-date-card {
+    min-height: 130px;
+  }
+}
+
+@media print {
+  .report-page {
+    background: #fff !important;
+  }
+
+  .report-sheet {
+    padding: 18px !important;
+    border-radius: 0 !important;
+  }
+
+  .report-cover h1 {
+    font-size: 40px !important;
+  }
+
+  .report-kpis {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
