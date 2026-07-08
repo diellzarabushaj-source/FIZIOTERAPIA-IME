@@ -2,8 +2,9 @@
 
 import { currentUser } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
-import { createPatientCode, createPatientUsername, getSupabaseAdmin } from "@/lib/supabase-admin";
 import { hasActivePhysioAccess } from "@/lib/billing";
+import { getClinicalProgramTemplate } from "@/lib/clinical-programs";
+import { createPatientCode, createPatientUsername, getSupabaseAdmin } from "@/lib/supabase-admin";
 
 type Profile = {
   id: string;
@@ -12,6 +13,14 @@ type Profile = {
   full_name: string | null;
   clinic_name: string | null;
   status: string | null;
+};
+
+type ExerciseLibraryMatch = {
+  id: string;
+  name: string;
+  ai_enabled: boolean | null;
+  is_default: boolean | null;
+  owner_physio_id: string | null;
 };
 
 function isAdminRole(role?: string | null) {
@@ -127,6 +136,26 @@ async function requireAccessibleExercise(exerciseId: string, profile: Profile) {
   return exercise;
 }
 
+async function getTemplateExercises(profile: Profile, exerciseNames: string[]) {
+  const supabase = getSupabaseAdmin();
+  if (!supabase) throw new Error("Missing Supabase service key.");
+
+  if (!exerciseNames.length) return [] as ExerciseLibraryMatch[];
+
+  const query = supabase
+    .from("exercise_library")
+    .select("id,name,ai_enabled,is_default,owner_physio_id")
+    .in("name", exerciseNames)
+    .eq("status", "published");
+
+  if (!isAdminRole(profile.role)) {
+    query.or(`is_default.eq.true,owner_physio_id.eq.${profile.id}`);
+  }
+
+  const { data } = await query.returns<ExerciseLibraryMatch[]>();
+  return data || [];
+}
+
 export async function createPatientAction(formData: FormData) {
   const supabase = getSupabaseAdmin();
   if (!supabase) throw new Error("Missing Supabase service key.");
@@ -139,7 +168,9 @@ export async function createPatientAction(formData: FormData) {
   const diagnosis = String(formData.get("diagnosis") || "").trim();
   const phone = String(formData.get("phone") || "").trim();
   const ageValue = String(formData.get("age") || "").trim();
-  const planTitle = String(formData.get("planTitle") || "Program rehabilitimi 14 ditë").trim();
+  const programKey = String(formData.get("programKey") || "").trim();
+  const program = getClinicalProgramTemplate(programKey);
+  const planTitle = String(formData.get("planTitle") || program.title).trim();
 
   if (!firstName) throw new Error("Patient first name is required.");
 
@@ -154,7 +185,7 @@ export async function createPatientAction(formData: FormData) {
       last_name: lastName || null,
       phone: phone || null,
       age: ageValue ? Number(ageValue) : null,
-      diagnosis: diagnosis || null,
+      diagnosis: diagnosis || program.diagnosisLabel,
       patient_code: patientCode,
       patient_username: patientUsername,
       status: "active",
@@ -166,14 +197,14 @@ export async function createPatientAction(formData: FormData) {
 
   const today = new Date();
   const end = new Date();
-  end.setDate(today.getDate() + 13);
+  end.setDate(today.getDate() + program.durationDays - 1);
 
   const { data: plan, error: planError } = await supabase
     .from("plans")
     .insert({
       patient_id: patient.id,
       physio_id: profile.id,
-      title: planTitle || "Program rehabilitimi 14 ditë",
+      title: planTitle || program.title,
       start_date: today.toISOString().slice(0, 10),
       end_date: end.toISOString().slice(0, 10),
       status: "active",
@@ -183,25 +214,50 @@ export async function createPatientAction(formData: FormData) {
 
   if (planError) throw new Error(planError.message);
 
-  const { data: defaultExercises } = await supabase
-    .from("exercise_library")
-    .select("id,name")
-    .eq("is_default", true)
-    .eq("status", "published")
-    .limit(3);
+  const templateExerciseNames = program.exercises.map((exercise) => exercise.exerciseName);
+  const matchingExercises = await getTemplateExercises(profile, templateExerciseNames);
+  const exerciseByName = new Map(matchingExercises.map((exercise) => [exercise.name, exercise]));
 
-  if (defaultExercises?.length) {
-    await supabase.from("plan_exercises").insert(
-      defaultExercises.map((exercise, index) => ({
+  const templateRows = program.exercises
+    .map((templateExercise) => {
+      const exercise = exerciseByName.get(templateExercise.exerciseName);
+      if (!exercise) return null;
+
+      return {
         plan_id: plan.id,
         exercise_id: exercise.id,
-        sets: index === 2 ? 3 : 2,
-        reps: index === 2 ? null : 10,
-        frequency: index === 2 ? "3 × 30 sek" : "Çdo ditë",
-        day_number: 1,
-        instructions: "Kryeje ushtrimin ngadalë dhe ndalo nëse dhimbja rritet.",
-      })),
-    );
+        sets: templateExercise.sets,
+        reps: templateExercise.reps,
+        frequency: templateExercise.frequency,
+        day_number: templateExercise.dayNumber,
+        instructions: `${templateExercise.instructions}\n\nSafety: ${program.safetyNote}`,
+      };
+    })
+    .filter((row): row is NonNullable<typeof row> => Boolean(row));
+
+  if (templateRows.length) {
+    await supabase.from("plan_exercises").insert(templateRows);
+  } else {
+    const { data: defaultExercises } = await supabase
+      .from("exercise_library")
+      .select("id,name")
+      .eq("is_default", true)
+      .eq("status", "published")
+      .limit(3);
+
+    if (defaultExercises?.length) {
+      await supabase.from("plan_exercises").insert(
+        defaultExercises.map((exercise, index) => ({
+          plan_id: plan.id,
+          exercise_id: exercise.id,
+          sets: index === 2 ? 3 : 2,
+          reps: index === 2 ? null : 10,
+          frequency: index === 2 ? "3 × 30 sek" : "Çdo ditë",
+          day_number: 1,
+          instructions: `Kryeje ushtrimin ngadalë dhe ndalo nëse dhimbja rritet.\n\nSafety: ${program.safetyNote}`,
+        })),
+      );
+    }
   }
 
   revalidatePath("/physiotherapist-portal");
