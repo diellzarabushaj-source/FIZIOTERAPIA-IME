@@ -1,6 +1,6 @@
 {
-  "name": "fizioplan-mobile-app",
-  "version": "0.2.0",
+  "name": "fizioterapia-ime-mobile-app",
+  "version": "1.0.0",
   "private": true,
   "main": "expo/AppEntry",
   "scripts": {
@@ -8,7 +8,12 @@
     "ios": "expo start --ios",
     "android": "expo start --android",
     "web": "expo start --web",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "build:preview": "eas build --profile preview --platform all",
+    "build:ios": "eas build --profile production --platform ios",
+    "build:android": "eas build --profile production --platform android",
+    "submit:ios": "eas submit --platform ios",
+    "submit:android": "eas submit --platform android"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.110.1",
