@@ -227,10 +227,207 @@
   border-color: rgba(255, 149, 0, 0.18);
 }
 
+.patient-progress-hero {
+  grid-template-columns: minmax(0, 1fr) 260px;
+}
+
+.progress-orb-card {
+  display: grid;
+  align-content: center;
+  gap: 10px;
+}
+
+.patient-kpis .kpi-card strong {
+  letter-spacing: -0.05em;
+}
+
+.patient-day-strip {
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr);
+  gap: 18px;
+  align-items: center;
+  margin: 18px 0;
+  padding: 20px;
+  border-radius: 28px;
+  border: 1px solid rgba(230, 238, 248, 0.94);
+  background: rgba(255, 255, 255, 0.88);
+  box-shadow: 0 16px 46px rgba(15, 32, 51, 0.06);
+}
+
+.patient-day-strip h2 {
+  margin: 8px 0 0;
+  font-size: 28px;
+}
+
+.day-chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.day-chip {
+  padding: 9px 12px;
+  border-radius: 999px;
+  background: #fff;
+  border: 1px solid var(--fi-line);
+  color: var(--fi-gray);
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.day-chip.active {
+  color: var(--fi-teal-dark);
+  background: var(--fi-mint);
+  border-color: rgba(48, 181, 168, 0.16);
+}
+
+.patient-progress-grid {
+  align-items: start;
+}
+
+.exercise-card-list {
+  display: grid;
+  gap: 14px;
+}
+
+.patient-exercise-card {
+  display: grid;
+  gap: 14px;
+  padding: 18px;
+  border-radius: 26px;
+  border: 1px solid rgba(230, 238, 248, 0.94);
+  background:
+    radial-gradient(circle at 100% 0%, rgba(52, 199, 89, 0.08), transparent 26%),
+    rgba(255, 255, 255, 0.92);
+  box-shadow: 0 12px 34px rgba(15, 32, 51, 0.05);
+}
+
+.patient-exercise-card.done {
+  background: linear-gradient(135deg, rgba(247, 255, 251, 0.96), rgba(255, 255, 255, 0.94));
+}
+
+.exercise-card-header,
+.exercise-actions-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.exercise-card-header h3 {
+  margin: 10px 0 4px;
+  font-size: 26px;
+  letter-spacing: -0.04em;
+}
+
+.exercise-card-header p,
+.exercise-instruction {
+  margin: 0;
+  color: var(--fi-gray);
+}
+
+.exercise-status-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-end;
+}
+
+.status-pill {
+  padding: 7px 10px;
+  border-radius: 999px;
+  background: rgba(255, 149, 0, 0.10);
+  color: #9A3412;
+  border: 1px solid rgba(255, 149, 0, 0.18);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.status-pill.done,
+.status-pill.ai {
+  color: var(--fi-teal-dark);
+  background: var(--fi-mint);
+  border-color: rgba(48, 181, 168, 0.16);
+}
+
+.exercise-meta-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.exercise-meta-grid div {
+  padding: 12px;
+  border-radius: 18px;
+  background: #fff;
+  border: 1px solid var(--fi-line);
+}
+
+.exercise-meta-grid b,
+.exercise-meta-grid span {
+  display: block;
+}
+
+.exercise-meta-grid span {
+  margin-top: 4px;
+  color: var(--fi-gray);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.exercise-complete-form {
+  display: grid;
+  grid-template-columns: 120px minmax(140px, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+  flex: 1;
+}
+
+.active-exercise-card {
+  display: grid;
+  align-content: start;
+  gap: 14px;
+}
+
+.trend-bars {
+  height: 170px;
+  display: flex;
+  align-items: end;
+  gap: 8px;
+  padding: 18px;
+  border-radius: 24px;
+  background: #fff;
+  border: 1px solid var(--fi-line);
+}
+
+.trend-bars span {
+  min-width: 28px;
+  flex: 1;
+  display: grid;
+  place-items: start center;
+  align-content: start;
+  border-radius: 999px 999px 10px 10px;
+  background: linear-gradient(180deg, var(--fi-teal), var(--fi-green));
+  color: #fff;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.pain-trend span:nth-child(n+1) {
+  background: linear-gradient(180deg, #FFB020, #34C759);
+}
+
+.trend-bars em {
+  margin-top: 6px;
+  font-style: normal;
+}
+
 @media (max-width: 980px) {
   .patient-login-hero,
   .patient-preview-section,
-  .patient-info-grid {
+  .patient-info-grid,
+  .patient-progress-hero,
+  .patient-day-strip {
     grid-template-columns: 1fr;
   }
 
@@ -247,6 +444,22 @@
     width: min(340px, 100%);
     margin: 0 auto;
   }
+
+  .exercise-card-header,
+  .exercise-actions-row {
+    flex-direction: column;
+  }
+
+  .exercise-status-stack {
+    flex-direction: row;
+    align-items: flex-start;
+  }
+
+  .exercise-meta-grid,
+  .exercise-complete-form {
+    grid-template-columns: 1fr;
+    width: 100%;
+  }
 }
 
 @media (max-width: 640px) {
@@ -262,5 +475,11 @@
 
   .patient-dashboard-page .dashboard-kpis {
     grid-template-columns: 1fr;
+  }
+
+  .patient-exercise-card,
+  .patient-day-strip {
+    padding: 16px;
+    border-radius: 22px;
   }
 }
