@@ -8,7 +8,8 @@ const rows = [
 ];
 
 export default async function PhysioPage() {
-  const user = await currentUser();
+  const clerkConfigured = Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY && process.env.CLERK_SECRET_KEY);
+  const user = clerkConfigured ? await currentUser() : null;
   const displayName = user?.firstName || user?.primaryEmailAddress?.emailAddress || "Fizioterapeut";
 
   return (
@@ -29,6 +30,11 @@ export default async function PhysioPage() {
         <span className="badge">Fizioterapeut · Clerk protected</span>
         <h1>Dashboard per pacientet dhe planet</h1>
         <p>Ky panel eshte i mbrojtur me Clerk. I kyçur si: <b>{displayName}</b></p>
+        {!clerkConfigured && (
+          <div className="role-warning">
+            Clerk eshte vendosur ne kod, por login aktivizohet pasi te shtohen Environment Variables ne Vercel.
+          </div>
+        )}
         <p>Krijo pacient, cakto plan, monitoro dhimbjen, adherence dhe AI score.</p>
         <button className="button">Shto pacient</button>
       </section>
