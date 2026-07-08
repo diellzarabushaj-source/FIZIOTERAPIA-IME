@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
+import { notifyPhysioLowAiScore } from "@/lib/clinical-notifications";
 
 const USERNAME_COOKIE = "fizioplan_patient_username";
 const CODE_COOKIE = "fizioplan_patient_code";
@@ -75,6 +76,15 @@ export async function POST(request: Request) {
 
   if (error) {
     return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
+  }
+
+  if (score < 60) {
+    await notifyPhysioLowAiScore({
+      supabase,
+      patientId: patient.id,
+      score,
+      feedback,
+    });
   }
 
   return NextResponse.json({ ok: true, aiCheck: data });
