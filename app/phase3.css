@@ -200,6 +200,19 @@
   font-size: 13px;
 }
 
+.patient-access-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  min-width: 190px;
+}
+
+.patient-access-actions .compact-button:first-child {
+  color: var(--fi-teal-dark);
+  background: var(--fi-mint);
+  border-color: rgba(48, 181, 168, 0.16);
+}
+
 .alert-text {
   color: #9A3412;
 }
