@@ -14,6 +14,7 @@ Fizioterapia ime is a digital physiotherapy SaaS with:
 - AI Movement Check using Google MediaPipe
 - pilot feedback and launch readiness pages
 - Expo mobile app in `apps/mobile-app`
+- mobile app connected to the web backend through `/api/mobile/*`
 
 Production URL:
 
@@ -41,10 +42,12 @@ diellzarabushaj-source/FIZIOTERAPIA-IME
 ## First task for Codex
 
 1. Run `npm install`.
-2. Run `npm run build`.
-3. Fix build/type/lint errors only.
-4. Do not redesign the product unless a specific issue requires it.
-5. After build passes, verify route files and footer links.
+2. Run `npm run preflight:routes`.
+3. Run `npm run build`.
+4. Run `npm run mobile:typecheck`.
+5. Fix build/type/lint errors only.
+6. Do not redesign the product unless a specific issue requires it.
+7. After build passes, verify route files, footer links and mobile API routes.
 
 ## Non-negotiable product rules
 
@@ -70,7 +73,9 @@ Do not change these without explicit approval:
 - Pain 7/10 or higher means stop exercise and contact physiotherapist.
 - Camera video is not stored in MVP.
 - Supabase service-role key is server-only.
-- Do not expose secrets in GitHub, frontend, logs or docs.
+- Clerk secret key is server-only.
+- Resend API key is server-only.
+- Do not expose secrets in GitHub, frontend, mobile app, logs or docs.
 
 ## Security rules
 
@@ -89,6 +94,27 @@ is_default = true OR owner_physio_id = current profile id
 ```
 
 Owner/admin can bypass normal physio ownership checks only where explicitly intended.
+
+## Mobile backend rule
+
+The Expo patient app must not connect directly to service-role Supabase, Clerk secret, or Resend.
+
+Allowed mobile architecture:
+
+```text
+apps/mobile-app
+  → app/api/mobile/patient-session/route.ts
+  → app/api/mobile/save-progress/route.ts
+  → Supabase/Resend server-side on Vercel
+```
+
+Mobile public env only:
+
+```text
+EXPO_PUBLIC_API_BASE_URL=https://fizioterapia-ime.vercel.app
+```
+
+Do not add `SUPABASE_SERVICE_ROLE_KEY`, `CLERK_SECRET_KEY` or `RESEND_API_KEY` to Expo/mobile.
 
 ## Patient access flow
 
@@ -155,6 +181,18 @@ app/physiotherapist-portal/actions.ts
 app/admin-billing/actions.ts
 ```
 
+### Mobile integration
+
+```text
+apps/mobile-app/App.tsx
+apps/mobile-app/lib/api.ts
+apps/mobile-app/.env.example
+app/api/mobile/patient-session/route.ts
+app/api/mobile/save-progress/route.ts
+scripts/smoke-test-mobile-api.mjs
+docs/mobile-backend-integration.md
+```
+
 ### Patient access / QR
 
 ```text
@@ -193,6 +231,11 @@ Public:
 /qa-checklist
 /pilot-onboarding
 /pilot-launch
+/pilot-readiness
+/pilot-runbook
+/pilot-communications
+/mobile-submission
+/final-handoff
 /patient-handout
 /pilot-feedback
 /patient-portal
@@ -218,53 +261,20 @@ Protected/session routes:
 /pilot-decision
 ```
 
-## Build boundaries
-
-The web app should build on Vercel from the repository root.
-
-Do not make the Expo mobile app a dependency of the Vercel web build. Mobile assets and app config live under:
+Mobile API routes:
 
 ```text
-apps/mobile-app
+/api/mobile/patient-session
+/api/mobile/save-progress
 ```
 
-## Recommended local commands
+## Final check commands
 
 ```bash
 npm install
+npm run preflight:routes
 npm run build
-npm run lint
+npm run mobile:typecheck
+npm run smoke:production
+npm run smoke:mobile-api
 ```
-
-If lint script is unavailable or fails because of Next.js version/config, still run build and report the exact failure.
-
-## Codex task style
-
-When working with Codex:
-
-1. Make small commits.
-2. Do not rewrite unrelated files.
-3. Preserve existing styling system.
-4. Keep Albanian patient/clinic UI text.
-5. Keep safety wording visible.
-6. Run build/typecheck before finalizing.
-7. Report files changed, tests run, and any unresolved issues.
-
-## Next recommended tasks
-
-1. Create demo clinic seed with real demo physiotherapist and demo patients.
-2. Test full code-only patient flow.
-3. Test QR route and printable patient access card.
-4. Improve admin default exercise management actions.
-5. Improve mobile app preview build and screenshots.
-6. Add production smoke test script for key public routes.
-
-## Output expected from Codex
-
-When done, report:
-
-- build status
-- files changed
-- routes tested
-- remaining blockers
-- exact command output if build failed
