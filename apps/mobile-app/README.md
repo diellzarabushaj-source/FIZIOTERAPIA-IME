@@ -1,8 +1,8 @@
-# FizioPlan Mobile App
+# Fizioterapia ime Mobile App
 
-Expo React Native patient app for FizioPlan / Fizioterapia Ime.
+Expo React Native patient app for Fizioterapia ime.
 
-This folder contains the cleaned mobile prototype imported from the Replit `Patient-Helper` work and adapted as a standalone Expo app inside the main GitHub repository.
+This folder contains the mobile patient app that shares the same Supabase backend with the web dashboard.
 
 ## Included flow
 
@@ -35,8 +35,40 @@ EXPO_PUBLIC_SUPABASE_URL=https://squgbcmzyaclafnioczq.supabase.co
 EXPO_PUBLIC_SUPABASE_ANON_KEY=your_publishable_or_anon_key_here
 ```
 
-Use only the Supabase publishable/anon key.
+Use only the Supabase publishable/anon key. Never put the Supabase service role key in the mobile app.
+
+## App Store / Play Store preparation
+
+The app is configured for EAS builds:
+
+```bash
+npm run build:preview
+npm run build:ios
+npm run build:android
+```
+
+Current app identifiers:
+
+```text
+App name: Fizioterapia ime
+iOS bundle ID: com.fizioterapiaime.patient
+Android package: com.fizioterapiaime.patient
+```
+
+Store drafts are included:
+
+- `store-listing.md`
+- `app-privacy.md`
+- `eas.json`
+
+Before submitting, add real PNG assets:
+
+- App icon 1024 × 1024
+- Android adaptive icon
+- Splash screen
+- iPhone screenshots
+- Android screenshots
 
 ## Clinical safety
 
-The AI flow is only a movement-quality feedback placeholder. It does not replace the physiotherapist.
+The AI flow is movement-quality feedback only. It does not diagnose, prescribe therapy, or replace the physiotherapist.
