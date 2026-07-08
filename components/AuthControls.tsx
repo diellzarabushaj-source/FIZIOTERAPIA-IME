@@ -1,6 +1,6 @@
 "use client";
 
-import { SignInButton, SignUpButton, SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
+import { SignInButton, SignUpButton, Show, UserButton } from "@clerk/nextjs";
 
 const clerkConfigured = Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY);
 
@@ -16,20 +16,20 @@ export function AuthControls() {
 
   return (
     <div className="auth-controls">
-      <SignedOut>
+      <Show when="signed-out">
         <SignInButton mode="modal">
           <button className="auth-button auth-button-secondary">Hyr</button>
         </SignInButton>
         <SignUpButton mode="modal">
           <button className="auth-button">Krijo llogari</button>
         </SignUpButton>
-      </SignedOut>
-      <SignedIn>
+      </Show>
+      <Show when="signed-in">
         <div className="signed-in-pill">
           <span>Llogaria aktive</span>
-          <UserButton afterSignOutUrl="/" />
+          <UserButton />
         </div>
-      </SignedIn>
+      </Show>
     </div>
   );
 }
