@@ -38,6 +38,11 @@ const requiredProtectedRoutes = [
   "/pilot-decision",
 ];
 
+const requiredApiRoutes = [
+  ["/api/mobile/patient-session", join(appDir, "api", "mobile", "patient-session", "route.ts")],
+  ["/api/mobile/save-progress", join(appDir, "api", "mobile", "save-progress", "route.ts")],
+];
+
 const dynamicRoutes = new Set([
   "/reports/demo",
 ]);
@@ -62,24 +67,19 @@ function extractFooterHrefs() {
 }
 
 const checks = [
-  ...requiredPublicRoutes.map((route) => ({ route, group: "public" })),
-  ...requiredProtectedRoutes.map((route) => ({ route, group: "protected" })),
-  ...extractFooterHrefs().map((route) => ({ route, group: "footer" })),
+  ...requiredPublicRoutes.map((route) => ({ route, group: "public", exists: routeExists(route), file: dynamicRoutes.has(route) ? "dynamic route accepted" : routeToPageFile(route) })),
+  ...requiredProtectedRoutes.map((route) => ({ route, group: "protected", exists: routeExists(route), file: routeToPageFile(route) })),
+  ...extractFooterHrefs().map((route) => ({ route, group: "footer", exists: routeExists(route), file: dynamicRoutes.has(route) ? "dynamic route accepted" : routeToPageFile(route) })),
+  ...requiredApiRoutes.map(([route, file]) => ({ route, group: "api", exists: existsSync(file), file })),
 ];
 
 const seen = new Set();
-const uniqueChecks = checks.filter((check) => {
+const results = checks.filter((check) => {
   const key = `${check.group}:${check.route}`;
   if (seen.has(key)) return false;
   seen.add(key);
   return true;
 });
-
-const results = uniqueChecks.map((check) => ({
-  ...check,
-  exists: routeExists(check.route),
-  file: dynamicRoutes.has(check.route) ? "dynamic route accepted" : routeToPageFile(check.route),
-}));
 
 console.table(results.map(({ group, route, exists }) => ({ group, route, exists })));
 
