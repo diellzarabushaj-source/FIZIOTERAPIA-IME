@@ -1,11 +1,9 @@
-const assignedExercises = [
-  ["Glute bridge", "3 sete × 12", "Default", "Sot"],
-  ["Cat cow", "2 sete × 10", "Default", "Sot"],
-  ["Piriformis stretch", "3 × 30 sek", "Default", "Sot"],
-  ["Bird dog", "2 sete × 8", "Nga fizioterapeuti", "Nesër"]
-];
+import { patientLoginAction } from "./actions";
 
-export default function PatientPortalPage() {
+export default async function PatientPortalPage({ searchParams }: { searchParams?: Promise<{ error?: string }> }) {
+  const params = await searchParams;
+  const error = params?.error;
+
   return (
     <main className="page">
       <nav className="top-nav">
@@ -20,40 +18,43 @@ export default function PatientPortalPage() {
       </nav>
 
       <section className="hero">
-        <span className="badge">Patient Portal</span>
-        <h1>Hyrje për pacientin me username të gjeneruar nga fizioterapeuti.</h1>
+        <span className="badge">Patient Portal · Supabase login</span>
+        <h1>Hyrje për pacientin me username dhe kod.</h1>
         <p>
-          Pacienti nuk bën sign up dhe nuk krijon plan vetë. Fizioterapeuti ia gjeneron username-in dhe ia cakton planin e ushtrimeve.
+          Pacienti nuk krijon llogari vetë. Fizioterapeuti ia gjeneron username-in dhe kodin, pastaj pacienti sheh planin real nga Supabase.
         </p>
-        <div className="portal-login-card">
+        <form action={patientLoginAction} className="portal-login-card">
           <label className="label">Username i pacientit</label>
-          <input className="input" defaultValue="arb-4821" placeholder="p.sh. arb-4821" />
-          <label className="label">Kodi i planit</label>
-          <input className="input" defaultValue="ARB-4821" placeholder="Kodi i planit" />
-          <a className="button" href="/patient-dashboard">Hyr në dashboard</a>
-        </div>
+          <input className="input" name="username" placeholder="p.sh. arber-krasniqi-4821" required />
+          <label className="label">Kodi i pacientit</label>
+          <input className="input" name="code" placeholder="p.sh. ARB-4821" required />
+          {error === "invalid" && <div className="role-warning">Username ose kodi nuk është i saktë.</div>}
+          {error === "missing" && <div className="role-warning">Shkruaj username dhe kodin e pacientit.</div>}
+          <button className="button" type="submit">Hyr në dashboard</button>
+        </form>
       </section>
 
       <section className="grid">
         <div className="phone">
-          <h2>Pas hyrjes pacienti sheh dashboard</h2>
-          <p>Lumbosciatica · Fizioterapeut: Alketa Rabushaj</p>
-          <div className="exercise"><b>Username:</b><br />arb-4821</div>
-          <div className="exercise"><b>Progres sot:</b><br />3/5 ushtrime</div>
-          <a className="button" href="/patient-dashboard">Shiko dashboard-in</a>
+          <h2>Si e merr pacienti qasjen</h2>
+          <p>Fizioterapeuti krijon pacientin dhe ia dërgon username + kod.</p>
+          <div className="exercise"><b>Username:</b><br />gjenerohet automatikisht</div>
+          <div className="exercise"><b>Kodi:</b><br />p.sh. ARB-4821</div>
+          <div className="exercise"><b>Plan:</b><br />nga fizioterapeuti</div>
         </div>
 
         <div className="card" style={{ gridColumn: "span 2" }}>
-          <h2>Ushtrimet e caktuara</h2>
-          <p>Këto ushtrime janë zgjedhur nga fizioterapeuti. Disa janë default nga admin, disa janë ushtrime personale të fizioterapeutit.</p>
+          <h2>Çka sheh pacienti pas login</h2>
           <table className="table">
             <thead>
-              <tr><th>Ushtrimi</th><th>Dozimi</th><th>Burimi</th><th>Status</th></tr>
+              <tr><th>Moduli</th><th>Funksioni</th><th>Burimi</th></tr>
             </thead>
             <tbody>
-              {assignedExercises.map((row) => (
-                <tr key={row[0]}>{row.map((cell) => <td key={cell}>{cell}</td>)}</tr>
-              ))}
+              <tr><td>Plani</td><td>Ushtrimet e caktuara</td><td>Supabase</td></tr>
+              <tr><td>Video / instruksione</td><td>Udhëzime për çdo ushtrim</td><td>Exercise library</td></tr>
+              <tr><td>Dhimbja</td><td>Raportim 0–10 pas ushtrimit</td><td>exercise_logs</td></tr>
+              <tr><td>AI check</td><td>Score dhe feedback bazik</td><td>ai_checks</td></tr>
+              <tr><td>Mesazhe</td><td>Korrigjime nga fizioterapeuti</td><td>physio_messages</td></tr>
             </tbody>
           </table>
         </div>
@@ -61,18 +62,16 @@ export default function PatientPortalPage() {
 
       <section className="grid" style={{ marginTop: 20 }}>
         <div className="card green">
-          <h2>Raporto dhimbjen</h2>
-          <p>Pacienti shënon dhimbjen 0–10 pas çdo ushtrimi. Nëse dhimbja është e lartë, fizioterapeuti merr alert.</p>
-          <div className="kpis"><div className="kpi">Dhimbja sot<strong>5/10</strong></div></div>
+          <h2>Safety rule</h2>
+          <p>Nëse dhimbja është 7/10 ose më shumë, pacienti ndalon ushtrimin dhe kontakton fizioterapeutin.</p>
         </div>
         <div className="card blue">
-          <h2>AI Movement Check</h2>
-          <p>Kontrollon cilësinë e lëvizjes, jep feedback bazik dhe nuk e zëvendëson fizioterapeutin.</p>
-          <div className="kpis"><div className="kpi">AI score<strong>82%</strong></div></div>
+          <h2>AI nuk zëvendëson fizioterapeutin</h2>
+          <p>AI jep vetëm feedback për cilësinë e lëvizjes dhe ruan score/feedback për fizioterapeutin.</p>
         </div>
         <div className="card">
-          <h2>Mesazh nga fizioterapeuti</h2>
-          <p>“Bëje lëvizjen më ngadalë dhe mos vazhdo nëse dhimbja rritet.”</p>
+          <h2>Real data</h2>
+          <p>Ky portal tash lidhet me pacientë, plane, ushtrime, logs dhe AI checks reale në Supabase.</p>
         </div>
       </section>
     </main>
