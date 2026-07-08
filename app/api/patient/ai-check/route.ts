@@ -1,9 +1,8 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
-import { getSupabaseAdmin } from "@/lib/supabase-admin";
+import { getSupabaseAdmin, normalizePatientCode } from "@/lib/supabase-admin";
 import { notifyPhysioLowAiScore } from "@/lib/clinical-notifications";
 
-const USERNAME_COOKIE = "fizioplan_patient_username";
 const CODE_COOKIE = "fizioplan_patient_code";
 
 type AiPayload = {
@@ -21,10 +20,9 @@ export async function POST(request: Request) {
   }
 
   const cookieStore = await cookies();
-  const username = cookieStore.get(USERNAME_COOKIE)?.value?.toLowerCase();
-  const code = cookieStore.get(CODE_COOKIE)?.value?.toUpperCase();
+  const code = normalizePatientCode(cookieStore.get(CODE_COOKIE)?.value || "");
 
-  if (!username || !code) {
+  if (!code) {
     return NextResponse.json({ ok: false, error: "patient_not_logged_in" }, { status: 401 });
   }
 
@@ -41,7 +39,6 @@ export async function POST(request: Request) {
   const { data: patient } = await supabase
     .from("patients")
     .select("id")
-    .eq("patient_username", username)
     .eq("patient_code", code)
     .eq("status", "active")
     .maybeSingle();
