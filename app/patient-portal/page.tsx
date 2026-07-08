@@ -30,17 +30,17 @@ export default function PatientPortalPage() {
           <input className="input" defaultValue="arb-4821" placeholder="p.sh. arb-4821" />
           <label className="label">Kodi i planit</label>
           <input className="input" defaultValue="ARB-4821" placeholder="Kodi i planit" />
-          <button className="button">Hyr në plan</button>
+          <a className="button" href="/patient-dashboard">Hyr në dashboard</a>
         </div>
       </section>
 
       <section className="grid">
         <div className="phone">
-          <h2>Plani im 14 ditë</h2>
+          <h2>Pas hyrjes pacienti sheh dashboard</h2>
           <p>Lumbosciatica · Fizioterapeut: Alketa Rabushaj</p>
           <div className="exercise"><b>Username:</b><br />arb-4821</div>
           <div className="exercise"><b>Progres sot:</b><br />3/5 ushtrime</div>
-          <a className="button" href="/app-preview">Hap mobile preview</a>
+          <a className="button" href="/patient-dashboard">Shiko dashboard-in</a>
         </div>
 
         <div className="card" style={{ gridColumn: "span 2" }}>
