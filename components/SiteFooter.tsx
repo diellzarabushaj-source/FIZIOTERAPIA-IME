@@ -37,6 +37,7 @@ const footerSections = [
     links: [
       ["Admin Dashboard", "/admin-dashboard"],
       ["Admin Billing", "/admin-billing"],
+      ["Admin Feedback", "/admin-feedback"],
       ["Reports", "/reports/demo"],
     ],
   },
