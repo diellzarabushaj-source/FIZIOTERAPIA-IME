@@ -29,10 +29,12 @@ const workflow = [
 ];
 
 const roadmap = [
-  ["Auth", "Clerk për fizioterapeut dhe admin", "Në progres"],
-  ["Database", "Supabase RLS + real data", "Hapi tjetër"],
-  ["AI", "MediaPipe Movement Check", "MVP"],
-  ["Payments", "Stripe subscriptions", "Pas dashboard"],
+  ["Auth", "Clerk për fizioterapeut dhe admin", "Done"],
+  ["Database", "Supabase RLS + real data", "Done"],
+  ["AI", "MediaPipe Movement Check", "Done"],
+  ["Billing", "29.90 EUR/muaj manual/local-bank", "Done"],
+  ["Notifications", "Resend email alerts", "Done"],
+  ["PDF", "Raporte progresi", "Done"],
 ];
 
 export default function HomePage() {
@@ -40,12 +42,13 @@ export default function HomePage() {
     <main className="page">
       <nav className="top-nav">
         <a className="brand-link" href="/">
-          <span className="brand-logo">FP</span>
-          <span>FizioPlan</span>
+          <span className="brand-logo">FI</span>
+          <span>Fizioterapia ime</span>
         </a>
         <div className="nav-actions">
           <a href="/patient-portal">Patient</a>
           <a href="/physiotherapist-portal">Physio</a>
+          <a href="/faq">FAQ</a>
           <a href="/admin-hidden">Admin</a>
           <AuthControls />
         </div>
@@ -53,7 +56,7 @@ export default function HomePage() {
 
       <section className="hero">
         <span className="badge">Digital physiotherapy platform</span>
-        <h1>FizioPlan për pacientë, fizioterapeutë dhe klinika.</h1>
+        <h1>Fizioterapia ime për pacientë, fizioterapeutë dhe klinika.</h1>
         <p>
           Një platformë profesionale ku fizioterapeuti krijon planin, pacienti e ndjek në app,
           ndërsa AI ndihmon me kontroll bazik të lëvizjes dhe sinjalizime sigurie.
@@ -61,6 +64,7 @@ export default function HomePage() {
         <div className="portal-actions">
           <a className="button" href="/physiotherapist-portal">Hyr si fizioterapeut</a>
           <a className="button secondary" href="/patient-portal">Hyr si pacient</a>
+          <a className="button secondary" href="/faq">FAQ</a>
           <a className="button secondary" href="/app-preview">Shiko app preview</a>
         </div>
         <p style={{ fontSize: 14 }}>
@@ -95,10 +99,11 @@ export default function HomePage() {
       </section>
 
       <section className="grid" style={{ marginTop: 20 }}>
-        <div className="card blue">
-          <h2>Aktualisht</h2>
-          <p>Clerk është lidhur me webapp për fizioterapeut dhe admin. Pas auth-it kalojmë te Supabase RLS dhe real data.</p>
-        </div>
+        <a className="card blue" href="/faq">
+          <h2>FAQ</h2>
+          <p>Pyetje të shpeshta për pacientë, fizioterapeutë, AI, billing 29.90 EUR/muaj dhe sigurinë klinike.</p>
+          <span className="button secondary">Hap FAQ</span>
+        </a>
         <div className="card" style={{ gridColumn: "span 2" }}>
           <h2>Roadmap i MVP</h2>
           <table className="table">
