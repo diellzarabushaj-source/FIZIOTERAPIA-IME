@@ -1,4 +1,8 @@
+import { mkdirSync, writeFileSync } from "node:fs";
+import { dirname, resolve } from "node:path";
+
 const BASE_URL = process.env.SMOKE_BASE_URL || "https://fizioterapia-ime.vercel.app";
+const REPORT_PATH = process.env.SMOKE_REPORT_PATH || "reports/production-smoke-test.json";
 
 const publicRoutes = [
   "/",
@@ -29,6 +33,7 @@ const expectedContent = {
 
 async function checkRoute(route) {
   const url = `${BASE_URL}${route}`;
+  const startedAt = Date.now();
   const response = await fetch(url, {
     redirect: "manual",
     headers: {
@@ -46,6 +51,8 @@ async function checkRoute(route) {
     url,
     status: response.status,
     ok,
+    ms: Date.now() - startedAt,
+    expectedText: expected || null,
     reason: !ok
       ? response.status !== 200
         ? `Expected 200, got ${response.status}`
@@ -64,14 +71,32 @@ for (const route of publicRoutes) {
       url: `${BASE_URL}${route}`,
       status: "error",
       ok: false,
+      ms: null,
+      expectedText: expectedContent[route] || null,
       reason: error instanceof Error ? error.message : String(error),
     });
   }
 }
 
-console.table(results.map(({ route, status, ok, reason }) => ({ route, status, ok, reason })));
-
 const failures = results.filter((result) => !result.ok);
+const report = {
+  app: "Fizioterapia ime",
+  baseUrl: BASE_URL,
+  generatedAt: new Date().toISOString(),
+  total: results.length,
+  passed: results.length - failures.length,
+  failed: failures.length,
+  status: failures.length ? "failed" : "passed",
+  results,
+};
+
+console.table(results.map(({ route, status, ok, ms, reason }) => ({ route, status, ok, ms, reason })));
+
+const reportAbsolutePath = resolve(REPORT_PATH);
+mkdirSync(dirname(reportAbsolutePath), { recursive: true });
+writeFileSync(reportAbsolutePath, `${JSON.stringify(report, null, 2)}\n`);
+console.log(`\nSmoke report written to ${REPORT_PATH}`);
+
 if (failures.length) {
   console.error(`\nSmoke test failed for ${failures.length} route(s).`);
   process.exit(1);
