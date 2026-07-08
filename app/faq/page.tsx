@@ -1,4 +1,5 @@
 import { AuthControls } from "@/components/AuthControls";
+import { BrandMark } from "@/components/BrandMark";
 
 const faqs = [
   {
@@ -57,10 +58,7 @@ export default function FaqPage() {
   return (
     <main className="page">
       <nav className="top-nav">
-        <a className="brand-link" href="/">
-          <span className="brand-logo">FI</span>
-          <span>Fizioterapia ime</span>
-        </a>
+        <BrandMark />
         <div className="nav-actions">
           <a href="/patient-portal">Patient</a>
           <a href="/physiotherapist-portal">Physio</a>
