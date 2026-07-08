@@ -151,8 +151,8 @@ export default async function PhysiotherapistPortalPage() {
     <main className="page">
       <nav className="top-nav">
         <a className="brand-link" href="/">
-          <span className="brand-logo">FP</span>
-          <span>FizioPlan</span>
+          <span className="brand-logo">FI</span>
+          <span>Fizioterapia ime</span>
         </a>
         <div className="nav-actions">
           <a href="/patient-portal">Patient Portal</a>
@@ -166,10 +166,10 @@ export default async function PhysiotherapistPortalPage() {
         <h1>Dashboard funksional për fizioterapeutin.</h1>
         <p>I kyçur si: <b>{displayName}</b></p>
         <p>
-          Tash ky panel lexon pacientë, ushtrime, plane, pain logs dhe AI checks nga Supabase. Format më poshtë ruajnë të dhëna reale në databazë.
+          Ky panel lexon pacientë, ushtrime, plane, pain logs, AI checks dhe gjeneron raporte PDF nga Supabase.
         </p>
         {!clerkConfigured && <div className="role-warning">Clerk keys mungojnë në Vercel.</div>}
-        {!configured && <div className="role-warning">SUPABASE_SERVICE_ROLE_KEY mungon në Vercel. Pa këtë, server actions nuk mund të ruajnë të dhëna reale.</div>}
+        {!configured && <div className="role-warning">SUPABASE_SERVICE_ROLE_KEY mungon në Vercel.</div>}
         {error && <div className="role-warning">{error}</div>}
       </section>
 
@@ -177,7 +177,7 @@ export default async function PhysiotherapistPortalPage() {
         <div className="kpi-card">
           <span>Pacientë aktivë</span>
           <strong>{activePatients.length}</strong>
-          <small>{profile?.clinic_name || "FizioPlan"}</small>
+          <small>{profile?.clinic_name || "Fizioterapia ime"}</small>
         </div>
         <div className="kpi-card">
           <span>Ushtrime në bibliotekë</span>
@@ -224,22 +224,23 @@ export default async function PhysiotherapistPortalPage() {
             <span className="badge">{activePatients.length} total</span>
           </div>
           <table className="table">
-            <thead><tr><th>Username</th><th>Kodi</th><th>Pacient</th><th>Diagnoza</th><th>Plan</th><th>Done</th><th>Dhimbje</th><th>AI</th></tr></thead>
+            <thead><tr><th>Username</th><th>Kodi</th><th>Pacient</th><th>Diagnoza</th><th>Plan</th><th>Done</th><th>Dhimbje</th><th>AI</th><th>Raport</th></tr></thead>
             <tbody>
-              {activePatients.length === 0 && <tr><td colSpan={8}>Ende nuk ka pacientë realë. Shto pacientin e parë nga forma majtas.</td></tr>}
+              {activePatients.length === 0 && <tr><td colSpan={9}>Ende nuk ka pacientë realë. Shto pacientin e parë nga forma majtas.</td></tr>}
               {activePatients.map((patient) => {
                 const stats = getPatientStats(patient.id, logs, aiChecks);
-                const patientName = `${patient.first_name} ${patient.last_name || ""}`.trim();
+                const name = `${patient.first_name} ${patient.last_name || ""}`.trim();
                 return (
                   <tr key={patient.id}>
                     <td>{patient.patient_username || "—"}</td>
                     <td><b>{patient.patient_code}</b></td>
-                    <td>{patientName}</td>
+                    <td>{name}</td>
                     <td>{patient.diagnosis || "—"}</td>
                     <td>{patient.plans?.[0]?.title || "—"}</td>
                     <td>{stats.completed}</td>
                     <td>{stats.painAlert ? <b style={{ color: "#9A3412" }}>{stats.latestPain}/10</b> : stats.latestPain}</td>
                     <td>{stats.aiAlert ? <b style={{ color: "#9A3412" }}>{stats.latestAi}</b> : stats.latestAi}</td>
+                    <td><a className="button secondary" href={`/reports/${patient.id}`}>PDF</a></td>
                   </tr>
                 );
               })}
@@ -305,22 +306,10 @@ export default async function PhysiotherapistPortalPage() {
             {exercises.map((exercise) => <option key={exercise.id} value={exercise.id}>{exercise.name} · {exercise.category || "Pa kategori"}</option>)}
           </select>
           <div className="kpis">
-            <div>
-              <label className="label">Sete</label>
-              <input className="input" name="sets" type="number" defaultValue={2} min={1} />
-            </div>
-            <div>
-              <label className="label">Reps</label>
-              <input className="input" name="reps" type="number" defaultValue={10} min={1} />
-            </div>
-            <div>
-              <label className="label">Dita</label>
-              <input className="input" name="dayNumber" type="number" defaultValue={1} min={1} max={60} />
-            </div>
-            <div>
-              <label className="label">Status</label>
-              <div className="generated-box">Aktiv</div>
-            </div>
+            <div><label className="label">Sete</label><input className="input" name="sets" type="number" defaultValue={2} min={1} /></div>
+            <div><label className="label">Reps</label><input className="input" name="reps" type="number" defaultValue={10} min={1} /></div>
+            <div><label className="label">Dita</label><input className="input" name="dayNumber" type="number" defaultValue={1} min={1} max={60} /></div>
+            <div><label className="label">Status</label><div className="generated-box">Aktiv</div></div>
           </div>
           <label className="label">Instruksione</label>
           <textarea className="input" name="instructions" rows={4} placeholder="Kryeje ngadalë dhe me kontroll." />
@@ -328,9 +317,9 @@ export default async function PhysiotherapistPortalPage() {
         </form>
 
         <div className="card green">
-          <h2>Çka u bë funksionale</h2>
-          <p>Ky dashboard tash punon me server actions dhe Supabase real data.</p>
-          <p>Hapi tjetër është patient app me Supabase: pacienti hyn me username + kod dhe e sheh planin real.</p>
+          <h2>Raporte PDF</h2>
+          <p>Te lista e pacientëve kliko “PDF” për raportin e progresit: adherence, dhimbje, AI score dhe përmbledhje klinike.</p>
+          <p>Faqja hapet si raport print-ready; pastaj klikon “Shkarko / Printo PDF”.</p>
         </div>
       </section>
     </main>
