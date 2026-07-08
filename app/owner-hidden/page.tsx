@@ -1,10 +1,35 @@
-export default function OwnerHiddenPage() {
+import { currentUser } from "@clerk/nextjs/server";
+import { AuthControls } from "@/components/AuthControls";
+
+export default async function OwnerHiddenPage() {
+  const user = await currentUser();
+  const role = (user?.publicMetadata?.role as string | undefined) || "not-set";
+  const isAdmin = role === "admin" || role === "owner";
+
   return (
     <main className="page">
+      <nav className="top-nav">
+        <a className="brand-link" href="/">
+          <span className="brand-logo">FP</span>
+          <span>FizioPlan</span>
+        </a>
+        <div className="nav-actions">
+          <a href="/physio">Fizioterapeut</a>
+          <AuthControls />
+        </div>
+      </nav>
+
       <section className="hero">
-        <span className="badge">Owner only</span>
+        <span className="badge">Owner/Admin · Clerk protected</span>
         <h1>Panel i fshehur per pronarin</h1>
-        <p>Kjo faqe nuk duhet te shfaqet ne landing page dhe nuk duhet te kete signup publik.</p>
+        <p>Kjo faqe nuk shfaqet ne landing page dhe kerkon hyrje me Clerk.</p>
+        <p><b>Role:</b> {role}</p>
+        {!isAdmin && (
+          <div className="role-warning">
+            Llogaria eshte e kyçur, por ende nuk ka role <b>admin</b> ose <b>owner</b> ne Clerk Dashboard.
+            Per production, cakto publicMetadata.role = "admin" ose "owner" per pronarin.
+          </div>
+        )}
       </section>
 
       <section className="grid">
