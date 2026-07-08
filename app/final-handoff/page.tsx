@@ -1,47 +1,80 @@
 import { BrandMark } from "@/components/BrandMark";
 
+const commandOrder = [
+  "npm install",
+  "npm run preflight:routes",
+  "npm run build",
+  "vercel deploy --prod",
+  "npm run smoke:production",
+  "npm run smoke:report",
+];
+
 const handoffSections = [
   {
-    title: "Production validation",
+    title: "1 · Production validation",
+    status: "P0 before pilot",
     items: [
-      "Run npm run preflight:routes",
-      "Run npm run build",
-      "Deploy latest commit to Vercel production",
-      "Run npm run smoke:production",
-      "Run npm run smoke:report",
-      "Open /pilot-readiness and confirm manual sign-off",
+      "Run every final command in order.",
+      "Confirm Vercel production uses the latest GitHub commit.",
+      "Confirm /final-handoff, /pilot-readiness and /pilot-runbook return 200.",
+      "Confirm smoke report status is PASSED.",
+      "If any route fails, stop and create a route-failure issue.",
     ],
   },
   {
-    title: "Pilot handoff",
+    title: "2 · Codex handoff",
+    status: "Fix only",
     items: [
-      "Use /pilot-runbook for the 7-day operator plan",
-      "Use /pilot-communications for WhatsApp/email messages",
-      "Use /patient-handout for the first patient",
-      "Use /pilot-feedback after 3–7 days",
-      "Use /admin-feedback to triage feedback",
-      "Use /pilot-decision for Go/Hold/No-go",
+      "Open the repo in Codex and read AGENTS.md first.",
+      "Read docs/codex-connect-and-first-run.md.",
+      "Do not add features after Phase 28.",
+      "Fix exact build/type/route errors only.",
+      "Report files changed and commands run after every Codex task.",
     ],
   },
   {
-    title: "Mobile handoff",
+    title: "3 · Pilot handoff",
+    status: "Controlled test",
     items: [
-      "Use /mobile-submission for App Store / Play Store checklist",
-      "Generate Expo assets before build",
-      "Capture store screenshots",
-      "Create production demo patient for reviewers",
-      "Submit only after demo login and privacy answers are complete",
+      "Use /pilot-readiness as the final manual gate.",
+      "Use /pilot-runbook for the 7-day operator plan.",
+      "Use /pilot-communications for WhatsApp/email scripts.",
+      "Use /patient-handout for the first patient.",
+      "Use /pilot-feedback, /admin-feedback and /pilot-decision after pilot.",
     ],
   },
   {
-    title: "Safety rules locked",
+    title: "4 · Mobile handoff",
+    status: "Not before demo works",
     items: [
-      "AI feedback only",
-      "AI does not diagnose",
-      "AI does not replace physiotherapist",
-      "Pain 7/10 or higher means stop and contact physiotherapist",
-      "Camera video is not stored in MVP",
-      "Patient cannot create own treatment plan",
+      "Use /mobile-submission for App Store / Play Store handoff.",
+      "Generate Expo assets before mobile builds.",
+      "Capture screenshots after web/mobile flow works.",
+      "Create production demo patient for reviewers.",
+      "Submit only after demo login and privacy answers are complete.",
+    ],
+  },
+  {
+    title: "5 · Safety rules locked",
+    status: "Do not change",
+    items: [
+      "AI feedback only.",
+      "AI does not diagnose.",
+      "AI does not replace physiotherapist.",
+      "Pain 7/10 or higher means stop and contact physiotherapist.",
+      "Camera video is not stored in MVP.",
+      "Patient cannot create own treatment plan.",
+    ],
+  },
+  {
+    title: "6 · Business rules locked",
+    status: "Do not change",
+    items: [
+      "Price remains 29.90 EUR/month for physiotherapists.",
+      "Billing remains manual/local-bank MVP.",
+      "No Stripe requirement before pilot.",
+      "Admin activates subscription access manually.",
+      "Patient uses username + code only.",
     ],
   },
 ];
@@ -54,6 +87,8 @@ const roadmap = [
 ];
 
 const archiveLinks = [
+  ["Final handoff", "/final-handoff"],
+  ["Codex connect", "docs/codex-connect-and-first-run.md"],
   ["Pilot readiness", "/pilot-readiness"],
   ["Pilot runbook", "/pilot-runbook"],
   ["Pilot communications", "/pilot-communications"],
@@ -61,6 +96,35 @@ const archiveLinks = [
   ["QA checklist", "/qa-checklist"],
   ["Pilot decision", "/pilot-decision"],
 ];
+
+const stopReasons = [
+  "npm run build fails",
+  "Any public pilot route returns 404/500",
+  "Patient sees wrong data",
+  "Feedback cannot be saved",
+  "Admin cannot triage feedback",
+  "Safety text is missing or weak",
+  "Any secret appears in source code or browser output",
+];
+
+const codexPrompt = `Open repository diellzarabushaj-source/FIZIOTERAPIA-IME.
+
+Read first:
+- AGENTS.md
+- docs/final-handoff-and-v1-roadmap.md
+- docs/codex-connect-and-first-run.md
+- docs/build-error-triage.md
+
+Feature freeze is active after Phase 28.
+Do not add new features.
+Run:
+
+npm install
+npm run preflight:routes
+npm run build
+
+Fix exact build/type/route errors only.
+Preserve price 29.90 EUR/month, manual billing, patient username + code, AI feedback only, no diagnosis, no camera video storage, and no secrets.`;
 
 export default function FinalHandoffPage() {
   return (
@@ -80,7 +144,7 @@ export default function FinalHandoffPage() {
           <span className="badge">Phase 28 · Final archive & v1 roadmap</span>
           <h1>Final handoff për Fizioterapia ime.</h1>
           <p>
-            Ky është fundi i feature-building për pilotin. Tash kalojmë në Codex build fixes, Vercel deploy, smoke test dhe real pilot testing.
+            Kjo është faqja finale e projektit para pilotit. Prej këtu nuk shtojmë features të reja: vetëm Codex build fixes, route fixes, safety fixes dhe real pilot testing.
           </p>
           <div className="hero-actions">
             <a className="button" href="/pilot-readiness">Start final gate</a>
@@ -89,15 +153,35 @@ export default function FinalHandoffPage() {
         </div>
         <div className="launch-status-card ready">
           <span className="mini-badge">Status</span>
-          <strong>Feature freeze after Phase 28</strong>
-          <p>Prej tash: vetëm build fixes, bugs, safety dhe pilot feedback.</p>
+          <strong>Feature freeze active</strong>
+          <p>Çdo ndryshim i ri duhet të jetë bug fix, build fix, route fix, safety fix ose feedback-driven fix pas pilotit.</p>
+        </div>
+      </section>
+
+      <section className="launch-panel soft">
+        <div>
+          <span className="mini-badge">Final command order</span>
+          <h2>Rendi final para pilotit.</h2>
+          <div className="decision-rule-list compact-rules">
+            {commandOrder.map((command, index) => (
+              <article key={command}>
+                <strong>{index + 1}. Command</strong>
+                <code>{command}</code>
+              </article>
+            ))}
+          </div>
+        </div>
+        <div>
+          <span className="mini-badge">Codex prompt</span>
+          <h2>Kopjoje këtë në Codex.</h2>
+          <pre>{codexPrompt}</pre>
         </div>
       </section>
 
       <section className="launch-grid readiness-grid">
         {handoffSections.map((section) => (
           <article className="launch-card" key={section.title}>
-            <span className="mini-badge">Final handoff</span>
+            <span className="mini-badge">{section.status}</span>
             <h2>{section.title}</h2>
             <ul className="support-list">
               {section.items.map((item) => <li key={item}>{item}</li>)}
@@ -126,7 +210,7 @@ export default function FinalHandoffPage() {
             {archiveLinks.map(([label, href]) => (
               <article key={href}>
                 <strong>{label}</strong>
-                <a href={href}>{href}</a>
+                {href.startsWith("/") ? <a href={href}>{href}</a> : <code>{href}</code>}
               </article>
             ))}
           </div>
@@ -135,11 +219,11 @@ export default function FinalHandoffPage() {
 
       <section className="launch-panel warning">
         <div>
-          <span className="mini-badge">Final rule</span>
-          <h2>Mos shto features të reja para pilotit.</h2>
-          <p>
-            Çdo ndryshim i ri duhet të jetë bug fix, safety fix, build fix ose feedback-driven improvement pas pilotit të parë.
-          </p>
+          <span className="mini-badge">Stop list</span>
+          <h2>Mos e nis pilotin nëse ndodh ndonjëra prej këtyre.</h2>
+          <ul className="support-list">
+            {stopReasons.map((reason) => <li key={reason}>{reason}</li>)}
+          </ul>
         </div>
         <a className="button" href="/pilot-decision">Go/Hold/No-go</a>
       </section>
