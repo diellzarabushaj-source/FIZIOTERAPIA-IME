@@ -22,6 +22,7 @@ const footerSections = [
       ["Pilot Readiness", "/pilot-readiness"],
       ["Pilot Runbook", "/pilot-runbook"],
       ["Pilot Communications", "/pilot-communications"],
+      ["Mobile Submission", "/mobile-submission"],
       ["Patient Handout", "/patient-handout"],
       ["Pilot Onboarding", "/pilot-onboarding"],
       ["Pilot Feedback", "/pilot-feedback"],
