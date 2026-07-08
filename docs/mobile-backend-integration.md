@@ -128,12 +128,36 @@ Alert conditions:
 - AI score below 60
 - alert type `contact_physio`
 
+## API smoke test
+
+After deployment, run the API route smoke test:
+
+```bash
+npm run smoke:mobile-api
+```
+
+This confirms that mobile API routes exist and validate required fields.
+
+To test a real production patient code, run:
+
+```bash
+MOBILE_SMOKE_PATIENT_CODE=REAL-CODE npm run smoke:mobile-api
+```
+
+Do not commit real patient codes.
+
 ## Test order
 
 1. Deploy web backend to Vercel.
 2. Confirm Vercel env vars exist.
 3. Create active patient + active plan in Supabase through physio portal.
-4. Run mobile app with:
+4. Run API smoke test:
+
+```bash
+npm run smoke:mobile-api
+```
+
+5. Run mobile app with:
 
 ```bash
 cd apps/mobile-app
@@ -141,14 +165,14 @@ npm install
 EXPO_PUBLIC_API_BASE_URL=https://fizioterapia-ime.vercel.app npm start
 ```
 
-5. Enter patient code.
-6. Confirm plan loads from Supabase.
-7. Complete one exercise.
-8. Confirm `exercise_logs` row appears in Supabase.
-9. Run AI check.
-10. Confirm `ai_checks` row appears in Supabase.
-11. Test pain 7/10.
-12. Confirm alert/physio message and Resend email if configured.
+6. Enter patient code.
+7. Confirm plan loads from Supabase.
+8. Complete one exercise.
+9. Confirm `exercise_logs` row appears in Supabase.
+10. Run AI check.
+11. Confirm `ai_checks` row appears in Supabase.
+12. Test pain 7/10.
+13. Confirm alert/physio message and Resend email if configured.
 
 ## Important
 
