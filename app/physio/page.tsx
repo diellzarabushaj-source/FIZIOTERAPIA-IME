@@ -1,15 +1,34 @@
+import { currentUser } from "@clerk/nextjs/server";
+import { AuthControls } from "@/components/AuthControls";
+
 const rows = [
   ["Arber Krasniqi", "Lumbosciatica", "60%", "5/10", "78%"],
   ["Mira Gashi", "Frozen shoulder", "42%", "6/10", "71%"],
   ["Ilir Berisha", "Post-op knee", "80%", "3/10", "86%"]
 ];
 
-export default function PhysioPage() {
+export default async function PhysioPage() {
+  const user = await currentUser();
+  const displayName = user?.firstName || user?.primaryEmailAddress?.emailAddress || "Fizioterapeut";
+
   return (
     <main className="page">
+      <nav className="top-nav">
+        <a className="brand-link" href="/">
+          <span className="brand-logo">FP</span>
+          <span>FizioPlan</span>
+        </a>
+        <div className="nav-actions">
+          <a href="/patient">Pacient</a>
+          <a href="/owner-hidden">Admin</a>
+          <AuthControls />
+        </div>
+      </nav>
+
       <section className="hero">
-        <span className="badge">Fizioterapeut</span>
+        <span className="badge">Fizioterapeut · Clerk protected</span>
         <h1>Dashboard per pacientet dhe planet</h1>
+        <p>Ky panel eshte i mbrojtur me Clerk. I kyçur si: <b>{displayName}</b></p>
         <p>Krijo pacient, cakto plan, monitoro dhimbjen, adherence dhe AI score.</p>
         <button className="button">Shto pacient</button>
       </section>
