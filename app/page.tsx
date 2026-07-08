@@ -1,3 +1,5 @@
+import { AuthControls } from "@/components/AuthControls";
+
 const patients = [
   ["Arber Krasniqi", "Lumbosciatica", "60%", "5/10", "78%"],
   ["Mira Gashi", "Frozen shoulder", "42%", "6/10", "71%"],
@@ -7,6 +9,18 @@ const patients = [
 export default function HomePage() {
   return (
     <main className="page">
+      <nav className="top-nav">
+        <a className="brand-link" href="/">
+          <span className="brand-logo">FP</span>
+          <span>FizioPlan</span>
+        </a>
+        <div className="nav-actions">
+          <a href="/patient">Pacient</a>
+          <a href="/physio">Fizioterapeut</a>
+          <AuthControls />
+        </div>
+      </nav>
+
       <section className="hero">
         <span className="badge">FizioPlan MVP</span>
         <h1>Platforme e thjeshte per fizioterapi digjitale</h1>
@@ -16,7 +30,7 @@ export default function HomePage() {
         <a className="button" href="/patient">Hyr si pacient</a>{" "}
         <a className="button secondary" href="/physio">Hyr si fizioterapeut</a>
         <p style={{ fontSize: 14 }}>
-          Owner/Admin nuk shfaqet publikisht dhe eshte vetem per pronarin e platformes.
+          Fizioterapeuti dhe Owner/Admin mbrohen me Clerk sign-in.
         </p>
       </section>
 
@@ -27,11 +41,11 @@ export default function HomePage() {
         </div>
         <div className="card green">
           <h2>Fizioterapeut</h2>
-          <p>Krijon pacient, cakton ushtrime, sheh progresin, AI score dhe alerts klinike.</p>
+          <p>Krijon pacient, cakton ushtrime, sheh progresin, AI score dhe alerts klinike. Kerkohet Clerk login.</p>
         </div>
         <div className="card blue">
-          <h2>AI Movement Check</h2>
-          <p>MediaPipe detekton trupin, llogarit score dhe jep feedback bazik pa zevendesuar fizioterapeutin.</p>
+          <h2>Owner/Admin</h2>
+          <p>Panel i fshehur për menaxhim ofruesish, abonime, revenue dhe biblioteken klinike. Kerkohet Clerk login.</p>
         </div>
       </section>
 
