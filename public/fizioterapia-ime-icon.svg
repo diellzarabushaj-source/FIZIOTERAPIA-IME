@@ -1,7 +1,6 @@
 <svg width="1024" height="1024" viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
   <title id="title">Fizioterapia ime icon</title>
-  <desc id="desc">Minimal spine and movement icon in navy and teal.</desc>
-  <rect width="1024" height="1024" fill="white"/>
+  <desc id="desc">Transparent minimal spine and movement icon in navy and teal.</desc>
   <path d="M270 735 C164 606 170 442 306 300 C214 449 247 624 391 724 C534 823 755 778 874 630 C751 846 445 892 270 735Z" fill="#18A6AD"/>
   <path d="M512 184 C463 245 443 318 466 386 C483 437 526 478 551 529 C595 620 570 719 493 803 C612 741 686 642 662 523 C646 445 586 398 565 333 C548 281 560 228 512 184Z" fill="#14325F"/>
   <circle cx="602" cy="320" r="58" fill="#14325F"/>
