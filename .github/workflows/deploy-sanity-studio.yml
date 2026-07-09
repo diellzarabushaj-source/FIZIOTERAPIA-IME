@@ -2,6 +2,12 @@ name: Deploy Sanity Studio
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - "apps/studio/**"
+      - ".github/workflows/deploy-sanity-studio.yml"
 
 jobs:
   deploy-studio:
@@ -24,6 +30,13 @@ jobs:
 
       - name: Install Studio dependencies
         run: npm install --no-audit --no-fund
+
+      - name: Verify Sanity deploy token exists
+        run: |
+          if [ -z "$SANITY_AUTH_TOKEN" ]; then
+            echo "SANITY_AUTH_TOKEN is missing. Add it in GitHub Settings > Secrets and variables > Actions."
+            exit 1
+          fi
 
       - name: Build Studio
         run: npm run build
