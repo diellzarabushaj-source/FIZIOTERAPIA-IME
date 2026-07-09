@@ -46,6 +46,10 @@ Para lansimit publik:
 - `npm run preflight:routes`, `npm run lint` dhe `npm run build` duhet të kalojnë.
 - Vercel preview/deploy duhet të mos jetë i bllokuar nga deployment limit.
 
+## Deployment note
+
+Admin route guards now live in `proxy.ts` only. `middleware.ts` is intentionally not used.
+
 ## Figma design
 
 Design source of truth:
