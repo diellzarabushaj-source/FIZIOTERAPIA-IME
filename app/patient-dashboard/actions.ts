@@ -5,51 +5,39 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getSupabaseAdmin, normalizePatientCode } from "@/lib/supabase-admin";
 import { notifyPhysioHighPain, notifyPhysioLowAiScore } from "@/lib/clinical-notifications";
-
-const USERNAME_COOKIE = "fizioplan_patient_username";
-const CODE_COOKIE = "fizioplan_patient_code";
-const MAX_PATIENT_COMMENT_LENGTH = 500;
-const MAX_AI_FEEDBACK_LENGTH = 600;
+import {
+  getActivePatientBySignedCode,
+  getAiAlertType,
+  HIGH_PAIN_THRESHOLD,
+  LOW_AI_SCORE_THRESHOLD,
+  MAX_AI_FEEDBACK_LENGTH,
+  MAX_PATIENT_COMMENT_LENGTH,
+  parseBoundedNumber,
+  parseOptionalText,
+  PATIENT_CODE_COOKIE,
+  PATIENT_SESSION_COOKIE,
+  PATIENT_USERNAME_COOKIE,
+  requireAssignedPlanExercise,
+} from "@/lib/backend-logic";
 
 async function getCurrentPatient() {
   const supabase = getSupabaseAdmin();
   if (!supabase) throw new Error("Supabase server key is missing.");
 
   const cookieStore = await cookies();
-  const code = normalizePatientCode(cookieStore.get(CODE_COOKIE)?.value || "");
+  const code = normalizePatientCode(cookieStore.get(PATIENT_CODE_COOKIE)?.value || "");
+  const signature = cookieStore.get(PATIENT_SESSION_COOKIE)?.value || "";
 
   if (!code) return null;
 
-  const { data: patient } = await supabase
-    .from("patients")
-    .select("id,patient_username,patient_code,status")
-    .eq("patient_code", code)
-    .eq("status", "active")
-    .maybeSingle();
-
-  return patient;
-}
-
-function parseBoundedNumber(value: FormDataEntryValue | null, fallback: number | null, min: number, max: number, label: string) {
-  const raw = String(value ?? "").trim();
-  if (!raw) return fallback;
-
-  const parsed = Number(raw);
-  if (!Number.isFinite(parsed) || parsed < min || parsed > max) {
-    throw new Error(`${label} must be ${min}–${max}.`);
-  }
-
-  return parsed;
-}
-
-function limitText(value: FormDataEntryValue | null, maxLength: number) {
-  return String(value || "").trim().slice(0, maxLength);
+  return getActivePatientBySignedCode({ supabase, code, signature });
 }
 
 export async function patientLogoutAction() {
   const cookieStore = await cookies();
-  cookieStore.delete(USERNAME_COOKIE);
-  cookieStore.delete(CODE_COOKIE);
+  cookieStore.delete(PATIENT_USERNAME_COOKIE);
+  cookieStore.delete(PATIENT_CODE_COOKIE);
+  cookieStore.delete(PATIENT_SESSION_COOKIE);
   redirect("/patient-portal");
 }
 
@@ -61,19 +49,12 @@ export async function completeExerciseAction(formData: FormData) {
   if (!patient) redirect("/patient-portal");
 
   const planExerciseId = String(formData.get("planExerciseId") || "");
-  const painScore = parseBoundedNumber(formData.get("painScore"), null, 0, 10, "Pain score");
-  const comment = limitText(formData.get("comment"), MAX_PATIENT_COMMENT_LENGTH);
+  const painScore = parseBoundedNumber(formData.get("painScore"), null, 0, 10, "Dhimbja");
+  const comment = parseOptionalText(formData.get("comment"), MAX_PATIENT_COMMENT_LENGTH);
 
-  if (!planExerciseId) throw new Error("Plan exercise is required.");
+  if (!planExerciseId) throw new Error("Ushtrimi është i detyrueshëm.");
 
-  const { data: planExercise } = await supabase
-    .from("plan_exercises")
-    .select("id,plans!inner(patient_id)")
-    .eq("id", planExerciseId)
-    .eq("plans.patient_id", patient.id)
-    .maybeSingle();
-
-  if (!planExercise) throw new Error("This exercise is not assigned to this patient.");
+  await requireAssignedPlanExercise({ supabase, patientId: patient.id, planExerciseId });
 
   await supabase.from("exercise_logs").insert({
     patient_id: patient.id,
@@ -84,7 +65,7 @@ export async function completeExerciseAction(formData: FormData) {
     completed_at: new Date().toISOString(),
   });
 
-  if (painScore !== null && painScore >= 7) {
+  if (painScore !== null && painScore >= HIGH_PAIN_THRESHOLD) {
     await notifyPhysioHighPain({
       supabase,
       patientId: patient.id,
@@ -105,22 +86,15 @@ export async function saveAiCheckAction(formData: FormData) {
 
   const planExerciseId = String(formData.get("planExerciseId") || "");
   const score = parseBoundedNumber(formData.get("score"), 82, 0, 100, "AI score");
-  const feedback = limitText(
+  const feedback = parseOptionalText(
     formData.get("feedback") || "Lëvizje e kontrolluar. Mbaje ritmin më të ngadalshëm në fazën e kthimit.",
     MAX_AI_FEEDBACK_LENGTH,
   );
-  const alertType = score < 60 ? "contact_physio" : score < 80 ? "needs_attention" : "good";
+  const alertType = getAiAlertType(score);
 
-  if (!planExerciseId) throw new Error("Plan exercise is required.");
+  if (!planExerciseId) throw new Error("Ushtrimi është i detyrueshëm.");
 
-  const { data: planExercise } = await supabase
-    .from("plan_exercises")
-    .select("id,plans!inner(patient_id)")
-    .eq("id", planExerciseId)
-    .eq("plans.patient_id", patient.id)
-    .maybeSingle();
-
-  if (!planExercise) throw new Error("This exercise is not assigned to this patient.");
+  await requireAssignedPlanExercise({ supabase, patientId: patient.id, planExerciseId, aiOnly: true });
 
   await supabase.from("ai_checks").insert({
     patient_id: patient.id,
@@ -131,7 +105,7 @@ export async function saveAiCheckAction(formData: FormData) {
     created_at: new Date().toISOString(),
   });
 
-  if (score < 60) {
+  if (score < LOW_AI_SCORE_THRESHOLD) {
     await notifyPhysioLowAiScore({
       supabase,
       patientId: patient.id,
