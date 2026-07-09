@@ -1,6 +1,6 @@
 # Fizioterapia Ime Design System
 
-Phase 1 centralizes the visual foundation. Phase 2 migrates the public homepage into the premium app-first direction. Phase 3 simplifies the patient login portal for older and non-technical patients. Phase 4 refreshes the physiotherapist dashboard visually without changing backend logic. Phase 5 refreshes the owner/admin dashboard into a clearer control center.
+Phase 1 centralizes the visual foundation. Phase 2 migrates the public homepage into the premium app-first direction. Phase 3 simplifies the patient login portal for older and non-technical patients. Phase 4 refreshes the physiotherapist dashboard visually without changing backend logic. Phase 5 refreshes the owner/admin dashboard into a clearer control center. Phase 6 aligns the Expo mobile app with the same visual system.
 
 ## Files
 
@@ -12,6 +12,7 @@ Phase 1 centralizes the visual foundation. Phase 2 migrates the public homepage 
 - `app/patient-login-refresh.css` — patient-login-specific mobile-first styling.
 - `app/physio-dashboard-refresh.css` — clinical visual cleanup for the physiotherapist dashboard.
 - `app/admin-dashboard-refresh.css` — owner/admin control-center visual cleanup.
+- `apps/mobile-app/App.tsx` — Expo mobile app aligned to the shared brand tokens and patient-first flow.
 
 ## Brand direction
 
@@ -139,10 +140,22 @@ The admin dashboard refresh turns the owner page into a clearer platform control
 6. Billing/access pills are visually clearer.
 7. Template and safety sections use the same card system as the clinical dashboard.
 
+## Mobile app visual alignment
+
+The Expo mobile app now mirrors the same visual language as the web product while keeping API calls and progress saving unchanged.
+
+1. React Native palette mirrors the web tokens: teal, green, ink, muted text, soft surfaces and safety colors.
+2. Login screen is patient-first: “Hyr në planin tënd” and larger code input.
+3. Cards, exercise rows, progress cards and buttons use the same rounded premium style.
+4. AI prep/check/result screens retain safety copy and use neutral symbols instead of emoji-heavy UI.
+5. Pain score and warning screens keep the 7/10 stop rule visually prominent.
+6. Demo/live fallback behavior and `saveMobileProgress` flow remain unchanged.
+
 ## Next migration order
 
-1. Mobile app: mirror the same token values in React Native styles.
-2. After visual QA, merge PR #4 and continue with functional cleanup only if needed.
+1. Visual QA: run the web app and Expo app and check homepage, patient login, physio dashboard, admin dashboard and mobile app.
+2. Merge PR #4 once visual QA passes.
+3. Continue with functional cleanup only if needed.
 
 ## Rules
 
