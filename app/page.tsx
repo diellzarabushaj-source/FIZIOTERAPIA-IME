@@ -18,16 +18,22 @@ const workflow = [
     step: "01",
     title: "Fizioterapeuti krijon planin",
     text: "Plan 7–14 ditor, ushtrime, dozime dhe safety rules vendosen nga profesionisti.",
+    image: "/workflow-create-plan.svg",
+    alt: "Fizioterapeuti i tregon pacientit planin e ushtrimeve në tablet.",
   },
   {
     step: "02",
     title: "Pacienti hyn me kod",
     text: "Pa username dhe pa konfuzion. Kodi ose QR e hap direkt planin personal.",
+    image: "/workflow-patient-code.svg",
+    alt: "Telefoni i pacientit me hyrje për kodin dhe QR për planin personal.",
   },
   {
     step: "03",
     title: "Progresi kthehet në dashboard",
     text: "Dhimbja, adherence dhe AI feedback bëhen sinjale për rikontroll klinik.",
+    image: "/workflow-dashboard.svg",
+    alt: "Dashboard klinik në laptop me progres, adherencë dhe feedback nga AI.",
   },
 ];
 
@@ -145,12 +151,17 @@ export default function HomePage() {
           <h2 className="fi-title-md">Proces i thjeshtë për pacientin, i kontrolluar për terapistin.</h2>
           <p className="fi-copy">Fizioterapia Ime nuk e zëvendëson profesionistin. Ajo e bën planin më të lehtë për t’u ndjekur dhe për t’u monitoruar.</p>
         </div>
-        <div className="premium-workflow-grid">
+        <div className="premium-workflow-grid premium-workflow-visual-grid">
           {workflow.map((item) => (
-            <article className="fi-card" key={item.step}>
-              <strong>{item.step}</strong>
-              <h3>{item.title}</h3>
-              <p>{item.text}</p>
+            <article className="fi-card workflow-visual-card" key={item.step}>
+              <div className="workflow-visual-media">
+                <img src={item.image} alt={item.alt} loading="lazy" />
+                <strong>{item.step}</strong>
+              </div>
+              <div className="workflow-visual-copy">
+                <h3>{item.title}</h3>
+                <p>{item.text}</p>
+              </div>
             </article>
           ))}
         </div>
