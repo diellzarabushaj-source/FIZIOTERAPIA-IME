@@ -4,6 +4,8 @@ import { getSupabaseAdmin, normalizePatientCode } from "@/lib/supabase-admin";
 import { notifyPhysioLowAiScore } from "@/lib/clinical-notifications";
 
 const CODE_COOKIE = "fizioplan_patient_code";
+const MAX_AI_FEEDBACK_LENGTH = 600;
+const allowedAlertTypes = new Set(["good", "needs_attention", "contact_physio"]);
 
 type AiPayload = {
   planExerciseId?: string;
@@ -12,6 +14,26 @@ type AiPayload = {
   alertType?: string;
   landmarksDetected?: number;
 };
+
+function parseScore(value: unknown) {
+  const score = Number(value);
+  if (!Number.isFinite(score) || score < 0 || score > 100) {
+    return null;
+  }
+
+  return Math.round(score);
+}
+
+function normalizeFeedback(value: unknown) {
+  const text = String(value || "AI check u ruajt.").trim().slice(0, MAX_AI_FEEDBACK_LENGTH);
+  return text || "AI check u ruajt.";
+}
+
+function normalizeAlertType(value: unknown, score: number) {
+  const alertType = String(value || "").trim();
+  if (allowedAlertTypes.has(alertType)) return alertType;
+  return score < 60 ? "contact_physio" : score < 80 ? "needs_attention" : "good";
+}
 
 export async function POST(request: Request) {
   const supabase = getSupabaseAdmin();
@@ -26,15 +48,26 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, error: "patient_not_logged_in" }, { status: 401 });
   }
 
-  const body = (await request.json()) as AiPayload;
-  const planExerciseId = body.planExerciseId;
-  const score = Math.max(0, Math.min(100, Math.round(Number(body.score || 0))));
-  const feedback = String(body.feedback || "AI check u ruajt.");
-  const alertType = body.alertType || (score < 60 ? "contact_physio" : score < 80 ? "needs_attention" : "good");
+  let body: AiPayload;
+  try {
+    body = (await request.json()) as AiPayload;
+  } catch {
+    return NextResponse.json({ ok: false, error: "invalid_json" }, { status: 400 });
+  }
+
+  const planExerciseId = String(body.planExerciseId || "").trim();
+  const score = parseScore(body.score);
 
   if (!planExerciseId) {
     return NextResponse.json({ ok: false, error: "missing_plan_exercise_id" }, { status: 400 });
   }
+
+  if (score === null) {
+    return NextResponse.json({ ok: false, error: "invalid_ai_score" }, { status: 400 });
+  }
+
+  const feedback = normalizeFeedback(body.feedback);
+  const alertType = normalizeAlertType(body.alertType, score);
 
   const { data: patient } = await supabase
     .from("patients")
