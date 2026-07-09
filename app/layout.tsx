@@ -16,6 +16,7 @@ import "./clinic-pro.css";
 import "./patient-pro.css";
 import "./duo-app.css";
 import "./home-refresh.css";
+import "./workflow-illustrations.css";
 import "./ui-friendly.css";
 import "./patient-login-refresh.css";
 import "./physio-dashboard-refresh.css";
