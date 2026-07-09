@@ -3,9 +3,7 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { getSupabaseAdmin, normalizePatientCode } from "@/lib/supabase-admin";
-
-const USERNAME_COOKIE = "fizioplan_patient_username";
-const CODE_COOKIE = "fizioplan_patient_code";
+import { PATIENT_CODE_COOKIE, PATIENT_SESSION_COOKIE, PATIENT_USERNAME_COOKIE, signPatientCode } from "@/lib/backend-logic";
 
 export async function patientLoginAction(formData: FormData) {
   const supabase = getSupabaseAdmin();
@@ -32,23 +30,19 @@ export async function patientLoginAction(formData: FormData) {
 
   const cookieStore = await cookies();
   const secure = process.env.NODE_ENV === "production";
-
-  cookieStore.set(CODE_COOKIE, patient.patient_code, {
+  const cookieOptions = {
     httpOnly: true,
-    sameSite: "lax",
+    sameSite: "lax" as const,
     secure,
     maxAge: 60 * 60 * 24 * 30,
     path: "/",
-  });
+  };
+
+  cookieStore.set(PATIENT_CODE_COOKIE, patient.patient_code, cookieOptions);
+  cookieStore.set(PATIENT_SESSION_COOKIE, signPatientCode(patient.patient_code), cookieOptions);
 
   if (patient.patient_username) {
-    cookieStore.set(USERNAME_COOKIE, patient.patient_username, {
-      httpOnly: true,
-      sameSite: "lax",
-      secure,
-      maxAge: 60 * 60 * 24 * 30,
-      path: "/",
-    });
+    cookieStore.set(PATIENT_USERNAME_COOKIE, patient.patient_username, cookieOptions);
   }
 
   redirect("/patient-dashboard");
