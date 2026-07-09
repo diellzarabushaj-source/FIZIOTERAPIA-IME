@@ -26,7 +26,15 @@ Mobile app
 - Patient mobile app uses only patient code.
 - Physiotherapist/admin authentication remains on web through Clerk.
 
-## New API routes
+## Mobile API routes
+
+### Health / backend readiness
+
+```text
+GET /api/mobile/health
+```
+
+Returns only presence/missing status for required env vars. It never returns secret values.
 
 ### Patient login/session
 
@@ -85,6 +93,7 @@ Writes:
 
 ## Web files added
 
+- `app/api/mobile/health/route.ts`
 - `app/api/mobile/patient-session/route.ts`
 - `app/api/mobile/save-progress/route.ts`
 
@@ -136,7 +145,7 @@ After deployment, run the API route smoke test:
 npm run smoke:mobile-api
 ```
 
-This confirms that mobile API routes exist and validate required fields.
+This confirms that mobile API routes exist, health responds, and required fields are validated.
 
 To test a real production patient code, run:
 
