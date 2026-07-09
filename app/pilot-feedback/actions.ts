@@ -2,14 +2,59 @@
 
 import { redirect } from "next/navigation";
 
+const TEXT_LIMITS: Record<string, number> = {
+  respondent_name: 120,
+  respondent_email: 160,
+  clinic_name: 160,
+  biggest_problem: 1200,
+  missing_feature: 1200,
+  safety_concern: 1200,
+  notes: 1600,
+};
+
+const allowedRoles = new Set(["physiotherapist", "clinic_owner", "doctor", "admin"]);
+const allowedUseAnswers = new Set(["yes", "maybe_after_changes", "no"]);
+
 function stringValue(formData: FormData, key: string) {
   const value = formData.get(key);
-  return typeof value === "string" ? value.trim() : "";
+  const text = typeof value === "string" ? value.trim() : "";
+  const limit = TEXT_LIMITS[key];
+  return limit ? text.slice(0, limit) : text;
 }
 
-function numberValue(formData: FormData, key: string) {
-  const value = Number(formData.get(key));
-  return Number.isFinite(value) ? value : null;
+function requiredString(formData: FormData, key: string, label: string) {
+  const value = stringValue(formData, key);
+  if (!value) throw new Error(`${label} is required.`);
+  return value;
+}
+
+function ratingValue(formData: FormData, key: string) {
+  const raw = String(formData.get(key) || "").trim();
+  const value = Number(raw);
+
+  if (!Number.isInteger(value) || value < 1 || value > 5) {
+    throw new Error("Rating values must be integers from 1 to 5.");
+  }
+
+  return value;
+}
+
+function roleValue(formData: FormData) {
+  const role = stringValue(formData, "role") || "physiotherapist";
+  return allowedRoles.has(role) ? role : "physiotherapist";
+}
+
+function wouldUseValue(formData: FormData) {
+  const value = stringValue(formData, "would_use_with_real_patient");
+  if (!allowedUseAnswers.has(value)) throw new Error("Select whether you would use it with a real patient.");
+  return value;
+}
+
+function emailValue(formData: FormData) {
+  const email = stringValue(formData, "respondent_email");
+  if (!email) return "";
+  if (!email.includes("@") || email.length > TEXT_LIMITS.respondent_email) throw new Error("Email is not valid.");
+  return email;
 }
 
 export async function submitPilotFeedback(formData: FormData) {
@@ -22,20 +67,20 @@ export async function submitPilotFeedback(formData: FormData) {
   }
 
   const payload = {
-    respondent_name: stringValue(formData, "respondent_name"),
-    respondent_email: stringValue(formData, "respondent_email"),
+    respondent_name: requiredString(formData, "respondent_name", "Name"),
+    respondent_email: emailValue(formData),
     clinic_name: stringValue(formData, "clinic_name"),
-    role: stringValue(formData, "role") || "physiotherapist",
-    patient_creation_score: numberValue(formData, "patient_creation_score"),
-    exercise_assignment_score: numberValue(formData, "exercise_assignment_score"),
-    patient_login_score: numberValue(formData, "patient_login_score"),
-    ai_clarity_score: numberValue(formData, "ai_clarity_score"),
-    report_usefulness_score: numberValue(formData, "report_usefulness_score"),
-    payment_readiness_score: numberValue(formData, "payment_readiness_score"),
-    biggest_problem: stringValue(formData, "biggest_problem"),
+    role: roleValue(formData),
+    patient_creation_score: ratingValue(formData, "patient_creation_score"),
+    exercise_assignment_score: ratingValue(formData, "exercise_assignment_score"),
+    patient_login_score: ratingValue(formData, "patient_login_score"),
+    ai_clarity_score: ratingValue(formData, "ai_clarity_score"),
+    report_usefulness_score: ratingValue(formData, "report_usefulness_score"),
+    payment_readiness_score: ratingValue(formData, "payment_readiness_score"),
+    biggest_problem: requiredString(formData, "biggest_problem", "Biggest problem"),
     missing_feature: stringValue(formData, "missing_feature"),
     safety_concern: stringValue(formData, "safety_concern"),
-    would_use_with_real_patient: stringValue(formData, "would_use_with_real_patient"),
+    would_use_with_real_patient: wouldUseValue(formData),
     notes: stringValue(formData, "notes"),
     source: "pilot-feedback-page",
   };

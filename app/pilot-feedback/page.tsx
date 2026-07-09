@@ -33,15 +33,14 @@ export default function PilotFeedbackPage() {
         <BrandMark />
         <div className="nav-actions">
           <a href="/">Home</a>
-          <a href="/pilot-onboarding">Pilot Onboarding</a>
-          <a href="/qa-checklist">QA Checklist</a>
           <a href="/support">Support</a>
+          <a href="/faq">FAQ</a>
         </div>
       </nav>
 
       <section className="launch-hero">
         <div>
-          <span className="badge">Phase 13 · Pilot feedback</span>
+          <span className="badge">Pilot feedback</span>
           <h1>Feedback form për fizioterapeutin testues.</h1>
           <p>
             Përdore këtë formë pas 3–7 ditësh pilot testimi. Qëllimi është me kuptu çka duhet rregullu para përdorimit real ose pagesës mujore.
@@ -50,7 +49,7 @@ export default function PilotFeedbackPage() {
         <div className="launch-status-card ready">
           <span className="mini-badge">Pilot signal</span>
           <strong>Measure before launch</strong>
-          <p>Feedback-u ruhet në Supabase nëse tabela `pilot_feedback` është krijuar.</p>
+          <p>Feedback-u ruhet në mënyrë të sigurt nëse tabela `pilot_feedback` është aktive.</p>
         </div>
       </section>
 
@@ -65,15 +64,15 @@ export default function PilotFeedbackPage() {
           <div className="feedback-grid two">
             <label className="feedback-field">
               <span>Emri</span>
-              <input name="respondent_name" placeholder="Emri i fizioterapeutit" required />
+              <input name="respondent_name" placeholder="Emri i fizioterapeutit" maxLength={120} required />
             </label>
             <label className="feedback-field">
               <span>Email</span>
-              <input name="respondent_email" type="email" placeholder="email@example.com" />
+              <input name="respondent_email" type="email" placeholder="email@example.com" maxLength={160} />
             </label>
             <label className="feedback-field">
               <span>Klinika</span>
-              <input name="clinic_name" placeholder="Emri i klinikës" />
+              <input name="clinic_name" placeholder="Emri i klinikës" maxLength={160} />
             </label>
             <label className="feedback-field">
               <span>Roli</span>
@@ -112,15 +111,15 @@ export default function PilotFeedbackPage() {
           <div className="feedback-grid">
             <label className="feedback-field">
               <span>Problemi më i madh</span>
-              <textarea name="biggest_problem" placeholder="Çka të pengoi më së shumti?" required />
+              <textarea name="biggest_problem" placeholder="Çka të pengoi më së shumti?" maxLength={1200} required />
             </label>
             <label className="feedback-field">
               <span>Feature që mungon</span>
-              <textarea name="missing_feature" placeholder="Çka duhet patjetër para përdorimit real?" />
+              <textarea name="missing_feature" placeholder="Çka duhet patjetër para përdorimit real?" maxLength={1200} />
             </label>
             <label className="feedback-field">
               <span>Brengë klinike / safety</span>
-              <textarea name="safety_concern" placeholder="A ka diçka që mund të keqkuptohet nga pacienti?" />
+              <textarea name="safety_concern" placeholder="A ka diçka që mund të keqkuptohet nga pacienti?" maxLength={1200} />
             </label>
             <label className="feedback-field">
               <span>A do ta përdorje me pacient real?</span>
@@ -133,7 +132,7 @@ export default function PilotFeedbackPage() {
             </label>
             <label className="feedback-field">
               <span>Shënime tjera</span>
-              <textarea name="notes" placeholder="Çdo koment tjetër për UI, pacientin, raportin, AI ose pagesën." />
+              <textarea name="notes" placeholder="Çdo koment tjetër për UI, pacientin, raportin, AI ose pagesën." maxLength={1600} />
             </label>
           </div>
         </section>
