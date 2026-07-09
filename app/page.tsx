@@ -18,24 +18,21 @@ const workflow = [
     step: "01",
     title: "Fizioterapeuti krijon planin",
     text: "Fizioterapeuti krijon një program të personalizuar ushtrimesh në platformën Fizioterapia Ime, përshtatur sipas nevojave të pacientit.",
-    image: "/workflow-create-plan.svg",
-    alt: "Fizioterapeuti i tregon pacientit planin e ushtrimeve në tablet.",
+    visual: "plan",
     icon: "♙",
   },
   {
     step: "02",
     title: "Pacienti hyn me kod",
     text: "Pacienti skanon kodin QR ose fut kodin unik për të hyrë në programin e tij personal dhe për të ndjekur ushtrimet nga çdo pajisje.",
-    image: "/workflow-patient-code.svg",
-    alt: "Telefoni i pacientit me hyrje për kodin dhe QR për planin personal.",
+    visual: "code",
     icon: "⌗",
   },
   {
     step: "03",
     title: "Progresi kthehet në dashboard",
     text: "Progresi i pacientit përditësohet automatikisht në dashboard. Fizioterapeuti monitoron rezultatet, adherencën dhe feedback-un nga AI.",
-    image: "/workflow-dashboard.svg",
-    alt: "Dashboard klinik në laptop me progres, adherencë dhe feedback nga AI.",
+    visual: "dashboard",
     icon: "▥",
   },
 ];
@@ -157,8 +154,8 @@ export default function HomePage() {
         <div className="premium-workflow-grid premium-workflow-visual-grid">
           {workflow.map((item) => (
             <article className="fi-card workflow-visual-card" key={item.step} tabIndex={0}>
-              <div className="workflow-visual-media">
-                <img src={item.image} alt={item.alt} loading="lazy" />
+              <div className="workflow-visual-media" aria-label={item.title}>
+                <WorkflowVisual visual={item.visual} />
                 <strong>{item.step}</strong>
               </div>
               <div className="workflow-visual-copy">
@@ -230,5 +227,57 @@ export default function HomePage() {
         </div>
       </section>
     </main>
+  );
+}
+
+function WorkflowVisual({ visual }: { visual: string }) {
+  if (visual === "plan") {
+    return (
+      <div className="workflow-scene workflow-scene-plan" aria-hidden="true">
+        <span className="scene-orb one" />
+        <span className="scene-orb two" />
+        <span className="scene-poster" />
+        <span className="scene-plant" />
+        <span className="scene-bed" />
+        <span className="scene-person therapist"><i /><b /><em /></span>
+        <span className="scene-person patient"><i /><b /></span>
+        <span className="scene-tablet"><b>Plani i trajtimit</b><i /><i /><i /></span>
+      </div>
+    );
+  }
+
+  if (visual === "code") {
+    return (
+      <div className="workflow-scene workflow-scene-code" aria-hidden="true">
+        <span className="scene-orb one" />
+        <span className="scene-orb two" />
+        <span className="scene-phone-hand" />
+        <span className="scene-phone">
+          <b className="mini-logo" />
+          <strong>Fizioterapia Ime</strong>
+          <i>Kodi i pacientit</i>
+          <em>Hyr</em>
+          <small>e hap planin personal</small>
+        </span>
+        <span className="scene-qr-bubble"><i /><i /><i /><i /><i /></span>
+        <span className="scene-plant right" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="workflow-scene workflow-scene-dashboard" aria-hidden="true">
+      <span className="scene-orb one" />
+      <span className="scene-orb two" />
+      <span className="scene-laptop">
+        <i className="side" />
+        <strong>Dashboard</strong>
+        <b className="chart"><i /><i /><i /></b>
+        <b className="ring">85%</b>
+        <em>Feedback nga AI</em>
+      </span>
+      <span className="scene-check">✓</span>
+      <span className="scene-plant right" />
+    </div>
   );
 }
