@@ -1,18 +1,9 @@
 "use server";
 
-import { currentUser } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
+import { requireOwner } from "@/lib/admin-access";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import { PHYSIO_MONTHLY_PRICE_EUR } from "@/lib/billing";
-
-async function requireOwner() {
-  const user = await currentUser();
-  const email = user?.primaryEmailAddress?.emailAddress?.toLowerCase();
-
-  if (email !== "diellzarabushaj@gmail.com") {
-    throw new Error("Only owner/admin can manage billing.");
-  }
-}
 
 export async function activateSubscriptionAction(formData: FormData) {
   await requireOwner();
