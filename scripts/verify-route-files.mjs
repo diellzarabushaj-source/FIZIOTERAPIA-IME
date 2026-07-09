@@ -39,6 +39,7 @@ const requiredProtectedRoutes = [
 ];
 
 const requiredApiRoutes = [
+  ["/api/mobile/health", join(appDir, "api", "mobile", "health", "route.ts")],
   ["/api/mobile/patient-session", join(appDir, "api", "mobile", "patient-session", "route.ts")],
   ["/api/mobile/save-progress", join(appDir, "api", "mobile", "save-progress", "route.ts")],
 ];
