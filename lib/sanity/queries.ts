@@ -1,5 +1,7 @@
 import { groq } from "next-sanity";
 import { blogPosts, getBlogPost, type BlogPost } from "@/lib/blog-content";
+import { fallbackFaqs, type FaqItem } from "@/lib/faq-content";
+import { getFallbackLegalPage, type LegalContent } from "@/lib/legal-content";
 import { hasSanityConfig, sanityClient } from "./client";
 
 export type SanityBlock = Record<string, unknown>;
@@ -22,6 +24,15 @@ export type SanityBlogPost = Omit<BlogPost, "sections"> & {
   safetyReviewed?: boolean | null;
   mainImage?: SanityImage | null;
   seo?: SanitySeo | null;
+};
+
+export type SanityFaqItem = FaqItem & {
+  isPublished?: boolean | null;
+};
+
+export type SanityLegalPage = LegalContent & {
+  pageType?: "legal" | "safety" | "privacy" | string;
+  reviewed?: boolean | null;
 };
 
 const blogPostFields = groq`
@@ -63,6 +74,32 @@ const postBySlugQuery = groq`
   }
 `;
 
+const faqItemsQuery = groq`
+  *[_type == "faqItem" && coalesce(isPublished, true) == true] | order(coalesce(order, 999) asc, question asc) {
+    question,
+    answer,
+    category,
+    order,
+    isPublished
+  }
+`;
+
+const legalPageBySlugQuery = groq`
+  *[_type == "legalPage" && slug.current == $slug][0] {
+    title,
+    "slug": slug.current,
+    badge,
+    intro,
+    lastUpdated,
+    pageType,
+    reviewed,
+    sections[] {
+      title,
+      body
+    }
+  }
+`;
+
 function normalizePost(post: SanityBlogPost): SanityBlogPost {
   return {
     ...post,
@@ -89,6 +126,28 @@ function staticToSanityShape(post: BlogPost): SanityBlogPost {
       keywords: ["Fizioterapia ime", "fizioterapi", "ushtrime", post.category],
       image: null,
     },
+  };
+}
+
+function normalizeFaqItem(item: SanityFaqItem): SanityFaqItem {
+  return {
+    ...item,
+    category: item.category || "paciente",
+    order: item.order || 999,
+    isPublished: item.isPublished ?? true,
+  };
+}
+
+function normalizeLegalPage(page: SanityLegalPage, slug: string): SanityLegalPage {
+  const fallback = getFallbackLegalPage(slug);
+  return {
+    ...page,
+    slug: page.slug || slug,
+    badge: page.badge || fallback?.badge || "Legal & Safety",
+    title: page.title || fallback?.title || "Legal & Safety",
+    intro: page.intro || fallback?.intro || "Informata për siguri, privatësi dhe përdorim të platformës.",
+    lastUpdated: page.lastUpdated || fallback?.lastUpdated || "Korrik 2026",
+    sections: page.sections?.length ? page.sections : fallback?.sections || [],
   };
 }
 
@@ -135,5 +194,38 @@ export async function getBlogSlugs() {
     return Array.from(new Set([...(slugs || []), ...blogPosts.map((post) => post.slug)]));
   } catch {
     return blogPosts.map((post) => post.slug);
+  }
+}
+
+export async function getFaqItems(): Promise<SanityFaqItem[]> {
+  if (!hasSanityConfig) return fallbackFaqs.map(normalizeFaqItem);
+
+  try {
+    const items = await sanityClient.fetch<SanityFaqItem[]>(faqItemsQuery, {}, { next: { revalidate: 60 } });
+    if (!items?.length) return fallbackFaqs.map(normalizeFaqItem);
+    return items.map(normalizeFaqItem);
+  } catch (error) {
+    console.error("Sanity FAQ fetch failed", error);
+    return fallbackFaqs.map(normalizeFaqItem);
+  }
+}
+
+export async function getLegalPageBySlug(slug: string): Promise<SanityLegalPage> {
+  const fallback = getFallbackLegalPage(slug);
+
+  if (!hasSanityConfig) {
+    if (fallback) return { ...fallback, reviewed: true };
+    return normalizeLegalPage({ slug, badge: "Legal & Safety", title: "Legal & Safety", intro: "", sections: [] }, slug);
+  }
+
+  try {
+    const page = await sanityClient.fetch<SanityLegalPage | null>(legalPageBySlugQuery, { slug }, { next: { revalidate: 60 } });
+    if (page) return normalizeLegalPage(page, slug);
+    if (fallback) return { ...fallback, reviewed: true };
+    return normalizeLegalPage({ slug, badge: "Legal & Safety", title: "Legal & Safety", intro: "", sections: [] }, slug);
+  } catch (error) {
+    console.error("Sanity legal page fetch failed", error);
+    if (fallback) return { ...fallback, reviewed: true };
+    return normalizeLegalPage({ slug, badge: "Legal & Safety", title: "Legal & Safety", intro: "", sections: [] }, slug);
   }
 }
