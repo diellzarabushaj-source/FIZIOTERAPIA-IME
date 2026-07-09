@@ -15,12 +15,12 @@ export default async function AiCheckPage({ searchParams }: { searchParams?: Pro
       <main className="page patient-dashboard-page ai-check-page">
         <nav className="top-nav">
           <BrandMark />
-          <div className="nav-actions"><a href="/patient-dashboard">Patient Dashboard</a></div>
+          <div className="nav-actions"><a href="/patient-dashboard">Plani im</a></div>
         </nav>
         <section className="ai-empty-state">
-          <span className="badge">AI Movement Check</span>
-          <h1>Konfigurimi mungon.</h1>
-          <div className="role-warning">SUPABASE_SERVICE_ROLE_KEY mungon në Vercel.</div>
+          <span className="badge">Kontrollo lëvizjen</span>
+          <h1>Kontrolli nuk është aktiv.</h1>
+          <div className="role-warning">Konfigurimi i sistemit mungon.</div>
         </section>
       </main>
     );
@@ -29,16 +29,10 @@ export default async function AiCheckPage({ searchParams }: { searchParams?: Pro
   const cookieStore = await cookies();
   const code = normalizePatientCode(cookieStore.get(PATIENT_CODE_COOKIE)?.value || "");
   const signature = cookieStore.get(PATIENT_SESSION_COOKIE)?.value || "";
-
-  if (!code) {
-    redirect("/patient-portal");
-  }
+  if (!code) redirect("/patient-portal");
 
   const patient = await getActivePatientBySignedCode({ supabase, code, signature });
-
-  if (!patient) {
-    redirect("/patient-portal");
-  }
+  if (!patient) redirect("/patient-portal");
 
   if (planExerciseId) {
     const { data: assignedExercise } = await supabase
@@ -48,10 +42,7 @@ export default async function AiCheckPage({ searchParams }: { searchParams?: Pro
       .eq("plans.patient_id", patient.id)
       .eq("exercise_library.ai_enabled", true)
       .maybeSingle();
-
-    if (!assignedExercise) {
-      redirect("/patient-dashboard");
-    }
+    if (!assignedExercise) redirect("/patient-dashboard");
   } else {
     const { data: firstAiExercise } = await supabase
       .from("plan_exercises")
@@ -61,7 +52,6 @@ export default async function AiCheckPage({ searchParams }: { searchParams?: Pro
       .order("day_number", { ascending: true })
       .limit(1)
       .maybeSingle();
-
     planExerciseId = firstAiExercise?.id;
   }
 
@@ -70,17 +60,17 @@ export default async function AiCheckPage({ searchParams }: { searchParams?: Pro
       <nav className="top-nav ai-nav">
         <BrandMark />
         <div className="nav-actions">
-          <a href="/patient-dashboard">Patient Dashboard</a>
-          <a href="/patient-portal">Patient Portal</a>
-          <a href="/camera-consent">Camera consent</a>
+          <a href="/patient-dashboard">Plani im</a>
+          <a href="/patient-portal">Hyrja me kod</a>
+          <a href="/camera-consent">Leja e kamerës</a>
         </div>
       </nav>
       {!planExerciseId ? (
         <section className="ai-empty-state">
-          <span className="badge">Google MediaPipe · AI Movement Check</span>
-          <h1>Nuk ka ushtrim me AI aktiv.</h1>
-          <p>Fizioterapeuti duhet të caktojë një ushtrim me AI check aktiv në planin e pacientit.</p>
-          <a className="button" href="/patient-dashboard">Kthehu te dashboard</a>
+          <span className="badge">Kontroll opsional</span>
+          <h1>Nuk ka ushtrim me kontroll AI.</h1>
+          <p>Fizioterapeuti duhet ta aktivizojë kontrollin e lëvizjes për një ushtrim në planin tënd.</p>
+          <a className="button" href="/patient-dashboard">Kthehu te plani im</a>
         </section>
       ) : (
         <MovementCheckClient planExerciseId={planExerciseId} />
