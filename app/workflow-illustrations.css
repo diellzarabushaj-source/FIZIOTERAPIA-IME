@@ -1,5 +1,5 @@
 .premium-workflow-visual-grid {
-  gap: 18px;
+  gap: clamp(18px, 2vw, 28px);
   perspective: 1200px;
 }
 
@@ -9,8 +9,11 @@
   overflow: hidden;
   padding: 0;
   border-radius: 34px;
-  background: rgba(255, 255, 255, 0.92);
-  box-shadow: var(--fi-shadow-xs);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(255, 255, 255, 0.94)),
+    radial-gradient(circle at 18% 4%, rgba(15, 143, 134, 0.09), transparent 34%);
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  box-shadow: 0 22px 55px rgba(15, 32, 51, 0.08);
   isolation: isolate;
   cursor: default;
   transform: translateY(0) scale(1);
@@ -28,8 +31,8 @@
   z-index: -1;
   border-radius: inherit;
   background:
-    radial-gradient(circle at 18% 10%, rgba(52, 199, 89, 0.18), transparent 34%),
-    radial-gradient(circle at 86% 0%, rgba(15, 143, 134, 0.12), transparent 32%);
+    radial-gradient(circle at 18% 10%, rgba(52, 199, 89, 0.22), transparent 34%),
+    radial-gradient(circle at 86% 0%, rgba(15, 143, 134, 0.16), transparent 32%);
   opacity: 0;
   transition: opacity 260ms ease;
 }
@@ -49,9 +52,9 @@
 .premium-workflow-grid .workflow-visual-card:hover,
 .premium-workflow-grid .workflow-visual-card:focus-visible {
   transform: translateY(-10px) scale(1.012);
-  border-color: rgba(15, 143, 134, 0.26);
-  background: rgba(255, 255, 255, 0.98);
-  box-shadow: 0 28px 70px rgba(15, 32, 51, 0.14);
+  border-color: rgba(15, 143, 134, 0.28);
+  background: rgba(255, 255, 255, 0.99);
+  box-shadow: 0 32px 82px rgba(15, 32, 51, 0.15);
 }
 
 .premium-workflow-grid .workflow-visual-card:hover::before,
@@ -72,27 +75,27 @@
 
 .workflow-visual-media {
   position: relative;
-  min-height: 270px;
+  min-height: 330px;
   overflow: hidden;
-  border-radius: 34px 34px 24px 24px;
+  border-radius: 34px 34px 0 0;
   background:
     radial-gradient(circle at 30% 16%, rgba(15, 143, 134, 0.1), transparent 30%),
-    linear-gradient(180deg, #f5fbfc 0%, #eaf6f8 100%);
+    linear-gradient(180deg, #f8fcfd 0%, #eaf6f8 100%);
 }
 
 .workflow-visual-media::after {
   content: "";
   position: absolute;
-  inset: auto 22px 18px;
+  inset: auto 0 0;
   height: 1px;
   background: linear-gradient(90deg, transparent, rgba(15, 143, 134, 0.28), transparent);
-  opacity: 0.7;
+  opacity: 0.8;
 }
 
 .workflow-visual-media img {
   width: 100%;
   height: 100%;
-  min-height: 270px;
+  min-height: 330px;
   display: block;
   object-fit: cover;
   transform: scale(1.01);
@@ -101,37 +104,56 @@
 
 .premium-workflow-grid .workflow-visual-card:hover .workflow-visual-media img,
 .premium-workflow-grid .workflow-visual-card:focus-visible .workflow-visual-media img {
-  transform: scale(1.06) translateY(-4px);
+  transform: scale(1.055) translateY(-4px);
   filter: saturate(1.06) contrast(1.02);
 }
 
 .premium-workflow-grid .workflow-visual-media strong {
   position: absolute;
-  top: 18px;
-  left: 18px;
-  width: 56px;
-  height: 56px;
+  top: 20px;
+  left: 20px;
+  width: 58px;
+  height: 58px;
   border-radius: 999px;
   background: linear-gradient(135deg, var(--fi-secondary), var(--fi-primary));
   color: #ffffff;
-  font-size: 1rem;
-  box-shadow: 0 14px 34px rgba(15, 143, 134, 0.22);
+  font-size: 1.05rem;
+  box-shadow: 0 16px 36px rgba(15, 143, 134, 0.26);
   transition: transform 260ms ease, box-shadow 260ms ease;
 }
 
 .premium-workflow-grid .workflow-visual-card:hover .workflow-visual-media strong,
 .premium-workflow-grid .workflow-visual-card:focus-visible .workflow-visual-media strong {
   transform: translateY(-2px) scale(1.08);
-  box-shadow: 0 18px 42px rgba(15, 143, 134, 0.34);
+  box-shadow: 0 18px 42px rgba(15, 143, 134, 0.36);
 }
 
 .workflow-visual-copy {
-  padding: 22px 22px 24px;
+  position: relative;
+  display: grid;
+  min-height: 250px;
+  align-content: start;
+  padding: clamp(24px, 2.2vw, 32px);
+}
+
+.workflow-visual-copy::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 3px;
+  background: linear-gradient(90deg, rgba(52, 199, 89, 0.8), rgba(15, 143, 134, 0.55), transparent);
+  opacity: 0.9;
 }
 
 .premium-workflow-grid .workflow-visual-copy h3 {
-  margin: 0 0 10px;
-  font-size: clamp(1.45rem, 2.15vw, 2.05rem);
+  max-width: 92%;
+  margin: 0 0 12px;
+  color: var(--fi-ink);
+  font-size: clamp(1.55rem, 2.05vw, 2rem);
+  line-height: 1.06;
+  letter-spacing: -0.05em;
   transition: color 220ms ease;
 }
 
@@ -141,9 +163,33 @@
 }
 
 .premium-workflow-grid .workflow-visual-copy p {
+  max-width: 96%;
   margin: 0;
   color: var(--fi-muted-2);
-  line-height: 1.62;
+  font-size: 0.98rem;
+  line-height: 1.68;
+}
+
+.workflow-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: auto;
+  padding-top: 24px;
+}
+
+.workflow-visual-icon {
+  width: 48px;
+  height: 48px;
+  display: inline-grid;
+  place-items: center;
+  border-radius: 18px;
+  background: rgba(15, 143, 134, 0.1);
+  color: var(--fi-primary-strong);
+  font-size: 1.25rem;
+  font-weight: 950;
+  transition: transform 220ms ease, background 220ms ease;
 }
 
 .workflow-visual-cta {
@@ -151,13 +197,18 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  margin-top: 16px;
   color: var(--fi-primary-strong);
   font-size: 0.9rem;
   font-weight: 950;
   opacity: 0;
   transform: translateY(8px);
   transition: opacity 220ms ease, transform 220ms ease;
+}
+
+.premium-workflow-grid .workflow-visual-card:hover .workflow-visual-icon,
+.premium-workflow-grid .workflow-visual-card:focus-visible .workflow-visual-icon {
+  transform: translateY(-2px) rotate(-2deg);
+  background: rgba(15, 143, 134, 0.16);
 }
 
 .premium-workflow-grid .workflow-visual-card:hover .workflow-visual-cta,
@@ -173,6 +224,7 @@
   .workflow-visual-media img,
   .premium-workflow-grid .workflow-visual-media strong,
   .workflow-visual-copy h3,
+  .workflow-visual-icon,
   .workflow-visual-cta {
     transition: none !important;
   }
@@ -188,7 +240,11 @@
 @media (max-width: 1080px) {
   .workflow-visual-media,
   .workflow-visual-media img {
-    min-height: 340px;
+    min-height: 360px;
+  }
+
+  .workflow-visual-copy {
+    min-height: 0;
   }
 
   .workflow-visual-cta {
@@ -209,6 +265,6 @@
   }
 
   .workflow-visual-copy {
-    padding: 18px 18px 20px;
+    padding: 20px 20px 24px;
   }
 }

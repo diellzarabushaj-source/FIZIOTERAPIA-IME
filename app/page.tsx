@@ -17,23 +17,26 @@ const workflow = [
   {
     step: "01",
     title: "Fizioterapeuti krijon planin",
-    text: "Plan 7–14 ditor, ushtrime, dozime dhe safety rules vendosen nga profesionisti.",
+    text: "Fizioterapeuti krijon një program të personalizuar ushtrimesh në platformën Fizioterapia Ime, përshtatur sipas nevojave të pacientit.",
     image: "/workflow-create-plan.svg",
     alt: "Fizioterapeuti i tregon pacientit planin e ushtrimeve në tablet.",
+    icon: "♙",
   },
   {
     step: "02",
     title: "Pacienti hyn me kod",
-    text: "Pa username dhe pa konfuzion. Kodi ose QR e hap direkt planin personal.",
+    text: "Pacienti skanon kodin QR ose fut kodin unik për të hyrë në programin e tij personal dhe për të ndjekur ushtrimet nga çdo pajisje.",
     image: "/workflow-patient-code.svg",
     alt: "Telefoni i pacientit me hyrje për kodin dhe QR për planin personal.",
+    icon: "⌗",
   },
   {
     step: "03",
     title: "Progresi kthehet në dashboard",
-    text: "Dhimbja, adherence dhe AI feedback bëhen sinjale për rikontroll klinik.",
+    text: "Progresi i pacientit përditësohet automatikisht në dashboard. Fizioterapeuti monitoron rezultatet, adherencën dhe feedback-un nga AI.",
     image: "/workflow-dashboard.svg",
     alt: "Dashboard klinik në laptop me progres, adherencë dhe feedback nga AI.",
+    icon: "▥",
   },
 ];
 
@@ -161,7 +164,10 @@ export default function HomePage() {
               <div className="workflow-visual-copy">
                 <h3>{item.title}</h3>
                 <p>{item.text}</p>
-                <span className="workflow-visual-cta">Shiko hapin →</span>
+                <div className="workflow-card-footer" aria-hidden="true">
+                  <span className="workflow-visual-icon">{item.icon}</span>
+                  <span className="workflow-visual-cta">Shiko hapin →</span>
+                </div>
               </div>
             </article>
           ))}
