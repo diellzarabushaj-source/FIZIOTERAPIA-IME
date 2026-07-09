@@ -8,20 +8,20 @@
     "userInterfaceStyle": "light",
     "platforms": ["ios", "android"],
     "privacy": "unlisted",
-    "description": "Fizioterapia ime është app për pacientë që marrin plan ushtrimesh nga fizioterapeuti, raportojnë dhimbjen dhe përdorin AI Movement Check si feedback për lëvizjen.",
+    "description": "Fizioterapia ime eshte app per paciente qe marrin plan ushtrimesh nga fizioterapeuti, raportojne dhimbjen dhe perdorin AI Movement Check si feedback per levizjen.",
     "icon": "./assets/generated/app-icon.png",
     "splash": {
       "image": "./assets/generated/splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#F7FBF9"
+      "backgroundColor": "#F5F9FC"
     },
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.fizioterapiaime.patient",
       "buildNumber": "1",
       "infoPlist": {
-        "NSCameraUsageDescription": "Kamera përdoret për AI Movement Check për të dhënë feedback mbi cilësinë e lëvizjes gjatë ushtrimeve. Videoja nuk përdoret për diagnozë.",
-        "NSMicrophoneUsageDescription": "Mikrofoni nuk përdoret për funksionet kryesore të app-it.",
+        "NSCameraUsageDescription": "Kamera perdoret per AI Movement Check per te dhene feedback mbi cilesine e levizjes gjate ushtrimeve. Videoja nuk perdoret per diagnoze.",
+        "NSMicrophoneUsageDescription": "Mikrofoni nuk perdoret per funksionet kryesore te app-it.",
         "ITSAppUsesNonExemptEncryption": false
       }
     },
@@ -31,7 +31,7 @@
       "permissions": ["CAMERA", "POST_NOTIFICATIONS"],
       "adaptiveIcon": {
         "foregroundImage": "./assets/generated/adaptive-icon-foreground.png",
-        "backgroundColor": "#F7FBF9"
+        "backgroundColor": "#F5F9FC"
       }
     },
     "extra": {
