@@ -1,15 +1,15 @@
 const BASE_URL = process.env.SMOKE_BASE_URL || "https://fizioterapia-ime.vercel.app";
 const PATIENT_CODE = process.env.MOBILE_SMOKE_PATIENT_CODE || "";
 
-async function postJson(path, payload) {
+async function requestJson(path, options = {}) {
   const startedAt = Date.now();
   const response = await fetch(`${BASE_URL}${path}`, {
-    method: "POST",
     headers: {
       "content-type": "application/json",
       "user-agent": "fizioterapia-ime-mobile-api-smoke/1.0",
+      ...(options.headers || {}),
     },
-    body: JSON.stringify(payload),
+    ...options,
   });
   const text = await response.text();
   let data = null;
@@ -21,7 +21,24 @@ async function postJson(path, payload) {
   return { path, status: response.status, ok: response.ok, ms: Date.now() - startedAt, data };
 }
 
+function postJson(path, payload) {
+  return requestJson(path, {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
 const checks = [];
+
+const health = await requestJson("/api/mobile/health");
+checks.push({
+  name: "mobile health endpoint responds",
+  status: health.status,
+  ok: health.status === 200 || health.status === 503,
+  expected: "200 ready or 503 missing env",
+  detail: health.data?.status || health.data?.error || "",
+  ms: health.ms,
+});
 
 const missingCode = await postJson("/api/mobile/patient-session", {});
 checks.push({
