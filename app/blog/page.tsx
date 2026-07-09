@@ -4,7 +4,7 @@ import { getBlogPosts } from "@/lib/sanity/queries";
 
 export const metadata = {
   title: "Blog | Fizioterapia ime",
-  description: "Artikuj për pacientë, fizioterapeutë, AI Movement Check dhe pilotimin e Fizioterapia ime.",
+  description: "Artikuj të thjeshtë për pacientë dhe fizioterapeutë rreth ushtrimeve, sigurisë dhe përdorimit të Fizioterapia ime.",
 };
 
 export const revalidate = 60;
@@ -26,20 +26,24 @@ export default async function BlogPage() {
       <section className="launch-hero">
         <div>
           <span className="badge">Blog · Fizioterapia ime</span>
-          <h1>Artikuj të thjeshtë për pacientë dhe fizioterapeutë.</h1>
+          <h1>Artikuj të thjeshtë që pacienti i kupton menjëherë.</h1>
           <p>
-            Blogu tani lexon artikuj nga Sanity kur env vars janë të vendosura. Nëse Sanity nuk është konfiguruar ende,
-            faqja përdor fallback statik që Vercel build të mos prishet.
+            Këtu gjeni shpjegime të qarta për ushtrimet në shtëpi, sigurinë gjatë rehabilitimit
+            dhe mënyrën si Fizioterapia Ime ndihmon pacientin të ndjekë planin e dhënë nga fizioterapeuti.
           </p>
           <div className="hero-actions">
-            <a className="button" href="/pilot-readiness">Pilot readiness</a>
-            <a className="button secondary" href="/mobile-submission">Mobile handoff</a>
+            <a className="button" href="/support">Pyet për pilotin</a>
+            <a className="button secondary" href="/faq">Lexo FAQ</a>
           </div>
         </div>
         <div className="launch-status-card ready">
           <span className="mini-badge">Status</span>
-          <strong>{hasSanityConfig ? "Sanity connected" : "Static fallback"}</strong>
-          <p>{hasSanityConfig ? "Blogu po lexon postime nga Sanity dataset." : "Shto NEXT_PUBLIC_SANITY_PROJECT_ID për me aktivizu Sanity live."}</p>
+          <strong>{hasSanityConfig ? "Blog live nga Sanity" : "Blog demo aktiv"}</strong>
+          <p>
+            {hasSanityConfig
+              ? "Artikujt menaxhohen në Sanity dhe shfaqen automatikisht në website."
+              : "Website-i shfaq artikuj shembull derisa të lidhet Sanity në ambientin live."}
+          </p>
         </div>
       </section>
 
