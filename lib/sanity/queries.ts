@@ -6,6 +6,7 @@ export type SanityBlock = Record<string, unknown>;
 
 export type SanityBlogPost = Omit<BlogPost, "sections"> & {
   body?: SanityBlock[] | null;
+  sections?: BlogPost["sections"];
   safetyReviewed?: boolean | null;
 };
 
@@ -52,6 +53,7 @@ function staticToSanityShape(post: BlogPost): SanityBlogPost {
   return {
     ...post,
     body: null,
+    sections: post.sections,
     safetyReviewed: true,
   };
 }
@@ -73,7 +75,8 @@ export async function getBlogPosts(): Promise<SanityBlogPost[]> {
 
 export async function getBlogPostBySlug(slug: string): Promise<SanityBlogPost | null> {
   if (!hasSanityConfig) {
-    return staticToSanityShape(getBlogPost(slug) as BlogPost) || null;
+    const fallback = getBlogPost(slug);
+    return fallback ? staticToSanityShape(fallback) : null;
   }
 
   try {
