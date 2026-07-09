@@ -14,6 +14,7 @@ import { saveAiCheck } from './lib/supabase';
 
 type Screen = 'login' | 'plan' | 'exercise' | 'ai-prep' | 'ai-checking' | 'ai-result' | 'pain' | 'pain-warning' | 'saved';
 type AlertType = 'good' | 'needs_attention' | 'contact_physio';
+type Tone = 'success' | 'warning' | 'danger' | 'info' | 'light';
 
 type Exercise = {
   id: string;
@@ -27,69 +28,71 @@ type Exercise = {
 const PATIENT = {
   id: 'demo-patient-1',
   code: 'ARB-4821',
-  name: 'Arbër Rexha',
+  name: 'Arber Rexha',
   diagnosis: 'Lumbosciatica',
-  planTitle: 'Plani juaj 14 ditë – Lumbosciatica',
+  planTitle: 'Program 14 ditor per lumbosciatica',
+  physio: 'Dr. Diellza Rabushaj',
 };
 
 const exercises: Exercise[] = [
   {
     id: 'ex-1',
     name: 'Glute bridge',
-    meta: '3 sete × 12 përsëritje',
+    meta: '3 sete x 12 perseritje',
     duration: '5 min',
     aiEnabled: true,
-    instructions:
-      'Shtrihu në shpinë, përkul gjunjët dhe ngriti ijet ngadalë. Mbaje legenin stabil dhe mos e shpejto lëvizjen.',
+    instructions: 'Shtrihu ne shpine, perkul gjunjet dhe ngriti ijet ngadale. Mbaje legenin stabil dhe mos e shpejto levizjen.',
   },
   {
     id: 'ex-2',
     name: 'Cat cow',
-    meta: '2 sete × 10 përsëritje',
+    meta: '2 sete x 10 perseritje',
     duration: '4 min',
     aiEnabled: true,
-    instructions:
-      'Fillo me katër këmbë. Lëvize shpinën ngadalë nga pozicioni i maces në pozicionin e lopës pa dhimbje të fortë.',
+    instructions: 'Fillo me kater kembe. Levize shpinen ngadale dhe pa dhimbje te forte.',
   },
   {
     id: 'ex-3',
     name: 'Piriformis stretch',
-    meta: '3 × 30 sekonda',
+    meta: '3 x 30 sekonda',
     duration: '6 min',
     aiEnabled: false,
-    instructions:
-      'Kryqëzo këmbën mbi gjurin tjetër dhe tërhiq butësisht drejt gjoksit derisa të ndjesh shtrirje të kontrolluar.',
+    instructions: 'Kryqezo kemben mbi gjurin tjeter dhe terhiq butesisht drejt gjoksit derisa te ndjesh shtrirje te kontrolluar.',
   },
   {
     id: 'ex-4',
-    name: 'Pelvic tilt',
-    meta: '2 sete × 12 përsëritje',
-    duration: '4 min',
-    aiEnabled: true,
-    instructions:
-      'Shtrihu në shpinë dhe shtype lehtë pjesën e poshtme të shpinës drejt dyshemesë. Lëvizja duhet të jetë e vogël dhe e kontrolluar.',
-  },
-  {
-    id: 'ex-5',
     name: 'Bird dog',
-    meta: '2 sete × 8 secila anë',
+    meta: '2 sete x 8 secila ane',
     duration: '7 min',
     aiEnabled: true,
-    instructions:
-      'Nga pozicioni me katër këmbë, zgjat dorën dhe këmbën e kundërt. Mbaje trupin stabil dhe mos e lako shpinën.',
+    instructions: 'Nga pozicioni me kater kembe, zgjat doren dhe kemben e kundert. Mbaje trupin stabil dhe mos e lako shpinen.',
   },
 ];
 
 const aiFeedback = [
-  'Mbaje legenin më stabil gjatë ngritjes.',
-  'Mos e shpejto lëvizjen.',
-  'Nëse dhimbja rritet, ndalo dhe kontakto fizioterapeutin.',
+  'Mbaje legenin me stabil gjate ngritjes.',
+  'Ritmi eshte i mire, por kthimi duhet te jete me i ngadalte.',
+  'Nese dhimbja rritet, ndalo dhe kontakto fizioterapeutin.',
 ];
+
+const toneMap: Record<Tone, { bg: string; border: string; text: string }> = {
+  success: { bg: '#E9F8EF', border: '#CBEDD9', text: '#13744D' },
+  warning: { bg: '#FFF4DF', border: '#FFE1A8', text: '#A15C00' },
+  danger: { bg: '#FFF0EE', border: '#FFD0CA', text: '#B42318' },
+  info: { bg: '#EAF3FF', border: '#D7E8FF', text: '#2563EB' },
+  light: { bg: 'rgba(255,255,255,0.16)', border: 'rgba(255,255,255,0.28)', text: '#FFFFFF' },
+};
 
 function getAlertType(score: number): AlertType {
   if (score > 80) return 'good';
   if (score >= 60) return 'needs_attention';
   return 'contact_physio';
+}
+
+function getPainTone(score: number): Tone {
+  if (score >= 7) return 'danger';
+  if (score >= 4) return 'warning';
+  return 'success';
 }
 
 export default function App() {
@@ -119,29 +122,30 @@ export default function App() {
     setCountdown(3);
     setIsAnalyzing(false);
     let count = 3;
-
+    let timeout: ReturnType<typeof setTimeout> | undefined;
     const interval = setInterval(() => {
       count -= 1;
       if (count > 0) {
         setCountdown(count);
-      } else {
-        clearInterval(interval);
-        setIsAnalyzing(true);
-        const timeout = setTimeout(() => {
-          setIsAnalyzing(false);
-          setScreen('ai-result');
-        }, 1800);
-        return () => clearTimeout(timeout);
+        return;
       }
-    }, 900);
+      clearInterval(interval);
+      setIsAnalyzing(true);
+      timeout = setTimeout(() => {
+        setIsAnalyzing(false);
+        setScreen('ai-result');
+      }, 1500);
+    }, 800);
 
-    return () => clearInterval(interval);
+    return () => {
+      clearInterval(interval);
+      if (timeout) clearTimeout(timeout);
+    };
   }, [screen]);
 
   function handleLogin() {
-    const clean = code.trim().toUpperCase();
-    if (clean !== PATIENT.code) {
-      setError('Kodi nuk u gjet. Për demo përdor ARB-4821.');
+    if (code.trim().toUpperCase() !== PATIENT.code) {
+      setError('Kodi nuk u gjet. Per demo perdor ARB-4821.');
       return;
     }
     setError('');
@@ -169,7 +173,7 @@ export default function App() {
 
     setCompletedIds((current) => Array.from(new Set([...current, selectedExercise.id])));
     setSaving(false);
-    setSaveText(result.demoMode ? 'U ruajt në demo mode. Supabase aktivizohet kur shtohen env keys.' : 'U ruajt në Supabase.');
+    setSaveText(result.demoMode ? 'U ruajt ne demo mode. Supabase aktivizohet kur shtohen env keys.' : 'U ruajt ne Supabase.');
     setScreen('saved');
   }
 
@@ -177,95 +181,117 @@ export default function App() {
     setPainScore(score);
     if (score >= 7) {
       setScreen('pain-warning');
-    } else {
-      void saveResult(score);
+      return;
     }
+    void saveResult(score);
   }
 
   return (
     <SafeAreaView style={styles.safe}>
-      <StatusBar style="dark" />
+      <StatusBar style={screen === 'ai-checking' ? 'light' : 'dark'} />
       <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
-        <Header onHome={() => setScreen(screen === 'login' ? 'login' : 'plan')} />
+        {screen !== 'ai-checking' && <Header onHome={() => setScreen(screen === 'login' ? 'login' : 'plan')} />}
 
         {screen === 'login' && (
-          <View>
-            <View style={styles.heroBlue}>
-              <Text style={styles.logoMark}>FP</Text>
-              <Text style={styles.heroTitle}>Fizioterapia Ime</Text>
-              <Text style={styles.heroText}>Platformë rehabilitimi për pacientin</Text>
+          <View style={styles.stack}>
+            <View style={styles.hero}>
+              <View style={styles.rowBetween}>
+                <BrandBadge />
+                <Pill label="Code-only access" tone="info" />
+              </View>
+              <Text style={styles.heroTitle}>Plani i fizioterapise ne telefon.</Text>
+              <Text style={styles.heroText}>Hyr me kodin qe ta jep fizioterapeuti, ndiq ushtrimet dhe raporto dhimbjen pa krijuar llogari.</Text>
+              <View style={styles.twoCols}>
+                <Metric label="Plani" value="Dita 3/14" />
+                <Metric label="Siguria" value="7/10 stop" />
+              </View>
             </View>
 
-            <View style={styles.cardLifted}>
-              <Text style={styles.title}>Hyr me kodin e pacientit</Text>
-              <Text style={styles.text}>Kodi merret nga fizioterapeuti juaj. Pacienti nuk krijon plan vetë.</Text>
+            <Card raised>
+              <View style={styles.rowBetweenTop}>
+                <View>
+                  <Text style={styles.eyebrow}>Patient portal</Text>
+                  <Text style={styles.title}>Hyr me kod</Text>
+                </View>
+                <Pill label="Pa account" tone="success" />
+              </View>
+              <Text style={styles.text}>Kodi unik e lidh pacientin vetem me planin qe e ka krijuar fizioterapeuti.</Text>
               <View style={styles.inputWrap}>
-                <Text style={styles.inputIcon}>🔐</Text>
+                <Text style={styles.inputPrefix}>CODE</Text>
                 <TextInput
                   value={code}
                   onChangeText={setCode}
                   style={styles.input}
                   autoCapitalize="characters"
                   autoCorrect={false}
-                  placeholder="Kodi i pacientit"
+                  placeholder="ARB-4821"
                   placeholderTextColor="#8AA0B3"
                 />
               </View>
               {error ? <Text style={styles.error}>{error}</Text> : null}
-              <TouchableOpacity style={styles.primaryButton} onPress={handleLogin} activeOpacity={0.86}>
-                <Text style={styles.primaryButtonText}>Hyr në plan</Text>
-              </TouchableOpacity>
+              <Button label="Hyr ne plan" onPress={handleLogin} />
               <Text style={styles.helper}>Demo code: ARB-4821</Text>
-            </View>
+            </Card>
+            <SafetyStrip />
           </View>
         )}
 
         {screen === 'plan' && (
-          <View>
-            <View style={styles.planHeader}>
-              <View>
-                <Text style={styles.whiteSmall}>Mirë se vini,</Text>
-                <Text style={styles.whiteTitle}>{PATIENT.name}</Text>
-                <Text style={styles.whiteText}>{PATIENT.planTitle}</Text>
+          <View style={styles.stack}>
+            <View style={styles.darkCard}>
+              <View style={styles.rowBetweenTop}>
+                <View>
+                  <Text style={styles.whiteSmall}>Mire se vini,</Text>
+                  <Text style={styles.whiteTitle}>{PATIENT.name}</Text>
+                </View>
+                <Pill label="Dita 3" tone="light" />
               </View>
-              <View style={styles.dayBadge}>
-                <Text style={styles.dayBadgeText}>Dita 3/14</Text>
+              <Text style={styles.whiteText}>{PATIENT.planTitle}</Text>
+              <View style={styles.chipRow}>
+                <Text style={styles.whiteChip}>{PATIENT.diagnosis}</Text>
+                <Text style={styles.whiteChip}>{PATIENT.physio}</Text>
               </View>
             </View>
 
-            <View style={styles.progressCard}>
+            <Card>
               <View style={styles.rowBetween}>
-                <Text style={styles.progressTitle}>Ushtrime të kryera sot</Text>
-                <Text style={styles.progressPercent}>{progress}%</Text>
+                <View>
+                  <Text style={styles.cardTitle}>Progresi sot</Text>
+                  <Text style={styles.smallText}>{completedIds.length}/{exercises.length} ushtrime te kryera</Text>
+                </View>
+                <Text style={styles.percent}>{progress}%</Text>
               </View>
               <View style={styles.progressTrack}>
                 <View style={[styles.progressFill, { width: `${progress}%` }]} />
               </View>
-              <Text style={styles.helper}>{completedIds.length}/{exercises.length} ushtrime të kryera</Text>
+            </Card>
+
+            <View style={styles.twoCols}>
+              <StatusCard label="AI checks" value="4 aktiv" tone="info" />
+              <StatusCard label="Pain rule" value="7/10 stop" tone="warning" />
             </View>
 
-            <View style={styles.calendarRow}>
-              {[1, 2, 3, 4, 5, 6, 7].map((day) => (
-                <View key={day} style={[styles.calendarPill, day === 3 && styles.calendarActive]}>
-                  <Text style={[styles.calendarText, day === 3 && styles.calendarActiveText]}>{day}</Text>
-                </View>
-              ))}
-            </View>
-
-            <Text style={styles.sectionTitle}>Ushtrimet për sot</Text>
-            {exercises.map((exercise) => {
+            <Text style={styles.sectionTitle}>Ushtrimet per sot</Text>
+            {exercises.map((exercise, index) => {
               const completed = completedIds.includes(exercise.id);
               return (
-                <TouchableOpacity key={exercise.id} style={[styles.exerciseCard, completed && styles.exerciseDone]} onPress={() => openExercise(exercise)} activeOpacity={0.8}>
-                  <View style={[styles.exerciseIcon, completed && styles.exerciseIconDone]}>
-                    <Text style={styles.exerciseIconText}>{completed ? '✓' : '↗'}</Text>
+                <TouchableOpacity
+                  key={exercise.id}
+                  style={[styles.listItem, completed && styles.listItemDone]}
+                  onPress={() => openExercise(exercise)}
+                  activeOpacity={0.84}
+                >
+                  <View style={[styles.numberBox, completed && styles.numberBoxDone]}>
+                    <Text style={[styles.numberText, completed && styles.numberTextDone]}>{completed ? 'OK' : String(index + 1).padStart(2, '0')}</Text>
                   </View>
-                  <View style={styles.exerciseInfo}>
-                    <Text style={styles.exerciseName}>{exercise.name}</Text>
-                    <Text style={styles.smallText}>{exercise.meta} · {exercise.duration}</Text>
-                    {exercise.aiEnabled && <Text style={styles.aiMini}>AI check aktiv</Text>}
+                  <View style={styles.flex}>
+                    <View style={styles.titleLine}>
+                      <Text style={styles.itemTitle}>{exercise.name}</Text>
+                      {exercise.aiEnabled ? <Pill label="AI" tone="info" compact /> : null}
+                    </View>
+                    <Text style={styles.smallText}>{exercise.meta} - {exercise.duration}</Text>
                   </View>
-                  <Text style={styles.chevron}>›</Text>
+                  <Text style={styles.arrow}>{'>'}</Text>
                 </TouchableOpacity>
               );
             })}
@@ -273,61 +299,53 @@ export default function App() {
         )}
 
         {screen === 'exercise' && (
-          <View>
-            <TouchableOpacity onPress={() => setScreen('plan')}><Text style={styles.back}>‹ Kthehu te plani</Text></TouchableOpacity>
-            <View style={styles.card}>
-              <Text style={styles.eyebrow}>Ushtrimi</Text>
-              <Text style={styles.title}>{selectedExercise.name}</Text>
-              <View style={styles.videoBox}>
-                <Text style={styles.videoIcon}>▶</Text>
-                <Text style={styles.videoText}>Video udhëzuese</Text>
+          <View style={styles.stack}>
+            <BackButton label="Kthehu te plani" onPress={() => setScreen('plan')} />
+            <Card>
+              <View style={styles.rowBetweenTop}>
+                <View style={styles.flex}>
+                  <Text style={styles.eyebrow}>Ushtrimi</Text>
+                  <Text style={styles.title}>{selectedExercise.name}</Text>
+                </View>
+                <Pill label={selectedExercise.aiEnabled ? 'AI aktiv' : 'Manual'} tone={selectedExercise.aiEnabled ? 'info' : 'warning'} />
               </View>
-              <View style={styles.infoGrid}>
-                <InfoPill label="Sete" value={selectedExercise.meta} />
-                <InfoPill label="Koha" value={selectedExercise.duration} />
+              <VisualGuide label="Udhezim vizual" />
+              <View style={styles.stackSmall}>
+                <Info label="Doza" value={selectedExercise.meta} />
+                <Info label="Koha" value={selectedExercise.duration} />
               </View>
               <Text style={styles.text}>{selectedExercise.instructions}</Text>
-              <TouchableOpacity style={styles.primaryButton} onPress={() => setScreen('ai-prep')} activeOpacity={0.86}>
-                <Text style={styles.primaryButtonText}>Kontrollo lëvizjen me kamerë</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.secondaryButton} onPress={() => setScreen('pain')} activeOpacity={0.86}>
-                <Text style={styles.secondaryButtonText}>E përfundova ushtrimin</Text>
-              </TouchableOpacity>
-            </View>
+              <SafetyStrip compact />
+              {selectedExercise.aiEnabled ? <Button label="Kontrollo levizjen me kamere" onPress={() => setScreen('ai-prep')} /> : null}
+              <Button label="E perfundova ushtrimin" onPress={() => setScreen('pain')} secondary />
+            </Card>
           </View>
         )}
 
         {screen === 'ai-prep' && (
-          <View>
-            <TouchableOpacity onPress={() => setScreen('exercise')}><Text style={styles.back}>‹ Kthehu te ushtrimi</Text></TouchableOpacity>
-            <View style={styles.card}>
+          <View style={styles.stack}>
+            <BackButton label="Kthehu te ushtrimi" onPress={() => setScreen('exercise')} />
+            <Card>
               <Text style={styles.eyebrow}>AI Movement Check</Text>
-              <Text style={styles.title}>Përgatitu për kontrollin me kamerë</Text>
-              <View style={styles.cameraPrepBox}>
-                <Text style={styles.cameraEmoji}>📱</Text>
-                <Text style={styles.textCenter}>Telefoni duhet të shohë trupin qartë.</Text>
-              </View>
-              <Instruction text="Vendose telefonin në një vend stabil." />
-              <Instruction text="Trupi duhet të shihet qartë në ekran." />
-              <Instruction text="Bëje ushtrimin ngadalë dhe me kontroll." />
-              <View style={styles.safetyBox}>
-                <Text style={styles.safetyText}>AI mat vetëm cilësinë e lëvizjes. Nuk diagnostikon dhe nuk ndryshon planin. Fizioterapeuti mbetet vendimmarrës i fundit.</Text>
-              </View>
-              <TouchableOpacity style={styles.primaryButton} onPress={() => setScreen('ai-checking')} activeOpacity={0.86}>
-                <Text style={styles.primaryButtonText}>Fillo kontrollin</Text>
-              </TouchableOpacity>
-            </View>
+              <Text style={styles.title}>Pergatitu per kontrollin me kamere</Text>
+              <VisualGuide label="Telefoni duhet te shohe trupin qarte" phone />
+              <Instruction text="Vendose telefonin ne nje vend stabil." />
+              <Instruction text="Trupi duhet te shihet qarte ne ekran." />
+              <Instruction text="Beje ushtrimin ngadale dhe me kontroll." />
+              <SafetyStrip compact />
+              <Button label="Fillo kontrollin" onPress={() => setScreen('ai-checking')} />
+            </Card>
           </View>
         )}
 
         {screen === 'ai-checking' && (
-          <View style={styles.darkScreen}>
-            <Text style={styles.darkSmall}>{selectedExercise.name}</Text>
+          <View style={styles.aiScreen}>
+            <Text style={styles.aiTitle}>{selectedExercise.name}</Text>
             <View style={styles.cameraFrame}>
-              <View style={styles.cornerTopLeft} />
-              <View style={styles.cornerTopRight} />
-              <View style={styles.cornerBottomLeft} />
-              <View style={styles.cornerBottomRight} />
+              <View style={styles.cornerTL} />
+              <View style={styles.cornerTR} />
+              <View style={styles.cornerBL} />
+              <View style={styles.cornerBR} />
               <View style={styles.bodyGuide}>
                 <View style={styles.head} />
                 <View style={styles.bodyLine} />
@@ -338,72 +356,75 @@ export default function App() {
             </View>
             {!isAnalyzing ? (
               <>
-                <Text style={styles.countdownHint}>Fillo ushtrimin...</Text>
+                <Text style={styles.aiHint}>Fillo ushtrimin</Text>
                 <Text style={styles.countdown}>{countdown}</Text>
               </>
             ) : (
               <>
                 <ActivityIndicator color="#62D6A4" size="large" />
-                <Text style={styles.analyzing}>Duke analizuar lëvizjen...</Text>
+                <Text style={styles.aiHint}>Duke analizuar levizjen...</Text>
               </>
             )}
           </View>
         )}
 
         {screen === 'ai-result' && (
-          <View>
-            <View style={styles.resultCard}>
-              <Text style={styles.eyebrow}>Rezultati i AI</Text>
+          <Card>
+            <Text style={styles.eyebrow}>Rezultati i AI</Text>
+            <View style={styles.rowBetween}>
               <Text style={styles.score}>{aiScore}%</Text>
-              <Text style={styles.title}>Lëvizje e mirë</Text>
-              <View style={styles.resultBadge}><Text style={styles.resultBadgeText}>{alertType}</Text></View>
-              {aiFeedback.map((item) => <Instruction key={item} text={item} />)}
-              <View style={styles.safetyBox}>
-                <Text style={styles.safetyText}>Ky feedback nuk e zëvendëson vlerësimin e fizioterapeutit.</Text>
-              </View>
-              <TouchableOpacity style={styles.primaryButton} onPress={() => setScreen('pain')} activeOpacity={0.86}>
-                <Text style={styles.primaryButtonText}>Raporto dhimbjen</Text>
-              </TouchableOpacity>
+              <Pill label={alertType} tone="success" />
             </View>
-          </View>
+            <Text style={styles.title}>Levizje e kontrolluar</Text>
+            {aiFeedback.map((item) => <Instruction key={item} text={item} />)}
+            <SafetyStrip compact />
+            <Button label="Raporto dhimbjen" onPress={() => setScreen('pain')} />
+          </Card>
         )}
 
         {screen === 'pain' && (
-          <View style={styles.card}>
+          <Card>
             <Text style={styles.eyebrow}>Siguria</Text>
-            <Text style={styles.title}>Sa dhimbje pate gjatë ushtrimit?</Text>
-            <Text style={styles.text}>Zgjedh 0–10. Nëse dhimbja është 7 ose më shumë, ndalo ushtrimin dhe kontakto fizioterapeutin.</Text>
+            <Text style={styles.title}>Sa dhimbje pate gjate ushtrimit?</Text>
+            <Text style={styles.text}>Zgjedh 0-10. Nese dhimbja eshte 7 ose me shume, ndalo ushtrimin dhe kontakto fizioterapeutin.</Text>
             <View style={styles.painGrid}>
-              {Array.from({ length: 11 }, (_, index) => (
-                <TouchableOpacity key={index} style={styles.painButton} onPress={() => selectPain(index)} activeOpacity={0.8}>
-                  <Text style={styles.painText}>{index}</Text>
-                </TouchableOpacity>
-              ))}
+              {Array.from({ length: 11 }, (_, index) => {
+                const tone = toneMap[getPainTone(index)];
+                return (
+                  <TouchableOpacity
+                    key={index}
+                    style={[styles.painButton, { backgroundColor: tone.bg, borderColor: tone.border }]}
+                    onPress={() => selectPain(index)}
+                    activeOpacity={0.84}
+                  >
+                    <Text style={[styles.painText, { color: tone.text }]}>{index}</Text>
+                  </TouchableOpacity>
+                );
+              })}
             </View>
-            {saving && <ActivityIndicator color="#2D9E5F" style={{ marginTop: 16 }} />}
-          </View>
+            {saving ? <ActivityIndicator color="#1F9F96" style={styles.loading} /> : null}
+          </Card>
         )}
 
         {screen === 'pain-warning' && (
-          <View style={styles.warningCard}>
-            <Text style={styles.warningIcon}>⚠️</Text>
+          <Card danger>
+            <View style={styles.warningMark}><Text style={styles.warningText}>!</Text></View>
             <Text style={styles.title}>Ndalo ushtrimin</Text>
-            <Text style={styles.text}>Dhimbja është {painScore}/10. Ndalo ushtrimin dhe kontakto fizioterapeutin para se të vazhdosh.</Text>
-            <TouchableOpacity style={styles.primaryButton} onPress={() => void saveResult()} activeOpacity={0.86}>
-              <Text style={styles.primaryButtonText}>{saving ? 'Duke ruajtur...' : 'Ruaj dhe kthehu te plani'}</Text>
-            </TouchableOpacity>
-          </View>
+            <Text style={styles.text}>Dhimbja eshte {painScore}/10. Kontakto fizioterapeutin para se te vazhdosh programin.</Text>
+            <Button label={saving ? 'Duke ruajtur...' : 'Ruaj dhe njofto fizioterapeutin'} onPress={() => void saveResult()} />
+          </Card>
         )}
 
         {screen === 'saved' && (
-          <View style={styles.card}>
-            <Text style={styles.savedIcon}>✓</Text>
-            <Text style={styles.title}>U ruajt kontrolli</Text>
+          <Card>
+            <View style={styles.savedMark}><Text style={styles.savedText}>OK</Text></View>
+            <Text style={styles.title}>Seanca u ruajt</Text>
             <Text style={styles.text}>{saveText || 'Rezultati u ruajt.'}</Text>
-            <TouchableOpacity style={styles.primaryButton} onPress={() => setScreen('plan')} activeOpacity={0.86}>
-              <Text style={styles.primaryButtonText}>Kthehu te plani</Text>
-            </TouchableOpacity>
-          </View>
+            <Info label="Ushtrimi" value={selectedExercise.name} />
+            <Info label="AI score" value={`${aiScore}%`} />
+            <Info label="Dhimbja" value={painScore == null ? 'Pa raport' : `${painScore}/10`} />
+            <Button label="Kthehu te plani" onPress={() => setScreen('plan')} />
+          </Card>
         )}
       </ScrollView>
     </SafeAreaView>
@@ -412,138 +433,246 @@ export default function App() {
 
 function Header({ onHome }: { onHome: () => void }) {
   return (
-    <TouchableOpacity style={styles.header} onPress={onHome} activeOpacity={0.8}>
-      <View style={styles.headerLogo}><Text style={styles.headerLogoText}>FP</Text></View>
-      <View>
-        <Text style={styles.headerTitle}>FizioPlan</Text>
-        <Text style={styles.headerSubtitle}>Fizioterapia Ime</Text>
+    <TouchableOpacity style={styles.header} onPress={onHome} activeOpacity={0.84}>
+      <BrandBadge small />
+      <View style={styles.flex}>
+        <Text style={styles.headerTitle}>Fizioterapia ime</Text>
+        <Text style={styles.headerSub}>Leviz me mire, jeto me mire</Text>
       </View>
+      <Pill label="MVP" tone="success" compact />
     </TouchableOpacity>
   );
 }
 
-function Instruction({ text }: { text: string }) {
+function BrandBadge({ small = false }: { small?: boolean }) {
   return (
-    <View style={styles.instruction}>
-      <Text style={styles.check}>✓</Text>
-      <Text style={styles.instructionText}>{text}</Text>
+    <View style={[styles.brand, small && styles.brandSmall]}>
+      <Text style={[styles.brandText, small && styles.brandTextSmall]}>FI</Text>
     </View>
   );
 }
 
-function InfoPill({ label, value }: { label: string; value: string }) {
+function Card({ children, raised = false, danger = false }: { children: React.ReactNode; raised?: boolean; danger?: boolean }) {
+  return <View style={[styles.card, raised && styles.raised, danger && styles.dangerCard]}>{children}</View>;
+}
+
+function Pill({ label, tone, compact = false }: { label: string; tone: Tone; compact?: boolean }) {
+  const colors = toneMap[tone];
   return (
-    <View style={styles.infoPill}>
+    <View style={[styles.pill, compact && styles.pillSmall, { backgroundColor: colors.bg, borderColor: colors.border }]}>
+      <Text style={[styles.pillText, { color: colors.text }]}>{label}</Text>
+    </View>
+  );
+}
+
+function Button({ label, onPress, secondary = false }: { label: string; onPress: () => void; secondary?: boolean }) {
+  return (
+    <TouchableOpacity style={[styles.button, secondary && styles.secondaryButton]} onPress={onPress} activeOpacity={0.86}>
+      <Text style={[styles.buttonText, secondary && styles.secondaryButtonText]}>{label}</Text>
+    </TouchableOpacity>
+  );
+}
+
+function BackButton({ label, onPress }: { label: string; onPress: () => void }) {
+  return (
+    <TouchableOpacity onPress={onPress} activeOpacity={0.84}>
+      <Text style={styles.back}>{'<'} {label}</Text>
+    </TouchableOpacity>
+  );
+}
+
+function Metric({ label, value }: { label: string; value: string }) {
+  return (
+    <View style={styles.metric}>
+      <Text style={styles.metricLabel}>{label}</Text>
+      <Text style={styles.metricValue}>{value}</Text>
+    </View>
+  );
+}
+
+function StatusCard({ label, value, tone }: { label: string; value: string; tone: Tone }) {
+  const colors = toneMap[tone];
+  return (
+    <View style={[styles.statusCard, { backgroundColor: colors.bg, borderColor: colors.border }]}>
+      <Text style={styles.metricLabel}>{label}</Text>
+      <Text style={styles.metricValue}>{value}</Text>
+    </View>
+  );
+}
+
+function Info({ label, value }: { label: string; value: string }) {
+  return (
+    <View style={styles.info}>
       <Text style={styles.infoLabel}>{label}</Text>
       <Text style={styles.infoValue}>{value}</Text>
     </View>
   );
 }
 
+function Instruction({ text }: { text: string }) {
+  return (
+    <View style={styles.instruction}>
+      <View style={styles.okDot}><Text style={styles.okText}>OK</Text></View>
+      <Text style={styles.instructionText}>{text}</Text>
+    </View>
+  );
+}
+
+function SafetyStrip({ compact = false }: { compact?: boolean }) {
+  return (
+    <View style={[styles.safety, compact && styles.safetyCompact]}>
+      <Text style={styles.safetyLabel}>Safety rule</Text>
+      <Text style={styles.safetyText}>Dhimbje 7/10 ose me shume = ndalo ushtrimin dhe kontakto fizioterapeutin.</Text>
+    </View>
+  );
+}
+
+function VisualGuide({ label, phone = false }: { label: string; phone?: boolean }) {
+  return (
+    <View style={styles.visual}>
+      {phone ? (
+        <View style={styles.phone}>
+          <View style={styles.phoneCam} />
+          <View style={styles.phoneTarget} />
+        </View>
+      ) : (
+        <View style={styles.bodyGuideLight}>
+          <View style={styles.headLight} />
+          <View style={styles.bodyLight} />
+          <View style={styles.armLight} />
+          <View style={styles.legLight} />
+        </View>
+      )}
+      <Text style={styles.visualLabel}>{label}</Text>
+    </View>
+  );
+}
+
+const baseCard = {
+  borderRadius: 8,
+  borderWidth: 1,
+  borderColor: '#DFE9EF',
+  backgroundColor: '#FFFFFF',
+} as const;
+
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#F5FAFD' },
+  safe: { flex: 1, backgroundColor: '#F6FAFC' },
   container: { padding: 18, paddingBottom: 42 },
-  header: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 18, marginTop: 4 },
-  headerLogo: { width: 46, height: 46, borderRadius: 16, backgroundColor: '#2C6EAB', alignItems: 'center', justifyContent: 'center' },
-  headerLogoText: { color: '#FFFFFF', fontWeight: '900', fontSize: 18 },
-  headerTitle: { fontSize: 22, fontWeight: '900', color: '#102033' },
-  headerSubtitle: { fontSize: 13, color: '#6B7A90', marginTop: 2 },
+  flex: { flex: 1 },
+  stack: { gap: 14 },
+  stackSmall: { gap: 10, marginBottom: 12 },
+  rowBetween: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 12 },
+  rowBetweenTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 },
+  twoCols: { flexDirection: 'row', gap: 10 },
+  chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
 
-  heroBlue: { backgroundColor: '#2C6EAB', borderRadius: 30, padding: 28, alignItems: 'center', marginBottom: -18 },
-  logoMark: { width: 76, height: 76, borderRadius: 38, backgroundColor: '#FFFFFF', color: '#2C6EAB', textAlign: 'center', textAlignVertical: 'center', fontSize: 28, fontWeight: '900', overflow: 'hidden', marginBottom: 14 },
-  heroTitle: { color: '#FFFFFF', fontSize: 30, fontWeight: '900', letterSpacing: -0.5 },
-  heroText: { color: 'rgba(255,255,255,0.82)', fontSize: 15, marginTop: 8 },
+  header: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 18, marginTop: 4 },
+  headerTitle: { fontSize: 19, fontWeight: '900', color: '#101820', letterSpacing: 0 },
+  headerSub: { fontSize: 12, color: '#657586', marginTop: 2 },
+  brand: { width: 72, height: 72, borderRadius: 8, backgroundColor: '#101820', alignItems: 'center', justifyContent: 'center' },
+  brandSmall: { width: 44, height: 44 },
+  brandText: { color: '#FFFFFF', fontSize: 25, fontWeight: '900', letterSpacing: 0 },
+  brandTextSmall: { fontSize: 15 },
 
-  card: { backgroundColor: '#FFFFFF', borderRadius: 26, padding: 22, borderWidth: 1, borderColor: '#DCEAF2', shadowColor: '#134162', shadowOpacity: 0.08, shadowRadius: 18, shadowOffset: { width: 0, height: 10 }, elevation: 3 },
-  cardLifted: { backgroundColor: '#FFFFFF', borderRadius: 26, padding: 22, borderWidth: 1, borderColor: '#DCEAF2', shadowColor: '#134162', shadowOpacity: 0.12, shadowRadius: 24, shadowOffset: { width: 0, height: 12 }, elevation: 5 },
-  title: { fontSize: 27, lineHeight: 32, fontWeight: '900', color: '#102033', letterSpacing: -0.5, marginBottom: 10 },
-  text: { fontSize: 16, lineHeight: 24, color: '#496175', marginBottom: 16 },
-  smallText: { fontSize: 13, lineHeight: 18, color: '#6B7A90' },
-  helper: { fontSize: 13, color: '#6B7A90', marginTop: 10, textAlign: 'center' },
-  eyebrow: { color: '#2C6EAB', fontSize: 13, fontWeight: '900', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 },
+  hero: { ...baseCard, minHeight: 312, padding: 22, backgroundColor: '#EAF7F5', borderColor: '#CFEEE7', justifyContent: 'space-between' },
+  heroTitle: { color: '#101820', fontSize: 36, lineHeight: 39, fontWeight: '900', letterSpacing: 0, marginTop: 18 },
+  heroText: { color: '#3B5668', fontSize: 16, lineHeight: 23, marginTop: 10 },
+  card: { ...baseCard, padding: 18, shadowColor: '#0F2033', shadowOpacity: 0.08, shadowRadius: 18, shadowOffset: { width: 0, height: 10 }, elevation: 3 },
+  raised: { shadowOpacity: 0.12, shadowRadius: 24, shadowOffset: { width: 0, height: 14 }, elevation: 5 },
+  dangerCard: { backgroundColor: '#FFF0EE', borderColor: '#FFD0CA' },
+  darkCard: { ...baseCard, padding: 20, gap: 14, backgroundColor: '#101820', borderColor: '#101820' },
 
-  inputWrap: { flexDirection: 'row', alignItems: 'center', gap: 10, borderWidth: 2, borderColor: '#D1E5F8', borderRadius: 16, paddingHorizontal: 14, backgroundColor: '#FBFDFF', marginBottom: 12 },
-  inputIcon: { fontSize: 18 },
-  input: { flex: 1, paddingVertical: 16, fontSize: 18, color: '#102033', fontWeight: '800', letterSpacing: 1.2 },
-  error: { color: '#EF4444', backgroundColor: '#FEF2F2', borderWidth: 1, borderColor: '#FCA5A5', borderRadius: 12, padding: 12, marginBottom: 12 },
+  title: { fontSize: 26, lineHeight: 32, fontWeight: '900', color: '#101820', letterSpacing: 0, marginBottom: 10 },
+  text: { fontSize: 15, lineHeight: 22, color: '#4E6678', marginBottom: 14 },
+  smallText: { fontSize: 13, lineHeight: 18, color: '#657586' },
+  helper: { fontSize: 13, color: '#657586', marginTop: 10, textAlign: 'center' },
+  eyebrow: { color: '#1F9F96', fontSize: 12, fontWeight: '900', textTransform: 'uppercase', letterSpacing: 0, marginBottom: 6 },
+  sectionTitle: { fontSize: 20, color: '#101820', fontWeight: '900', marginTop: 4 },
+  cardTitle: { fontSize: 16, color: '#101820', fontWeight: '900' },
+  percent: { fontSize: 24, color: '#1F9F96', fontWeight: '900' },
 
-  primaryButton: { backgroundColor: '#2D9E5F', borderRadius: 18, paddingVertical: 17, paddingHorizontal: 18, alignItems: 'center', marginTop: 10, shadowColor: '#2D9E5F', shadowOpacity: 0.18, shadowRadius: 14, shadowOffset: { width: 0, height: 8 }, elevation: 2 },
-  primaryButtonText: { color: '#FFFFFF', fontSize: 17, fontWeight: '900' },
-  secondaryButton: { backgroundColor: '#E8F4FD', borderRadius: 18, paddingVertical: 17, paddingHorizontal: 18, alignItems: 'center', marginTop: 10 },
-  secondaryButtonText: { color: '#2C6EAB', fontSize: 17, fontWeight: '900' },
+  inputWrap: { flexDirection: 'row', alignItems: 'center', gap: 10, borderWidth: 1.5, borderColor: '#D7E6EE', borderRadius: 8, paddingHorizontal: 14, backgroundColor: '#FBFDFF', marginBottom: 12 },
+  inputPrefix: { color: '#1F9F96', fontSize: 12, fontWeight: '900', paddingRight: 10, borderRightWidth: 1, borderRightColor: '#D7E6EE' },
+  input: { flex: 1, paddingVertical: 16, fontSize: 18, color: '#101820', fontWeight: '900', letterSpacing: 1 },
+  error: { color: '#B42318', backgroundColor: '#FFF0EE', borderWidth: 1, borderColor: '#FFD0CA', borderRadius: 8, padding: 12, marginBottom: 12 },
 
-  planHeader: { backgroundColor: '#2C6EAB', borderRadius: 28, padding: 22, flexDirection: 'row', justifyContent: 'space-between', gap: 14, marginBottom: 14 },
-  whiteSmall: { color: 'rgba(255,255,255,0.82)', fontSize: 14 },
-  whiteTitle: { color: '#FFFFFF', fontSize: 25, fontWeight: '900', marginTop: 2 },
-  whiteText: { color: 'rgba(255,255,255,0.82)', fontSize: 14, marginTop: 6, maxWidth: 220 },
-  dayBadge: { alignSelf: 'flex-start', paddingHorizontal: 12, paddingVertical: 9, borderRadius: 999, backgroundColor: 'rgba(255,255,255,0.18)' },
-  dayBadgeText: { color: '#FFFFFF', fontWeight: '900', fontSize: 12 },
-  progressCard: { backgroundColor: '#FFFFFF', borderRadius: 22, padding: 18, borderWidth: 1, borderColor: '#DCEAF2', marginBottom: 14 },
-  rowBetween: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  progressTitle: { fontSize: 16, color: '#102033', fontWeight: '800' },
-  progressPercent: { fontSize: 18, color: '#2D9E5F', fontWeight: '900' },
-  progressTrack: { height: 11, backgroundColor: '#EAF2F7', borderRadius: 999, overflow: 'hidden', marginTop: 12 },
-  progressFill: { height: '100%', backgroundColor: '#2D9E5F', borderRadius: 999 },
-  calendarRow: { flexDirection: 'row', gap: 8, marginBottom: 20 },
-  calendarPill: { width: 42, height: 42, borderRadius: 15, backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: '#DCEAF2', alignItems: 'center', justifyContent: 'center' },
-  calendarActive: { backgroundColor: '#2C6EAB' },
-  calendarText: { color: '#6B7A90', fontWeight: '800' },
-  calendarActiveText: { color: '#FFFFFF' },
-  sectionTitle: { fontSize: 20, color: '#102033', fontWeight: '900', marginBottom: 12 },
+  button: { backgroundColor: '#101820', borderRadius: 8, paddingVertical: 16, paddingHorizontal: 18, alignItems: 'center', marginTop: 10 },
+  buttonText: { color: '#FFFFFF', fontSize: 16, fontWeight: '900' },
+  secondaryButton: { backgroundColor: '#EEF8F5', borderWidth: 1, borderColor: '#D8EFEA' },
+  secondaryButtonText: { color: '#1F7F79' },
+  pill: { alignSelf: 'flex-start', borderRadius: 999, paddingHorizontal: 11, paddingVertical: 7, borderWidth: 1 },
+  pillSmall: { paddingHorizontal: 8, paddingVertical: 5 },
+  pillText: { fontSize: 11, fontWeight: '900' },
 
-  exerciseCard: { flexDirection: 'row', alignItems: 'center', gap: 14, backgroundColor: '#FFFFFF', borderRadius: 20, padding: 16, borderWidth: 1.5, borderColor: '#DCEAF2', marginBottom: 12 },
-  exerciseDone: { backgroundColor: '#F0FFF4', borderColor: '#BBF7D0' },
-  exerciseIcon: { width: 48, height: 48, borderRadius: 24, backgroundColor: '#2C6EAB', alignItems: 'center', justifyContent: 'center' },
-  exerciseIconDone: { backgroundColor: '#2D9E5F' },
-  exerciseIconText: { color: '#FFFFFF', fontSize: 20, fontWeight: '900' },
-  exerciseInfo: { flex: 1 },
-  exerciseName: { fontSize: 18, color: '#102033', fontWeight: '900', marginBottom: 4 },
-  aiMini: { color: '#2C6EAB', fontSize: 12, fontWeight: '900', marginTop: 4 },
-  chevron: { fontSize: 34, color: '#9AAABD' },
-  back: { color: '#2C6EAB', fontWeight: '900', marginBottom: 14, fontSize: 16 },
+  metric: { flex: 1, borderRadius: 8, padding: 13, backgroundColor: 'rgba(255,255,255,0.58)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.3)' },
+  statusCard: { flex: 1, borderRadius: 8, padding: 14, borderWidth: 1 },
+  metricLabel: { color: '#657586', fontSize: 12, fontWeight: '800' },
+  metricValue: { color: '#101820', fontSize: 18, fontWeight: '900', marginTop: 6 },
 
-  videoBox: { height: 190, borderRadius: 24, backgroundColor: '#E8F4FD', alignItems: 'center', justifyContent: 'center', marginBottom: 16, borderWidth: 1, borderColor: '#D1E5F8' },
-  videoIcon: { fontSize: 48, color: '#2C6EAB', marginBottom: 8 },
-  videoText: { color: '#2C6EAB', fontWeight: '800' },
-  infoGrid: { gap: 10, marginBottom: 12 },
-  infoPill: { backgroundColor: '#F5F8FA', borderRadius: 14, padding: 13, borderWidth: 1, borderColor: '#E2EBF5' },
-  infoLabel: { color: '#6B7A90', fontSize: 12, fontWeight: '800', textTransform: 'uppercase' },
-  infoValue: { color: '#102033', fontSize: 15, fontWeight: '900', marginTop: 3 },
+  whiteSmall: { color: 'rgba(255,255,255,0.72)', fontSize: 14 },
+  whiteTitle: { color: '#FFFFFF', fontSize: 25, fontWeight: '900', marginTop: 2, letterSpacing: 0 },
+  whiteText: { color: 'rgba(255,255,255,0.82)', fontSize: 15, lineHeight: 21 },
+  whiteChip: { color: '#D8EFEA', fontSize: 12, fontWeight: '800', paddingHorizontal: 10, paddingVertical: 7, borderRadius: 999, backgroundColor: 'rgba(255,255,255,0.1)' },
+  progressTrack: { height: 10, backgroundColor: '#E8EEF3', borderRadius: 999, overflow: 'hidden', marginTop: 14 },
+  progressFill: { height: '100%', backgroundColor: '#1F9F96', borderRadius: 999 },
 
-  cameraPrepBox: { backgroundColor: '#E8F4FD', borderRadius: 24, padding: 24, alignItems: 'center', marginBottom: 16, borderWidth: 1, borderColor: '#D1E5F8' },
-  cameraEmoji: { fontSize: 58, marginBottom: 8 },
-  textCenter: { textAlign: 'center', color: '#496175', fontSize: 15 },
-  instruction: { flexDirection: 'row', alignItems: 'flex-start', gap: 10, backgroundColor: '#F8FCFF', borderRadius: 15, padding: 13, borderWidth: 1, borderColor: '#E2EBF5', marginBottom: 9 },
-  check: { color: '#2D9E5F', fontWeight: '900', fontSize: 16 },
-  instructionText: { flex: 1, color: '#102033', fontSize: 15, lineHeight: 21 },
-  safetyBox: { backgroundColor: '#FFFBEB', borderRadius: 15, padding: 13, borderWidth: 1, borderColor: '#FDE68A', marginTop: 6, marginBottom: 8 },
-  safetyText: { color: '#8A5C09', fontSize: 13, lineHeight: 19 },
+  listItem: { ...baseCard, flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14 },
+  listItemDone: { backgroundColor: '#F2FBF7', borderColor: '#CBEDD9' },
+  numberBox: { width: 48, height: 48, borderRadius: 8, backgroundColor: '#EEF3F7', alignItems: 'center', justifyContent: 'center' },
+  numberBoxDone: { backgroundColor: '#E9F8EF' },
+  numberText: { color: '#657586', fontSize: 13, fontWeight: '900' },
+  numberTextDone: { color: '#13744D' },
+  titleLine: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 4 },
+  itemTitle: { flex: 1, fontSize: 17, color: '#101820', fontWeight: '900' },
+  arrow: { fontSize: 22, color: '#9AAABD', fontWeight: '900' },
+  back: { color: '#1F7F79', fontWeight: '900', marginBottom: 2, fontSize: 16 },
 
-  darkScreen: { backgroundColor: '#080F1A', borderRadius: 28, padding: 18, minHeight: 620, alignItems: 'center', justifyContent: 'center' },
-  darkSmall: { color: 'rgba(255,255,255,0.72)', fontSize: 15, marginBottom: 20 },
-  cameraFrame: { width: '100%', height: 310, borderRadius: 26, borderWidth: 2, borderColor: 'rgba(98,214,164,0.6)', backgroundColor: '#0D1E32', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', marginBottom: 28 },
-  cornerTopLeft: { position: 'absolute', top: 16, left: 16, width: 38, height: 38, borderTopWidth: 3, borderLeftWidth: 3, borderColor: '#62D6A4' },
-  cornerTopRight: { position: 'absolute', top: 16, right: 16, width: 38, height: 38, borderTopWidth: 3, borderRightWidth: 3, borderColor: '#62D6A4' },
-  cornerBottomLeft: { position: 'absolute', bottom: 16, left: 16, width: 38, height: 38, borderBottomWidth: 3, borderLeftWidth: 3, borderColor: '#62D6A4' },
-  cornerBottomRight: { position: 'absolute', bottom: 16, right: 16, width: 38, height: 38, borderBottomWidth: 3, borderRightWidth: 3, borderColor: '#62D6A4' },
+  info: { ...baseCard, padding: 13, backgroundColor: '#FBFDFF' },
+  infoLabel: { color: '#657586', fontSize: 12, fontWeight: '900', textTransform: 'uppercase', letterSpacing: 0 },
+  infoValue: { color: '#101820', fontSize: 15, fontWeight: '900', marginTop: 3 },
+  instruction: { ...baseCard, flexDirection: 'row', alignItems: 'flex-start', gap: 10, padding: 13, backgroundColor: '#FBFDFF', marginBottom: 9 },
+  okDot: { width: 24, height: 24, borderRadius: 8, backgroundColor: '#E9F8EF', alignItems: 'center', justifyContent: 'center' },
+  okText: { color: '#13744D', fontSize: 9, fontWeight: '900' },
+  instructionText: { flex: 1, color: '#101820', fontSize: 15, lineHeight: 21 },
+  safety: { backgroundColor: '#FFF4DF', borderRadius: 8, padding: 14, borderWidth: 1, borderColor: '#FFE1A8' },
+  safetyCompact: { marginTop: 2, marginBottom: 4 },
+  safetyLabel: { color: '#A15C00', fontSize: 12, fontWeight: '900', textTransform: 'uppercase', letterSpacing: 0, marginBottom: 5 },
+  safetyText: { color: '#7B4B00', fontSize: 13, lineHeight: 19 },
+
+  visual: { height: 190, borderRadius: 8, backgroundColor: '#F2FBF7', alignItems: 'center', justifyContent: 'center', marginBottom: 14, borderWidth: 1, borderColor: '#D8EFEA', overflow: 'hidden' },
+  visualLabel: { color: '#1F7F79', fontWeight: '900', marginTop: 12, textAlign: 'center' },
+  bodyGuideLight: { alignItems: 'center', justifyContent: 'center' },
+  headLight: { width: 38, height: 38, borderRadius: 19, borderWidth: 3, borderColor: '#1F9F96', marginBottom: 8 },
+  bodyLight: { width: 4, height: 70, borderRadius: 999, backgroundColor: '#1F9F96' },
+  armLight: { position: 'absolute', width: 108, height: 4, borderRadius: 999, backgroundColor: '#8FD9CA', top: 54, transform: [{ rotate: '-8deg' }] },
+  legLight: { position: 'absolute', width: 108, height: 4, borderRadius: 999, backgroundColor: '#8FD9CA', bottom: -4, transform: [{ rotate: '22deg' }] },
+  phone: { width: 86, height: 132, borderRadius: 8, borderWidth: 5, borderColor: '#101820', backgroundColor: '#FFFFFF', alignItems: 'center', justifyContent: 'center' },
+  phoneCam: { position: 'absolute', top: 8, width: 28, height: 4, borderRadius: 999, backgroundColor: '#101820' },
+  phoneTarget: { width: 42, height: 42, borderRadius: 21, borderWidth: 3, borderColor: '#1F9F96' },
+
+  aiScreen: { backgroundColor: '#080F1A', borderRadius: 8, padding: 18, minHeight: 640, alignItems: 'center', justifyContent: 'center' },
+  aiTitle: { color: 'rgba(255,255,255,0.72)', fontSize: 15, marginBottom: 20, fontWeight: '800' },
+  cameraFrame: { width: '100%', height: 310, borderRadius: 8, borderWidth: 2, borderColor: 'rgba(98,214,164,0.6)', backgroundColor: '#0D1E32', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', marginBottom: 28 },
+  cornerTL: { position: 'absolute', top: 16, left: 16, width: 38, height: 38, borderTopWidth: 3, borderLeftWidth: 3, borderColor: '#62D6A4' },
+  cornerTR: { position: 'absolute', top: 16, right: 16, width: 38, height: 38, borderTopWidth: 3, borderRightWidth: 3, borderColor: '#62D6A4' },
+  cornerBL: { position: 'absolute', bottom: 16, left: 16, width: 38, height: 38, borderBottomWidth: 3, borderLeftWidth: 3, borderColor: '#62D6A4' },
+  cornerBR: { position: 'absolute', bottom: 16, right: 16, width: 38, height: 38, borderBottomWidth: 3, borderRightWidth: 3, borderColor: '#62D6A4' },
   bodyGuide: { alignItems: 'center', justifyContent: 'center' },
   head: { width: 42, height: 42, borderRadius: 21, borderWidth: 3, borderColor: 'rgba(255,255,255,0.78)', marginBottom: 8 },
   bodyLine: { width: 4, height: 82, backgroundColor: 'rgba(255,255,255,0.78)', borderRadius: 999 },
   armLine: { position: 'absolute', width: 118, height: 4, backgroundColor: 'rgba(255,255,255,0.58)', borderRadius: 999, top: 58, transform: [{ rotate: '-8deg' }] },
   legLine: { position: 'absolute', width: 118, height: 4, backgroundColor: 'rgba(255,255,255,0.58)', borderRadius: 999, bottom: -4, transform: [{ rotate: '22deg' }] },
   scanLine: { position: 'absolute', left: 0, right: 0, top: '48%', height: 3, backgroundColor: '#62D6A4', opacity: 0.86 },
-  countdownHint: { color: 'rgba(255,255,255,0.72)', fontSize: 16, marginBottom: 8 },
-  countdown: { color: '#FFFFFF', fontSize: 82, fontWeight: '900' },
-  analyzing: { color: '#FFFFFF', fontSize: 18, fontWeight: '800', marginTop: 18 },
+  aiHint: { color: 'rgba(255,255,255,0.72)', fontSize: 16, marginTop: 14 },
+  countdown: { color: '#FFFFFF', fontSize: 82, fontWeight: '900', letterSpacing: 0 },
 
-  resultCard: { backgroundColor: '#FFFFFF', borderRadius: 28, padding: 22, borderWidth: 1, borderColor: '#BBF7D0' },
-  score: { fontSize: 78, fontWeight: '900', color: '#2D9E5F', letterSpacing: -3, marginBottom: 0 },
-  resultBadge: { alignSelf: 'flex-start', backgroundColor: '#F0FFF4', borderColor: '#BBF7D0', borderWidth: 1, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 999, marginBottom: 14 },
-  resultBadgeText: { color: '#2D9E5F', fontWeight: '900' },
+  score: { fontSize: 70, fontWeight: '900', color: '#1F9F96', letterSpacing: 0 },
   painGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, justifyContent: 'center' },
-  painButton: { width: 54, height: 54, borderRadius: 18, backgroundColor: '#E8F4FD', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#D1E5F8' },
-  painText: { color: '#2C6EAB', fontSize: 20, fontWeight: '900' },
-  warningCard: { backgroundColor: '#FEF2F2', borderRadius: 28, padding: 22, borderWidth: 1, borderColor: '#FCA5A5' },
-  warningIcon: { fontSize: 48, marginBottom: 12 },
-  savedIcon: { width: 70, height: 70, borderRadius: 35, backgroundColor: '#2D9E5F', color: '#FFFFFF', textAlign: 'center', textAlignVertical: 'center', fontSize: 40, fontWeight: '900', overflow: 'hidden', marginBottom: 16 },
+  painButton: { width: 54, height: 54, borderRadius: 8, alignItems: 'center', justifyContent: 'center', borderWidth: 1 },
+  painText: { fontSize: 20, fontWeight: '900' },
+  warningMark: { width: 70, height: 70, borderRadius: 8, backgroundColor: '#B42318', alignItems: 'center', justifyContent: 'center', marginBottom: 16 },
+  warningText: { color: '#FFFFFF', fontSize: 34, fontWeight: '900' },
+  savedMark: { width: 70, height: 70, borderRadius: 8, backgroundColor: '#E9F8EF', alignItems: 'center', justifyContent: 'center', marginBottom: 16 },
+  savedText: { color: '#13744D', fontSize: 18, fontWeight: '900' },
+  loading: { marginTop: 16 },
 });
