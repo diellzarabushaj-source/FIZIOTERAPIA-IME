@@ -13,21 +13,12 @@ const footerSections = [
     ],
   },
   {
-    title: "Launch & support",
+    title: "Support",
     links: [
       ["Support Center", "/support"],
       ["Clinic Use Guide", "/clinic-use"],
-      ["Launch Checklist", "/launch-checklist"],
-      ["QA Checklist", "/qa-checklist"],
-      ["Pilot Launch", "/pilot-launch"],
-      ["Pilot Readiness", "/pilot-readiness"],
-      ["Pilot Runbook", "/pilot-runbook"],
-      ["Pilot Communications", "/pilot-communications"],
-      ["Mobile Submission", "/mobile-submission"],
-      ["Final Handoff", "/final-handoff"],
       ["Patient Handout", "/patient-handout"],
-      ["Pilot Onboarding", "/pilot-onboarding"],
-      ["Pilot Feedback", "/pilot-feedback"],
+      ["Contact", "/support"],
     ],
   },
   {
@@ -38,16 +29,6 @@ const footerSections = [
       ["Medical Disclaimer", "/medical-disclaimer"],
       ["Camera Consent", "/camera-consent"],
       ["Data Deletion", "/data-deletion"],
-    ],
-  },
-  {
-    title: "Admin",
-    links: [
-      ["Admin Dashboard", "/admin-dashboard"],
-      ["Admin Billing", "/admin-billing"],
-      ["Admin Feedback", "/admin-feedback"],
-      ["Pilot Decision", "/pilot-decision"],
-      ["Reports", "/reports/demo"],
     ],
   },
 ];
@@ -67,12 +48,12 @@ export function SiteFooter() {
           </div>
         </div>
 
-        <div className="footer-links-grid">
+        <div className="footer-links-grid public-footer-links-grid">
           {footerSections.map((section) => (
             <nav aria-label={section.title} key={section.title}>
               <h3>{section.title}</h3>
               {section.links.map(([label, href]) => (
-                <a href={href} key={href}>{label}</a>
+                <a href={href} key={`${section.title}-${href}`}>{label}</a>
               ))}
             </nav>
           ))}
