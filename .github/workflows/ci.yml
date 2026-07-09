@@ -1,0 +1,36 @@
+name: Launch CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  web:
+    name: Web preflight, lint and build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Route preflight
+        run: npm run preflight:routes
+
+      - name: Environment readiness report
+        run: npm run check:env
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Build
+        run: npm run build
