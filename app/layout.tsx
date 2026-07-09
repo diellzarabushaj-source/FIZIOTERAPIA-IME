@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
 import { SiteFooter } from "@/components/SiteFooter";
 import "./globals.css";
+import "./design-system.css";
 import "./brand.css";
 import "./brand-uploaded.css";
 import "./phase3.css";
