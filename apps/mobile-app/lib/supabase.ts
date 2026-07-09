@@ -50,7 +50,7 @@ export async function saveAiCheck(payload: AiPayload) {
       plan_exercise_id: payload.planExerciseId,
       completed: true,
       pain_score: payload.painScore,
-      comment: 'Raportuar gjatë kontrollit me kamerë',
+      comment: 'Raportuar gjate kontrollit me kamere',
       completed_at: now,
     });
   }
