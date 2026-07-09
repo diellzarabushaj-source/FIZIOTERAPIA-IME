@@ -15,6 +15,7 @@ import "./phase-code-access.css";
 import "./clinic-pro.css";
 import "./patient-pro.css";
 import "./duo-app.css";
+import "./patient-dashboard-mobile-panels.css";
 import "./workflow-illustrations.css";
 import "./homepage-workflow.css";
 import "./ui-friendly.css";
