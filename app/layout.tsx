@@ -15,6 +15,7 @@ import "./clinic-pro.css";
 import "./patient-pro.css";
 import "./duo-app.css";
 import "./home-refresh.css";
+import "./ui-friendly.css";
 
 export const metadata: Metadata = {
   title: "Fizioterapia ime – Digital physiotherapy platform",
