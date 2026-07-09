@@ -12,6 +12,7 @@
     "smoke:production": "node scripts/smoke-test-production.mjs",
     "smoke:report": "node scripts/render-smoke-report.mjs",
     "smoke:mobile-api": "node scripts/smoke-test-mobile-api.mjs",
+    "smoke:sanity-blog": "node scripts/smoke-test-sanity-blog.mjs",
     "mobile:typecheck": "npm install --prefix apps/mobile-app --no-audit --no-fund && npm run typecheck --prefix apps/mobile-app",
     "studio:dev": "npm install --prefix apps/studio --no-audit --no-fund && npm run dev --prefix apps/studio",
     "studio:build": "npm install --prefix apps/studio --no-audit --no-fund && npm run build --prefix apps/studio",
