@@ -1,14 +1,73 @@
 .premium-workflow-visual-grid {
   gap: 18px;
+  perspective: 1200px;
 }
 
 .premium-workflow-grid .workflow-visual-card {
+  position: relative;
   min-height: 0;
   overflow: hidden;
   padding: 0;
   border-radius: 34px;
   background: rgba(255, 255, 255, 0.92);
   box-shadow: var(--fi-shadow-xs);
+  isolation: isolate;
+  cursor: default;
+  transform: translateY(0) scale(1);
+  transition:
+    transform 260ms ease,
+    box-shadow 260ms ease,
+    border-color 260ms ease,
+    background 260ms ease;
+}
+
+.premium-workflow-grid .workflow-visual-card::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  z-index: -1;
+  border-radius: inherit;
+  background:
+    radial-gradient(circle at 18% 10%, rgba(52, 199, 89, 0.18), transparent 34%),
+    radial-gradient(circle at 86% 0%, rgba(15, 143, 134, 0.12), transparent 32%);
+  opacity: 0;
+  transition: opacity 260ms ease;
+}
+
+.premium-workflow-grid .workflow-visual-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  background: linear-gradient(120deg, transparent 20%, rgba(255, 255, 255, 0.48) 42%, transparent 62%);
+  opacity: 0;
+  transform: translateX(-70%);
+  transition: opacity 280ms ease, transform 520ms ease;
+}
+
+.premium-workflow-grid .workflow-visual-card:hover,
+.premium-workflow-grid .workflow-visual-card:focus-visible {
+  transform: translateY(-10px) scale(1.012);
+  border-color: rgba(15, 143, 134, 0.26);
+  background: rgba(255, 255, 255, 0.98);
+  box-shadow: 0 28px 70px rgba(15, 32, 51, 0.14);
+}
+
+.premium-workflow-grid .workflow-visual-card:hover::before,
+.premium-workflow-grid .workflow-visual-card:focus-visible::before {
+  opacity: 1;
+}
+
+.premium-workflow-grid .workflow-visual-card:hover::after,
+.premium-workflow-grid .workflow-visual-card:focus-visible::after {
+  opacity: 1;
+  transform: translateX(70%);
+}
+
+.premium-workflow-grid .workflow-visual-card:focus-visible {
+  outline: 3px solid rgba(15, 143, 134, 0.28);
+  outline-offset: 6px;
 }
 
 .workflow-visual-media {
@@ -16,7 +75,18 @@
   min-height: 270px;
   overflow: hidden;
   border-radius: 34px 34px 24px 24px;
-  background: linear-gradient(180deg, #f5fbfc 0%, #eaf6f8 100%);
+  background:
+    radial-gradient(circle at 30% 16%, rgba(15, 143, 134, 0.1), transparent 30%),
+    linear-gradient(180deg, #f5fbfc 0%, #eaf6f8 100%);
+}
+
+.workflow-visual-media::after {
+  content: "";
+  position: absolute;
+  inset: auto 22px 18px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(15, 143, 134, 0.28), transparent);
+  opacity: 0.7;
 }
 
 .workflow-visual-media img {
@@ -25,6 +95,14 @@
   min-height: 270px;
   display: block;
   object-fit: cover;
+  transform: scale(1.01);
+  transition: transform 520ms ease, filter 260ms ease;
+}
+
+.premium-workflow-grid .workflow-visual-card:hover .workflow-visual-media img,
+.premium-workflow-grid .workflow-visual-card:focus-visible .workflow-visual-media img {
+  transform: scale(1.06) translateY(-4px);
+  filter: saturate(1.06) contrast(1.02);
 }
 
 .premium-workflow-grid .workflow-visual-media strong {
@@ -38,6 +116,13 @@
   color: #ffffff;
   font-size: 1rem;
   box-shadow: 0 14px 34px rgba(15, 143, 134, 0.22);
+  transition: transform 260ms ease, box-shadow 260ms ease;
+}
+
+.premium-workflow-grid .workflow-visual-card:hover .workflow-visual-media strong,
+.premium-workflow-grid .workflow-visual-card:focus-visible .workflow-visual-media strong {
+  transform: translateY(-2px) scale(1.08);
+  box-shadow: 0 18px 42px rgba(15, 143, 134, 0.34);
 }
 
 .workflow-visual-copy {
@@ -47,6 +132,12 @@
 .premium-workflow-grid .workflow-visual-copy h3 {
   margin: 0 0 10px;
   font-size: clamp(1.45rem, 2.15vw, 2.05rem);
+  transition: color 220ms ease;
+}
+
+.premium-workflow-grid .workflow-visual-card:hover .workflow-visual-copy h3,
+.premium-workflow-grid .workflow-visual-card:focus-visible .workflow-visual-copy h3 {
+  color: var(--fi-primary-strong);
 }
 
 .premium-workflow-grid .workflow-visual-copy p {
@@ -55,10 +146,54 @@
   line-height: 1.62;
 }
 
+.workflow-visual-cta {
+  width: fit-content;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 16px;
+  color: var(--fi-primary-strong);
+  font-size: 0.9rem;
+  font-weight: 950;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 220ms ease, transform 220ms ease;
+}
+
+.premium-workflow-grid .workflow-visual-card:hover .workflow-visual-cta,
+.premium-workflow-grid .workflow-visual-card:focus-visible .workflow-visual-cta {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .premium-workflow-grid .workflow-visual-card,
+  .premium-workflow-grid .workflow-visual-card::before,
+  .premium-workflow-grid .workflow-visual-card::after,
+  .workflow-visual-media img,
+  .premium-workflow-grid .workflow-visual-media strong,
+  .workflow-visual-copy h3,
+  .workflow-visual-cta {
+    transition: none !important;
+  }
+
+  .premium-workflow-grid .workflow-visual-card:hover,
+  .premium-workflow-grid .workflow-visual-card:focus-visible,
+  .premium-workflow-grid .workflow-visual-card:hover .workflow-visual-media img,
+  .premium-workflow-grid .workflow-visual-card:focus-visible .workflow-visual-media img {
+    transform: none;
+  }
+}
+
 @media (max-width: 1080px) {
   .workflow-visual-media,
   .workflow-visual-media img {
     min-height: 340px;
+  }
+
+  .workflow-visual-cta {
+    opacity: 1;
+    transform: none;
   }
 }
 
