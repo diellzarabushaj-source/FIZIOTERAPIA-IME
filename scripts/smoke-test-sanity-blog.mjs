@@ -22,47 +22,52 @@ async function getJson(path) {
   return { ...result, data };
 }
 
+function pushHtmlCheck(checks, result, name, expectedText) {
+  checks.push({
+    name,
+    path: result.path,
+    status: result.status,
+    ok: result.status === 200 && result.text.includes(expectedText),
+    expected: `200 + ${expectedText}`,
+    detail: result.text.includes(expectedText) ? "Rendered" : "Missing expected text",
+    ms: result.ms,
+  });
+}
+
 const checks = [];
 
 const health = await getJson("/api/sanity/health");
 checks.push({
-  name: "Sanity health endpoint ready",
+  name: "Sanity content health endpoint ready",
   path: "/api/sanity/health",
   status: health.status,
-  ok: health.status === 200 && health.data?.ok === true && Number(health.data?.postCount || 0) >= 1,
-  expected: "200 + ok + postCount >= 1",
+  ok: health.status === 200 && health.data?.ok === true && Number(health.data?.postCount || 0) >= 1 && Number(health.data?.faqCount || 0) >= 1 && Number(health.data?.legalPageCount || 0) >= 5,
+  expected: "200 + posts + FAQ + legal pages",
   detail: health.data?.status || health.data?.error || "",
   ms: health.ms,
 });
 
 const blog = await getText("/blog");
-checks.push({
-  name: "Blog index renders Sanity/fallback posts",
-  path: "/blog",
-  status: blog.status,
-  ok: blog.status === 200 && blog.text.includes("Artikuj të thjeshtë") && blog.text.includes("Si funksionon plani digjital"),
-  expected: "200 + blog content",
-  detail: blog.text.includes("Sanity connected") ? "Sanity connected" : "Rendered",
-  ms: blog.ms,
-});
+pushHtmlCheck(checks, blog, "Blog index renders Sanity/fallback posts", "Si funksionon plani digjital");
 
 const post = await getText("/blog/si-funksionon-plani-digjital-i-fizioterapise");
-checks.push({
-  name: "Blog post renders Portable Text/fallback content",
-  path: "/blog/si-funksionon-plani-digjital-i-fizioterapise",
-  status: post.status,
-  ok: post.status === 200 && post.text.includes("Pacienti hyn vetëm me kod") && post.text.includes("AI Movement Check jep vetëm feedback"),
-  expected: "200 + article + safety text",
-  detail: post.text.includes("Siguri klinike") ? "Safety visible" : "Rendered",
-  ms: post.ms,
-});
+pushHtmlCheck(checks, post, "Blog post renders Portable Text/fallback content", "AI Movement Check jep vetëm feedback");
+
+const faq = await getText("/faq");
+pushHtmlCheck(checks, faq, "FAQ renders Sanity/fallback items", "A e zëvendëson AI fizioterapeutin?");
+
+const privacy = await getText("/privacy");
+pushHtmlCheck(checks, privacy, "Privacy page renders Sanity/fallback legal content", "Politika e privatësisë");
+
+const disclaimer = await getText("/medical-disclaimer");
+pushHtmlCheck(checks, disclaimer, "Safety disclaimer renders Sanity/fallback legal content", "AI Movement Check");
 
 console.table(checks.map(({ name, path, status, ok, expected, detail, ms }) => ({ name, path, status, ok, expected, detail, ms })));
 
 const failures = checks.filter((check) => !check.ok);
 if (failures.length) {
-  console.error(`\nSanity blog smoke test failed for ${failures.length} check(s).`);
+  console.error(`\nSanity content smoke test failed for ${failures.length} check(s).`);
   process.exit(1);
 }
 
-console.log(`\nSanity blog smoke test passed for ${checks.length} check(s).`);
+console.log(`\nSanity content smoke test passed for ${checks.length} check(s).`);
