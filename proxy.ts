@@ -12,20 +12,39 @@ const protectedRoutePrefixes = [
   "/physiotherapist-dashboard",
   "/admin-hidden",
   "/admin-dashboard",
+  "/admin-billing",
+  "/admin-feedback",
+  "/pilot-decision",
 ];
 
-function isProtectedPath(pathname: string) {
-  return protectedRoutePrefixes.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));
+const adminRoutePrefixes = [
+  "/admin-dashboard",
+  "/admin-billing",
+  "/admin-feedback",
+  "/pilot-decision",
+];
+
+function matchesPath(pathname: string, prefixes: string[]) {
+  return prefixes.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));
 }
 
 const protectedProxy = clerkMiddleware(async (auth, req) => {
-  if (isProtectedPath(req.nextUrl.pathname)) {
+  if (matchesPath(req.nextUrl.pathname, protectedRoutePrefixes)) {
     await auth.protect();
   }
 });
 
 export const proxy: NextProxy = (request, event) => {
+  const { pathname } = request.nextUrl;
+
   if (!isClerkConfigured) {
+    if (matchesPath(pathname, adminRoutePrefixes)) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/admin-hidden";
+      url.searchParams.set("reason", "auth-not-configured");
+      return NextResponse.redirect(url);
+    }
+
     return NextResponse.next();
   }
 
