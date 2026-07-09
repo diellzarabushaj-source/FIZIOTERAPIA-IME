@@ -15,6 +15,16 @@
       "resizeMode": "contain",
       "backgroundColor": "#F7FBF9"
     },
+    "plugins": [
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Kamera përdoret për kontroll të lëvizjes gjatë ushtrimeve. Videoja nuk ruhet dhe nuk përdoret për diagnozë.",
+          "microphonePermission": "Mikrofoni nuk përdoret për funksionet kryesore të app-it.",
+          "recordAudioAndroid": false
+        }
+      ]
+    ],
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.fizioterapiaime.patient",
