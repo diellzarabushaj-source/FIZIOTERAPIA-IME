@@ -338,13 +338,413 @@
   box-shadow: 0 3px 0 #b8ee88;
 }
 
-@media (max-width: 520px) {
+/* Patient dashboard v2 — mobile-first, Duolingo-inspired simplification */
+.duo-app-page {
+  min-height: 100vh;
+  overflow-x: hidden;
+  background:
+    radial-gradient(circle at 18% -10%, rgba(88, 204, 2, 0.22), transparent 34%),
+    radial-gradient(circle at 96% 0%, rgba(28, 176, 246, 0.16), transparent 28%),
+    linear-gradient(180deg, #f7fff2 0%, #f6fbff 48%, #fffef4 100%);
+}
+
+.duo-app-shell {
+  width: min(1180px, calc(100vw - 28px));
+  gap: 22px;
+  align-items: stretch;
+}
+
+.duo-phone {
+  position: relative;
+  background: #f7fbf2;
+  border-width: 8px;
+  box-shadow: 0 30px 90px rgba(15, 32, 51, 0.22);
+}
+
+.duo-header {
+  position: sticky;
+  top: 0;
+  z-index: 6;
+  padding-bottom: 14px;
+  border-bottom: 2px solid #e5e7eb;
+}
+
+.duo-header a,
+.duo-header > span {
+  box-shadow: 0 3px 0 #dbe4ee;
+}
+
+.duo-progress-top {
+  position: sticky;
+  top: 66px;
+  z-index: 5;
+  padding: 12px;
+  border-bottom: 2px solid #eef2f7;
+}
+
+.duo-progress-top div {
+  min-height: 54px;
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 5px 0 #dbe4ee;
+}
+
+.duo-lesson-hero {
+  margin: 14px 12px 14px;
+  padding: 22px 18px 18px;
+  border-radius: 30px;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.18), transparent 36%),
+    linear-gradient(135deg, #58cc02 0%, #76dd00 54%, #94e600 100%);
+  box-shadow: 0 9px 0 #46a302, 0 24px 54px rgba(70, 163, 2, 0.24);
+}
+
+.duo-lesson-hero .patient-pro-pill {
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.24);
+  font-size: 12px;
+  letter-spacing: 0.01em;
+}
+
+.duo-lesson-hero h1 {
+  max-width: 96%;
+  margin-top: 14px;
+  font-size: clamp(25px, 7vw, 34px);
+  line-height: 0.98;
+  letter-spacing: -0.055em;
+}
+
+.duo-lesson-hero p {
+  margin-top: 10px;
+  font-size: 14px;
+  line-height: 1.45;
+  font-weight: 800;
+  opacity: 0.96;
+}
+
+.duo-main-cta {
+  min-height: 58px;
+  border-radius: 20px;
+  font-size: 17px;
+  letter-spacing: -0.01em;
+  box-shadow: 0 6px 0 rgba(255, 255, 255, 0.48);
+}
+
+.duo-main-cta:active,
+.duo-complete-form button:active,
+.duo-next-card a:active,
+.duo-bottom-nav a:active,
+.duo-bottom-nav button:active {
+  transform: translateY(2px);
+  box-shadow: none;
+}
+
+.duo-simple-score-grid {
+  padding: 0 12px 12px;
+  background: transparent !important;
+}
+
+.duo-simple-score-grid article {
+  min-height: 92px;
+  padding: 16px;
+  border-radius: 22px;
+  background: #fff;
+  border: 2px solid #e5e7eb;
+  box-shadow: 0 6px 0 #dbe4ee;
+}
+
+.duo-simple-score-grid article strong {
+  font-size: 34px;
+}
+
+.duo-safety-card {
+  margin: 0 12px 12px;
+  padding: 14px 14px;
+  grid-template-columns: 42px 1fr;
+  border: 2px solid #e5e7eb;
+  border-radius: 22px;
+  box-shadow: 0 5px 0 #dbe4ee;
+}
+
+.duo-safety-card b {
+  width: 42px;
+  height: 42px;
+  border-radius: 15px;
+  background: #fff3bf;
+  color: #b45309;
+}
+
+.duo-safety-card b::before {
+  content: "!";
+  font-size: 22px;
+  font-weight: 1000;
+}
+
+.duo-safety-card span {
+  font-weight: 850;
+  line-height: 1.35;
+}
+
+.duo-warning {
+  margin: 0 12px 14px;
+  padding: 16px;
+  border-radius: 22px;
+  font-weight: 850;
+}
+
+.duo-path-head {
+  margin: 0;
+  padding: 20px 18px 8px;
+  border-top: 2px solid #eef2f7;
+}
+
+.duo-path-head h2 {
+  font-size: 26px;
+  letter-spacing: -0.05em;
+}
+
+.duo-path-head p {
+  font-weight: 800;
+}
+
+.duo-path-head > span {
+  padding: 9px 12px;
+  border-radius: 16px;
+  font-size: 12px;
+  font-weight: 1000;
+}
+
+.duo-rehab-path {
+  gap: 22px;
+  padding: 14px 18px 24px;
+}
+
+.duo-rehab-path::before {
+  left: 45px;
+  top: 24px;
+  bottom: 36px;
+  width: 7px;
+  background: linear-gradient(180deg, #58cc02, #dbe4ee 72%);
+}
+
+.duo-lesson-node {
+  grid-template-columns: 62px 1fr;
+  gap: 13px;
+}
+
+.duo-lesson-node:nth-child(odd) {
+  transform: translateX(18px);
+}
+
+.duo-lesson-node:nth-child(even) {
+  transform: translateX(-4px);
+}
+
+.duo-lesson-circle {
+  width: 62px;
+  height: 62px;
+  border-width: 4px;
+  font-size: 24px;
+  box-shadow: 0 7px 0 #dbe4ee;
+}
+
+.duo-lesson-card {
+  padding: 16px;
+  border-radius: 24px;
+  box-shadow: 0 6px 0 #dbe4ee;
+}
+
+.duo-lesson-node.current .duo-lesson-card {
+  background: linear-gradient(180deg, #ffffff, #fbfff7);
+  border-color: #a6e86a;
+  box-shadow: 0 6px 0 #a6e86a, 0 16px 28px rgba(88, 204, 2, 0.12);
+}
+
+.duo-lesson-title-row h3 {
+  font-size: 18px;
+  line-height: 1.08;
+}
+
+.duo-lesson-title-row span,
+.duo-lesson-title-row em {
+  font-size: 10px;
+  letter-spacing: 0.02em;
+}
+
+.duo-lesson-card p,
+.duo-lesson-card small {
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.duo-lesson-card summary {
+  display: grid;
+  place-items: center;
+  min-height: 46px;
+  margin-top: 12px;
+  border-radius: 16px;
+  background: #f0fdf4;
+  color: var(--duo-green-dark);
+  box-shadow: inset 0 0 0 2px #b8ee88;
+}
+
+.duo-complete-form {
+  grid-template-columns: 1fr;
+  gap: 10px;
+  padding-top: 10px;
+}
+
+.duo-complete-form > span {
+  color: var(--duo-ink);
+  font-weight: 1000;
+  font-size: 13px;
+}
+
+.duo-complete-form select,
+.duo-complete-form input,
+.duo-complete-form button {
+  min-height: 50px;
+  border-radius: 16px;
+  border: 2px solid #e5e7eb;
+  background: #fff;
+}
+
+.duo-complete-form button {
+  min-height: 56px;
+  border-radius: 18px;
+  font-size: 17px;
+  box-shadow: 0 5px 0 var(--duo-green-dark);
+}
+
+.duo-lesson-card .patient-pro-ai-button {
+  min-height: 50px;
+  margin-top: 10px;
+  border-radius: 17px;
+  background: #ddf4ff;
+  color: #0b78a8;
+  border: 2px solid #b9e6ff;
+  box-shadow: 0 4px 0 #b9e6ff;
+}
+
+.duo-bottom-nav {
+  min-height: 74px;
+  border-radius: 26px;
+  background: rgba(255, 255, 255, 0.96);
+}
+
+.duo-bottom-nav a,
+.duo-bottom-nav button {
+  min-height: 54px;
+  border-radius: 18px;
+  font-weight: 1000;
+}
+
+.duo-bottom-nav span {
+  font-size: 11px;
+  font-weight: 1000;
+}
+
+.duo-side-panel .patient-pro-welcome,
+.duo-code-card,
+.duo-insights article,
+.duo-day-strip,
+.duo-next-card,
+.duo-side-panel .patient-pro-trends article,
+.duo-side-panel .patient-pro-messages {
+  background: rgba(255, 255, 255, 0.92);
+  border: 2px solid #e5e7eb;
+  box-shadow: 0 6px 0 #dbe4ee, 0 18px 44px rgba(15, 32, 51, 0.06);
+}
+
+.duo-side-panel {
+  position: sticky;
+  top: 22px;
+}
+
+.duo-code-card strong {
+  letter-spacing: 0.03em;
+}
+
+.duo-day-strip span {
+  border: 2px solid transparent;
+}
+
+.duo-day-strip span.active {
+  border-color: #b8ee88;
+}
+
+@media (max-width: 980px) {
+  .duo-app-shell {
+    width: min(430px, 100vw);
+    margin: 0 auto;
+    grid-template-columns: 1fr;
+  }
+
+  .duo-side-panel {
+    display: none;
+  }
+
   .duo-phone {
+    width: min(430px, 100vw);
+  }
+}
+
+@media (max-width: 520px) {
+  .duo-app-page {
+    background: #f7fbf2;
+  }
+
+  .duo-app-shell {
+    width: 100vw;
+  }
+
+  .duo-phone {
+    width: 100vw;
+    min-height: 100vh;
     border: 0;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  .duo-header {
+    min-height: 70px;
+    padding: 14px 14px 12px;
+  }
+
+  .duo-progress-top {
+    top: 70px;
+    padding: 10px 12px;
+  }
+
+  .duo-progress-top div {
+    min-height: 50px;
+    border-radius: 16px;
   }
 
   .duo-lesson-node:nth-child(odd),
   .duo-lesson-node:nth-child(even) {
     transform: none;
+  }
+
+  .duo-lesson-hero {
+    margin: 12px 12px 14px;
+  }
+
+  .duo-rehab-path {
+    padding-bottom: 118px;
+  }
+
+  .duo-rehab-path::before {
+    left: 45px;
+  }
+
+  .duo-bottom-nav {
+    min-height: 76px;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .duo-bottom-nav .active {
+    margin: 7px;
   }
 }
