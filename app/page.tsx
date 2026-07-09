@@ -153,7 +153,7 @@ export default function HomePage() {
         </div>
         <div className="premium-workflow-grid premium-workflow-visual-grid">
           {workflow.map((item) => (
-            <article className="fi-card workflow-visual-card" key={item.step}>
+            <article className="fi-card workflow-visual-card" key={item.step} tabIndex={0}>
               <div className="workflow-visual-media">
                 <img src={item.image} alt={item.alt} loading="lazy" />
                 <strong>{item.step}</strong>
@@ -161,6 +161,7 @@ export default function HomePage() {
               <div className="workflow-visual-copy">
                 <h3>{item.title}</h3>
                 <p>{item.text}</p>
+                <span className="workflow-visual-cta">Shiko hapin →</span>
               </div>
             </article>
           ))}
