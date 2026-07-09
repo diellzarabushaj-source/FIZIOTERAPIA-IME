@@ -1,11 +1,13 @@
 # Fizioterapia Ime Design System
 
-Phase 1 centralizes the visual foundation without rewriting the existing product screens.
+Phase 1 centralizes the visual foundation. Phase 2 starts migrating the public homepage into the premium app-first direction.
 
 ## Files
 
 - `app/design-system.css` — shared brand tokens, layout helpers, cards, buttons, inputs, badges, alerts, statuses and table primitives.
 - `app/layout.tsx` — imports the design system globally after `globals.css`.
+- `app/page.tsx` — homepage migrated to a simpler app-first premium story.
+- `app/home-refresh.css` — homepage-specific premium layout using the shared tokens.
 
 ## Brand direction
 
@@ -85,13 +87,24 @@ The design system also improves existing classes such as:
 
 This allows current pages to benefit from the design foundation while future phases migrate markup to explicit `fi-*` classes.
 
+## Homepage premium pass
+
+The homepage now follows a simpler app-first story:
+
+1. Hero explains the product in one message: home rehabilitation guided by the physiotherapist.
+2. Primary CTA: start as physiotherapist.
+3. Secondary CTA: view patient app.
+4. Product visual shows patient app plus a clinical dashboard signal card.
+5. Workflow is reduced to three clinical steps.
+6. Safety section states that AI gives feedback only and does not make clinical decisions.
+7. Pricing remains visible and simple.
+
 ## Next migration order
 
-1. Homepage: replace one-off layout classes with `fi-container`, `fi-section`, `fi-card`, `fi-button`.
-2. Patient portal: simplify login screen and use `fi-panel`, `fi-input`, `fi-button`.
-3. Physio dashboard: convert stat cards, alert banners and tables to shared primitives.
-4. Admin dashboard: convert owner metrics and lists to shared primitives.
-5. Mobile app: mirror the same token values in React Native styles.
+1. Patient portal: simplify login screen and use `fi-panel`, `fi-input`, `fi-button`.
+2. Physio dashboard: convert stat cards, alert banners and tables to shared primitives.
+3. Admin dashboard: convert owner metrics and lists to shared primitives.
+4. Mobile app: mirror the same token values in React Native styles.
 
 ## Rules
 
