@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "sanity dev",
     "build": "sanity build",
-    "deploy": "sanity deploy --yes --url fizioterapia-ime-blog --schema-required"
+    "deploy": "sanity deploy --yes --url fizioterapia-ime-blog"
   },
   "dependencies": {
     "@sanity/vision": "latest",
