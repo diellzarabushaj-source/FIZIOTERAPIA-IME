@@ -20,9 +20,28 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     };
   }
 
+  const title = post.seo?.title || `${post.title} | Fizioterapia ime`;
+  const description = post.seo?.description || post.description;
+  const imageUrl = post.seo?.image?.url || post.mainImage?.url || "https://fizioterapia-ime.vercel.app/app-icon.svg";
+
   return {
-    title: `${post.title} | Fizioterapia ime`,
-    description: post.description,
+    title,
+    description,
+    keywords: post.seo?.keywords || undefined,
+    openGraph: {
+      title,
+      description,
+      type: "article",
+      publishedTime: post.date,
+      authors: [post.author],
+      images: [{ url: imageUrl, alt: post.seo?.image?.alt || post.mainImage?.alt || post.title }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: [imageUrl],
+    },
   };
 }
 
@@ -31,6 +50,9 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
   const post = await getBlogPostBySlug(slug);
 
   if (!post) notFound();
+
+  const heroImage = post.mainImage?.url || post.seo?.image?.url;
+  const heroAlt = post.mainImage?.alt || post.seo?.image?.alt || post.title;
 
   return (
     <main className="page launch-page blog-post-page">
@@ -55,6 +77,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
             </div>
           </div>
           <div className="launch-status-card ready">
+            {heroImage && <img src={heroImage} alt={heroAlt} className="blog-hero-image" />}
             <span className="mini-badge">{new Date(post.date).toLocaleDateString("sq-AL")}</span>
             <strong>{post.author}</strong>
             <p>{post.description}</p>
