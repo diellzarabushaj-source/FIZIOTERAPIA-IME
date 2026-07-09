@@ -1,12 +1,10 @@
-import { currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { AuthControls } from "@/components/AuthControls";
 import { BrandMark } from "@/components/BrandMark";
+import { getAdminEmail, getSignedInEmail } from "@/lib/admin-access";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import { getBillingStatusLabel, hasActivePhysioAccess, PHYSIO_MONTHLY_PRICE_LABEL } from "@/lib/billing";
 import { activateSubscriptionAction, createPhysioProfileAction, suspendSubscriptionAction } from "./actions";
-
-const defaultAdminEmail = "diellzarabushaj@gmail.com";
 
 type Physio = {
   id: string;
@@ -35,9 +33,8 @@ function formatDate(value?: string | null) {
 }
 
 export default async function AdminBillingPage() {
-  const user = await currentUser();
-  const email = user?.primaryEmailAddress?.emailAddress?.toLowerCase();
-  const adminEmail = (process.env.ADMIN_EMAIL || defaultAdminEmail).toLowerCase();
+  const adminEmail = getAdminEmail();
+  const email = await getSignedInEmail();
   if (email !== adminEmail) redirect("/admin-hidden");
 
   const supabase = getSupabaseAdmin();
