@@ -103,10 +103,11 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
           </div>
           <div>
             <span className="mini-badge">Siguri klinike</span>
-            <h2>Rregull i pandryshueshëm.</h2>
+            <h2>App-i ndihmon, fizioterapeuti vendos.</h2>
             <p>
-              AI Movement Check jep vetëm feedback për lëvizjen. Nuk diagnostikon, nuk zëvendëson fizioterapeutin
-              dhe në dhimbje 7/10 ose më shumë pacienti duhet të ndalojë dhe të kontaktojë fizioterapeutin.
+              Fizioterapia Ime nuk jep diagnozë dhe nuk e zëvendëson kontrollin profesional.
+              Nëse ushtrimi shkakton dhimbje të fortë, mpirje, dobësi të re ose përkeqësim,
+              pacienti duhet të ndalojë dhe të kontaktojë fizioterapeutin ose mjekun.
             </p>
           </div>
         </section>
