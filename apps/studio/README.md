@@ -1,6 +1,6 @@
 # Fizioterapia ime Sanity Studio
 
-This Studio is a separate module for future blog editing.
+This Studio is a separate module for editing blog content.
 
 It is intentionally excluded from the Vercel web build so the main website does not break if Studio dependencies are not installed.
 
@@ -9,7 +9,7 @@ It is intentionally excluded from the Vercel web build so the main website does 
 Create `apps/studio/.env.local`:
 
 ```bash
-SANITY_STUDIO_PROJECT_ID=your-project-id
+SANITY_STUDIO_PROJECT_ID=a3wcdlcy
 SANITY_STUDIO_DATASET=production
 ```
 
@@ -40,8 +40,28 @@ npm run studio:build
 npm run studio:deploy
 ```
 
+The deploy script uses:
+
+```bash
+sanity deploy --yes --url fizioterapia-ime-blog --schema-required
+```
+
+Expected Studio URL:
+
+```text
+https://fizioterapia-ime-blog.sanity.studio
+```
+
+## GitHub Actions deploy
+
+The workflow `.github/workflows/deploy-sanity-studio.yml` deploys this Studio automatically when `apps/studio/**` changes, and can also be run manually from GitHub Actions.
+
+Required secret:
+
+```text
+SANITY_AUTH_TOKEN
+```
+
 ## Current web blog
 
-The web routes `/blog` and `/blog/[slug]` currently use static content from `lib/blog-content.ts`.
-
-After the pilot, the next step is to add a Sanity read client and replace the static content with Sanity queries.
+The web routes `/blog` and `/blog/[slug]` read published posts from Sanity and use static fallback if Sanity is unavailable.
