@@ -12,7 +12,10 @@
     "smoke:production": "node scripts/smoke-test-production.mjs",
     "smoke:report": "node scripts/render-smoke-report.mjs",
     "smoke:mobile-api": "node scripts/smoke-test-mobile-api.mjs",
-    "mobile:typecheck": "npm install --prefix apps/mobile-app --no-audit --no-fund && npm run typecheck --prefix apps/mobile-app"
+    "mobile:typecheck": "npm install --prefix apps/mobile-app --no-audit --no-fund && npm run typecheck --prefix apps/mobile-app",
+    "studio:dev": "npm install --prefix apps/studio --no-audit --no-fund && npm run dev --prefix apps/studio",
+    "studio:build": "npm install --prefix apps/studio --no-audit --no-fund && npm run build --prefix apps/studio",
+    "studio:deploy": "npm install --prefix apps/studio --no-audit --no-fund && npm run deploy --prefix apps/studio"
   },
   "dependencies": {
     "@clerk/nextjs": "latest",
