@@ -35,14 +35,17 @@ export async function createPhysioProfileAction(formData: FormData) {
     .maybeSingle();
 
   if (existing) {
+    const updates: Record<string, string> = {
+      role: existing.role || "physio",
+      status: existing.status === "suspended" || existing.status === "blocked" ? existing.status : "active",
+    };
+
+    if (fullName) updates.full_name = fullName;
+    if (clinicName) updates.clinic_name = clinicName;
+
     const { error } = await supabase
       .from("profiles")
-      .update({
-        role: existing.role || "physio",
-        status: existing.status === "suspended" || existing.status === "blocked" ? existing.status : "active",
-        full_name: fullName || undefined,
-        clinic_name: clinicName || undefined,
-      })
+      .update(updates)
       .eq("id", existing.id);
 
     if (error) throw new Error(error.message);
