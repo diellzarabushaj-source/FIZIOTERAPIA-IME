@@ -1,6 +1,6 @@
 # Fizioterapia Ime Design System
 
-Phase 1 centralizes the visual foundation. Phase 2 migrates the public homepage into the premium app-first direction. Phase 3 simplifies the patient login portal for older and non-technical patients.
+Phase 1 centralizes the visual foundation. Phase 2 migrates the public homepage into the premium app-first direction. Phase 3 simplifies the patient login portal for older and non-technical patients. Phase 4 refreshes the physiotherapist dashboard visually without changing backend logic.
 
 ## Files
 
@@ -10,6 +10,7 @@ Phase 1 centralizes the visual foundation. Phase 2 migrates the public homepage 
 - `app/home-refresh.css` — homepage-specific premium layout using the shared tokens.
 - `app/patient-portal/page.tsx` — simplified patient code-login flow.
 - `app/patient-login-refresh.css` — patient-login-specific mobile-first styling.
+- `app/physio-dashboard-refresh.css` — clinical visual cleanup for the physiotherapist dashboard.
 
 ## Brand direction
 
@@ -113,11 +114,22 @@ The patient login flow now follows one main rule: one screen, one job.
 6. The preview area shows what the patient will see after login, without adding extra decisions.
 7. Safety notes remain visible: no account needed, plan is created by the physiotherapist, pain 7/10+ means stop and contact the therapist.
 
+## Physio dashboard cleanup
+
+The physio dashboard refresh keeps all server-side data queries and form actions unchanged while improving visual hierarchy.
+
+1. Sidebar and topbar use glass-card treatment and sticky positioning on desktop.
+2. Stats cards are standardized with softer borders, clearer typography and responsive grids.
+3. Safety alert banner is visually stronger and easier to scan.
+4. Patient table becomes more clinical: sticky table header, cleaner status pills, stronger patient initials and horizontal overflow on small screens.
+5. Phone preview is treated as a secondary sticky clinical preview, not the main focus.
+6. Forms and action zones are separated into cleaner panels with consistent spacing and larger touch targets.
+7. Mobile layout switches to horizontal dashboard navigation and simplified stat grids.
+
 ## Next migration order
 
-1. Physio dashboard: convert stat cards, alert banners and tables to shared primitives.
-2. Admin dashboard: convert owner metrics and lists to shared primitives.
-3. Mobile app: mirror the same token values in React Native styles.
+1. Admin dashboard: convert owner metrics and lists to shared primitives.
+2. Mobile app: mirror the same token values in React Native styles.
 
 ## Rules
 
