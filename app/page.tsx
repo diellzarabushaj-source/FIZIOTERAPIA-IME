@@ -46,6 +46,7 @@ export default function HomePage() {
           <a href="#how">Si funksionon</a>
           <a href="#safety">Siguria</a>
           <a href="#pilot">Pilot</a>
+          <a href="/blog">Blog</a>
           <a href="/faq">FAQ</a>
           <AuthControls />
         </div>
@@ -61,6 +62,7 @@ export default function HomePage() {
           </p>
           <div className="portal-actions">
             <a className="button" href="/support">Kërko informata</a>
+            <a className="button secondary" href="/blog">Lexo blogun për pacientë</a>
             <a className="button secondary" href="/clinic-use">Si përdoret në klinikë</a>
           </div>
           <div className="landing-proof">
@@ -190,6 +192,7 @@ export default function HomePage() {
         <h2>Një website më i qartë sot. Një platformë më e fortë për fizioterapi nesër.</h2>
         <div className="portal-actions">
           <a className="button" href="/support">Kontakto ekipin</a>
+          <a className="button secondary" href="/blog">Blog për pacientë</a>
           <a className="button secondary" href="/faq">Lexo FAQ</a>
           <a className="button secondary" href="/clinic-use">Përdorimi në klinikë</a>
         </div>
