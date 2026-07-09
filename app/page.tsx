@@ -4,37 +4,37 @@ import { BrandMark } from "@/components/BrandMark";
 const workflow = [
   {
     step: "01",
-    title: "Fizioterapeuti krijon planin",
-    text: "Fizioterapeuti krijon një program të personalizuar ushtrimesh në platformën Fizioterapia Ime, përshtatur sipas nevojave të pacientit.",
+    title: "Fizioterapeuti cakton ushtrimet",
+    text: "Krijo planin për pacientin shumë thjeshtë: ushtrimet, setet, përsëritjet dhe ditët kur duhet t’i bëjë.",
     visual: "plan",
     icon: "PT",
   },
   {
     step: "02",
-    title: "Pacienti hyn me kod",
-    text: "Pacienti skanon kodin QR ose fut kodin unik për të hyrë në programin e tij personal dhe për të ndjekur ushtrimet nga çdo pajisje.",
+    title: "Pacienti i sheh në telefon",
+    text: "Pacienti hyn me kod ose QR dhe e sheh qartë çka duhet të bëjë sot. Pa letra, pa foto në WhatsApp, pa konfuzion.",
     visual: "code",
     icon: "QR",
   },
   {
     step: "03",
-    title: "Progresi kthehet në dashboard",
-    text: "Progresi i pacientit përditësohet automatikisht në dashboard. Fizioterapeuti monitoron rezultatet, adherencën dhe feedback-un nga AI.",
+    title: "Ti e përcjell progresin",
+    text: "E sheh kush po i kryen ushtrimet, si po ecën pacienti dhe kur duhet kontrollë tjetër. Më afër pacientit, edhe pas seancës.",
     visual: "dashboard",
     icon: "AI",
   },
 ];
 
 const features = [
-  ["Për pacientë", "Plan i thjeshtë ditor", "Pacienti sheh vetëm ushtrimet e caktuara nga fizioterapeuti dhe i shënon si të kryera."],
-  ["Për fizioterapeutë", "Dashboard klinik", "Krijo pacientë, plane, ushtrime private dhe përcill progresin në kohë reale."],
-  ["Për klinika", "Menaxhim më i pastër", "Menaxheri i klinikës kontrollon qasjen mujore, bibliotekën e ushtrimeve dhe raportet e rikontrollit."],
+  ["Për pacientë", "Ushtrimet gjithmonë në telefon", "Pacienti e di saktë çka duhet të bëjë çdo ditë dhe i shënon ushtrimet si të kryera."],
+  ["Për fizioterapeutë", "Plane ushtrimesh për pak minuta", "Cakto ushtrimet, përcill progresin dhe mbaje pacientin më afër edhe jashtë ordinancës."],
+  ["Për klinika", "Më shumë rregull në trajtim", "Të gjithë pacientët, planet dhe raportet janë në një vend të qartë për ekipin."],
 ];
 
 const stats = [
   ["29.90€", "për fizioterapeut / muaj"],
-  ["7/10", "dhimbje = ndalo ushtrimin"],
-  ["AI", "feedback për lëvizje"],
+  ["0", "harrim i ushtrimeve"],
+  ["Më mirë", "rezultate me plan të qartë"],
 ];
 
 export default function HomePage() {
@@ -53,11 +53,11 @@ export default function HomePage() {
 
       <section className="landing-hero">
         <div className="landing-hero-copy">
-          <span className="badge">Platformë moderne për fizioterapi digjitale</span>
-          <h1>Lëviz më mirë, me plan të krijuar nga fizioterapeuti yt.</h1>
+          <span className="badge">App i thjeshtë për fizioterapi</span>
+          <h1>Caktoja ushtrimet pacientit në telefon.</h1>
           <p>
-            Fizioterapia ime lidh pacientin me fizioterapeutin përmes planeve të personalizuara,
-            progresit ditor, raporteve dhe AI Movement Check për cilësinë e lëvizjes.
+            Me Fizioterapia Ime pacienti nuk i harron ushtrimet. Ai e sheh planin qartë,
+            i ndjek ushtrimet hap pas hapi dhe ti e përcjell progresin më lehtë.
           </p>
           <div className="portal-actions">
             <a className="button" href="/physiotherapist-portal">Hyr si fizioterapeut</a>
@@ -127,10 +127,11 @@ export default function HomePage() {
 
       <section className="landing-section workflow-showcase-section" id="how">
         <div className="workflow-showcase-head">
-          <span className="badge">Workflow klinik</span>
-          <h2>Proces i thjeshtë, por i kontrolluar nga profesionisti.</h2>
+          <span className="badge">Si funksionon</span>
+          <h2>3 hapa të thjeshtë: cakto, pacienti i bën, ti e përcjell.</h2>
           <p>
-            Pacienti nuk krijon plan vetë. Çdo plan nis nga fizioterapeuti dhe progresi kthehet në dashboard për monitorim më të qartë.
+            Plani vjen gjithmonë nga fizioterapeuti. Pacienti vetëm e ndjek planin në telefon,
+            ndërsa ti sheh progresin dhe e di kur duhet me ndërhy.
           </p>
         </div>
         <div className="premium-workflow-grid premium-workflow-visual-grid">
@@ -155,17 +156,17 @@ export default function HomePage() {
       <section className="landing-section ai-section" id="ai">
         <div className="ai-copy">
           <span className="badge">AI Movement Check</span>
-          <h2>AI e sheh lëvizjen, fizioterapeuti merr vendimin.</h2>
+          <h2>AI e kontrollon lëvizjen, fizioterapeuti vendos.</h2>
           <p>
-            Kamera përdoret për feedback bazik mbi stabilitetin, ritmin dhe kontrollin e lëvizjes.
-            Nuk jep diagnozë, nuk cakton terapi dhe nuk e zëvendëson fizioterapeutin.
+            Pacienti mund ta hapë kamerën dhe të marrë feedback të thjeshtë për lëvizjen.
+            AI nuk jep diagnozë dhe nuk e zëvendëson fizioterapeutin.
           </p>
-          <div className="safety-pill">Dhimbje 7/10 ose më shumë = ndalo ushtrimin dhe kontakto fizioterapeutin.</div>
+          <div className="safety-pill">Nëse dhimbja shkon 7/10 ose më shumë, pacienti e ndalon ushtrimin dhe kontakton fizioterapeutin.</div>
         </div>
         <div className="ai-score-card">
           <span>AI score</span>
           <strong>82%</strong>
-          <p>Lëvizje e kontrolluar. Mbaje ritmin më të ngadalshëm në fazën e kthimit.</p>
+          <p>Lëvizja duket mirë. Bëje pak më ngadalë kthimin dhe mbaje kontrollin.</p>
         </div>
       </section>
 
@@ -187,7 +188,7 @@ export default function HomePage() {
 
       <section className="landing-section final-cta">
         <BrandMark compact />
-        <h2>Një app më i qartë për pacientin. Një dashboard më i fortë për fizioterapeutin.</h2>
+        <h2>Pacienti nuk harron ushtrimet. Fizioterapeuti sheh progresin. Rezultatet bëhen më të mira.</h2>
         <div className="portal-actions">
           <a className="button" href="/patient-portal">Hyr si pacient</a>
           <a className="button secondary" href="/physiotherapist-portal">Hyr si fizioterapeut</a>
@@ -209,7 +210,7 @@ function WorkflowVisual({ visual }: { visual: string }) {
         <span className="scene-bed" />
         <span className="scene-person therapist"><i /><b /><em /></span>
         <span className="scene-person patient"><i /><b /></span>
-        <span className="scene-tablet"><b>Plani i trajtimit</b><i /><i /><i /></span>
+        <span className="scene-tablet"><b>Plani i ushtrimeve</b><i /><i /><i /></span>
       </div>
     );
   }
@@ -242,7 +243,7 @@ function WorkflowVisual({ visual }: { visual: string }) {
         <strong>Dashboard</strong>
         <b className="chart"><i /><i /><i /></b>
         <b className="ring">85%</b>
-        <em>Feedback nga AI</em>
+        <em>Progresi i pacientit</em>
       </span>
       <span className="scene-check">✓</span>
       <span className="scene-plant right" />
