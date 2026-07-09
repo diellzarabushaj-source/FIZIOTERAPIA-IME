@@ -1,0 +1,43 @@
+<svg width="960" height="720" viewBox="0 0 960 720" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="960" height="720" rx="54" fill="#F5FBFC"/>
+  <circle cx="110" cy="82" r="54" fill="url(#g1)"/>
+  <text x="110" y="99" text-anchor="middle" font-family="Arial, sans-serif" font-size="38" font-weight="800" fill="white">03</text>
+  <path d="M64 608c86-88 177-122 273-102 67 14 124 2 171-36 79-64 168-82 267-52 61 19 103 51 127 96v152H64v-58Z" fill="#E4F4F8"/>
+  <g transform="translate(150 130)">
+    <rect x="0" y="0" width="650" height="390" rx="28" fill="#0F172A"/>
+    <rect x="28" y="28" width="594" height="324" rx="12" fill="#F8FBFF"/>
+    <rect x="28" y="28" width="92" height="324" rx="12" fill="#1B4C7C"/>
+    <rect x="56" y="72" width="38" height="38" rx="10" fill="#7DB9E8"/>
+    <rect x="56" y="142" width="38" height="38" rx="10" fill="#7DB9E8" opacity=".85"/>
+    <rect x="56" y="212" width="38" height="38" rx="10" fill="#7DB9E8" opacity=".7"/>
+    <rect x="56" y="282" width="38" height="38" rx="10" fill="#7DB9E8" opacity=".55"/>
+    <text x="156" y="82" font-family="Arial, sans-serif" font-size="34" font-weight="900" fill="#0F172A">Dashboard</text>
+    <rect x="156" y="118" width="270" height="154" rx="18" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="4"/>
+    <text x="180" y="158" font-family="Arial, sans-serif" font-size="20" font-weight="800" fill="#0F172A">Progresi i ushtrimeve</text>
+    <path d="M190 232c46-54 84-52 116-15 38 44 73 23 104-28" stroke="#34C759" stroke-width="9" stroke-linecap="round"/>
+    <circle cx="190" cy="232" r="8" fill="#34C759"/><circle cx="306" cy="217" r="8" fill="#34C759"/><circle cx="410" cy="189" r="8" fill="#34C759"/>
+    <line x1="180" y1="194" x2="406" y2="194" stroke="#E8F1F5" stroke-width="4"/><line x1="180" y1="232" x2="406" y2="232" stroke="#E8F1F5" stroke-width="4"/>
+    <rect x="448" y="118" width="146" height="154" rx="18" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="4"/>
+    <text x="470" y="156" font-family="Arial, sans-serif" font-size="20" font-weight="800" fill="#0F172A">Adherenca</text>
+    <circle cx="520" cy="218" r="44" stroke="#DCE8F0" stroke-width="16"/>
+    <path d="M520 174a44 44 0 1 1-38 66" stroke="url(#g2)" stroke-width="16" stroke-linecap="round"/>
+    <text x="520" y="228" text-anchor="middle" font-family="Arial, sans-serif" font-size="26" font-weight="900" fill="#0F172A">85%</text>
+    <rect x="156" y="292" width="438" height="48" rx="18" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="4"/>
+    <text x="180" y="322" font-family="Arial, sans-serif" font-size="20" font-weight="800" fill="#0F172A">Feedback nga AI</text>
+    <circle cx="566" cy="316" r="42" fill="#34C759"/>
+    <path d="M548 316l13 14 27-31" stroke="white" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+    <rect x="0" y="390" width="650" height="38" rx="19" fill="#859BB6"/>
+    <rect x="242" y="428" width="166" height="34" rx="12" fill="#7087A4"/>
+  </g>
+  <g transform="translate(738 451)">
+    <rect x="35" y="108" width="146" height="76" rx="18" fill="#A7D1E8"/>
+    <path d="M47 112h122" stroke="#7FB8D8" stroke-width="8" stroke-linecap="round"/>
+    <path d="M94 105C74 57 44 30 4 22c29 49 59 76 90 83Z" fill="#34C759" opacity=".82"/>
+    <path d="M110 105c-1-56 18-91 58-105 0 55-19 90-58 105Z" fill="#0F8F86" opacity=".82"/>
+    <path d="M126 106c41-44 83-59 128-46-40 41-83 56-128 46Z" fill="#34C759" opacity=".78"/>
+  </g>
+  <defs>
+    <linearGradient id="g1" x1="68" y1="36" x2="158" y2="140" gradientUnits="userSpaceOnUse"><stop stop-color="#34C759"/><stop offset="1" stop-color="#0F8F86"/></linearGradient>
+    <linearGradient id="g2" x1="480" y1="178" x2="558" y2="262" gradientUnits="userSpaceOnUse"><stop stop-color="#3B5CCB"/><stop offset="1" stop-color="#34C759"/></linearGradient>
+  </defs>
+</svg>
