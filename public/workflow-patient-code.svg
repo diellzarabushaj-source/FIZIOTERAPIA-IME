@@ -1,0 +1,40 @@
+<svg width="960" height="720" viewBox="0 0 960 720" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="960" height="720" rx="54" fill="#F5FBFC"/>
+  <circle cx="110" cy="82" r="54" fill="url(#g1)"/>
+  <text x="110" y="99" text-anchor="middle" font-family="Arial, sans-serif" font-size="38" font-weight="800" fill="white">02</text>
+  <path d="M66 612c76-93 158-132 247-116 70 12 124 3 163-29 69-57 151-76 246-57 70 14 123 49 163 105v151H66v-54Z" fill="#E4F4F8"/>
+  <g transform="translate(116 140)">
+    <path d="M25 310c41-56 94-85 158-86l-18 263c-72-6-127-42-165-107-12-20-4-52 25-70Z" fill="#FFBF92"/>
+    <path d="M148 50c4-36 34-62 70-58l214 25c36 4 62 34 58 70l-43 360c-4 36-34 62-70 58l-214-25c-36-4-62-34-58-70L148 50Z" fill="#111827"/>
+    <path d="M178 69c2-17 16-29 33-27l216 26c17 2 29 16 27 33l-39 326c-2 17-16 29-33 27l-216-26c-17-2-29-16-27-33l39-326Z" fill="#F8FBFF"/>
+    <path d="M258 48l96 12c-5 20-20 29-46 26l-10-1c-26-3-39-15-40-37Z" fill="#111827"/>
+    <circle cx="300" cy="158" r="42" fill="url(#g2)"/>
+    <path d="M281 159c25-20 51-20 77 0M319 121c-4 27-19 48-45 65M330 121c5 27 20 48 45 65" stroke="white" stroke-width="9" stroke-linecap="round"/>
+    <text x="315" y="237" text-anchor="middle" font-family="Arial, sans-serif" font-size="32" font-weight="800" fill="#0F172A">Fizioterapia Ime</text>
+    <rect x="214" y="278" width="218" height="54" rx="16" fill="#FFFFFF" stroke="#D9E8F0" stroke-width="5"/>
+    <text x="240" y="313" font-family="Arial, sans-serif" font-size="22" font-weight="700" fill="#90A4B8">Kodi i pacientit</text>
+    <rect x="214" y="352" width="218" height="58" rx="17" fill="#34C759"/>
+    <text x="323" y="390" text-anchor="middle" font-family="Arial, sans-serif" font-size="26" font-weight="800" fill="white">Hyr</text>
+    <text x="323" y="464" text-anchor="middle" font-family="Arial, sans-serif" font-size="23" font-weight="800" fill="#0F172A">Kodi ose QR</text>
+    <text x="323" y="494" text-anchor="middle" font-family="Arial, sans-serif" font-size="22" font-weight="700" fill="#486276">e hap planin personal.</text>
+    <path d="M126 266c33 13 60 34 80 65M100 317c41 14 73 37 96 70M78 374c32 8 58 24 76 48" stroke="#ECA97D" stroke-width="12" stroke-linecap="round"/>
+  </g>
+  <g transform="translate(641 178)">
+    <path d="M0 108c0-59 48-108 108-108h89c60 0 108 49 108 108s-48 108-108 108H95l-64 58 15-74C18 180 0 146 0 108Z" fill="#FFFFFF" stroke="#274C77" stroke-width="6"/>
+    <rect x="70" y="48" width="34" height="34" fill="#111827"/><rect x="112" y="48" width="18" height="18" fill="#111827"/><rect x="146" y="48" width="58" height="58" fill="#111827"/>
+    <rect x="80" y="58" width="14" height="14" fill="white"/><rect x="156" y="58" width="38" height="38" fill="white"/><rect x="166" y="68" width="18" height="18" fill="#111827"/>
+    <rect x="70" y="114" width="58" height="58" fill="#111827"/><rect x="82" y="126" width="34" height="34" fill="white"/><rect x="92" y="136" width="14" height="14" fill="#111827"/>
+    <rect x="146" y="124" width="18" height="18" fill="#111827"/><rect x="172" y="124" width="30" height="18" fill="#111827"/><rect x="146" y="150" width="58" height="18" fill="#111827"/>
+  </g>
+  <g transform="translate(707 474)">
+    <rect x="38" y="104" width="152" height="78" rx="18" fill="#A7D1E8"/>
+    <path d="M50 108h128" stroke="#7FB8D8" stroke-width="8" stroke-linecap="round"/>
+    <path d="M98 101C76 53 45 26 4 20c31 48 62 75 94 81Z" fill="#34C759" opacity=".82"/>
+    <path d="M110 103c-3-56 15-91 55-103 2 54-16 88-55 103Z" fill="#0F8F86" opacity=".82"/>
+    <path d="M126 104c39-44 81-59 126-46-39 41-81 56-126 46Z" fill="#34C759" opacity=".78"/>
+  </g>
+  <defs>
+    <linearGradient id="g1" x1="68" y1="36" x2="158" y2="140" gradientUnits="userSpaceOnUse"><stop stop-color="#34C759"/><stop offset="1" stop-color="#0F8F86"/></linearGradient>
+    <linearGradient id="g2" x1="262" y1="115" x2="348" y2="199" gradientUnits="userSpaceOnUse"><stop stop-color="#4F7BFF"/><stop offset="1" stop-color="#34C759"/></linearGradient>
+  </defs>
+</svg>
