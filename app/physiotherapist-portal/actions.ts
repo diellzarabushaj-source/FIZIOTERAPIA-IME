@@ -6,6 +6,9 @@ import { hasActivePhysioAccess } from "@/lib/billing";
 import { getClinicalProgramTemplate } from "@/lib/clinical-programs";
 import { createPatientUsername, createUniquePatientCode, getSupabaseAdmin } from "@/lib/supabase-admin";
 
+const defaultAdminEmail = "diellzarabushaj@gmail.com";
+const blockedProfileStatuses = new Set(["inactive", "suspended", "blocked"]);
+
 type Profile = {
   id: string;
   email: string;
@@ -42,7 +45,7 @@ async function requireProfile() {
   }
 
   const fullName = user.fullName || user.firstName || email;
-  const adminEmail = (process.env.ADMIN_EMAIL || "diellzarabushaj@gmail.com").toLowerCase();
+  const adminEmail = (process.env.ADMIN_EMAIL || defaultAdminEmail).toLowerCase();
   const role = email === adminEmail ? "owner" : "physio";
 
   const { data: existing } = await supabase
@@ -52,6 +55,10 @@ async function requireProfile() {
     .maybeSingle();
 
   if (existing) {
+    if (existing.status && blockedProfileStatuses.has(existing.status)) {
+      throw new Error("Profili është i bllokuar. Kontakto adminin e platformës.");
+    }
+
     const updates: Record<string, string> = {};
     if (!existing.clerk_user_id) updates.clerk_user_id = clerkUserId;
     if (!existing.full_name) updates.full_name = fullName;
@@ -62,6 +69,10 @@ async function requireProfile() {
     }
 
     return existing as Profile;
+  }
+
+  if (role !== "owner") {
+    throw new Error("Profili i fizioterapeutit duhet të krijohet dhe aktivizohet nga admini para përdorimit të dashboard-it.");
   }
 
   const { data, error } = await supabase
