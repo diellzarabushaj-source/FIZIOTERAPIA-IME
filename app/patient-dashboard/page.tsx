@@ -292,7 +292,7 @@ export default async function PatientDashboardPage() {
               <span>Fizioterapia ime</span>
               <small>{physio?.clinic_name || "Plani yt"}</small>
             </div>
-            <span>🔔</span>
+            <a href="#messages" aria-label="Mesazhe">🔔</a>
           </header>
 
           <section className="duo-progress-top">
@@ -404,9 +404,36 @@ export default async function PatientDashboardPage() {
             <span>AI jep vetëm feedback për lëvizje. Planin dhe ndryshimet i vendos fizioterapeuti yt.</span>
           </div>
 
+          <section className="duo-mobile-info-panel" id="progress">
+            <div className="duo-mobile-section-title">
+              <span>Progresi yt</span>
+              <h2>Si po shkon?</h2>
+            </div>
+            <div className="duo-mobile-stat-grid">
+              <article><span>Plan total</span><b>{completedCount}/{planExercises.length || 0}</b><small>ushtrime</small></article>
+              <article><span>Sot</span><b>{todayDone}/{visibleExercises.length || 0}</b><small>të kryera</small></article>
+              <article><span>Dhimbja</span><b>{latestPain !== undefined ? `${latestPain}/10` : "—"}</b><small>{highPain ? "ndalo" : "ok"}</small></article>
+              <article><span>AI</span><b>{latestAi !== undefined ? `${latestAi}%` : "—"}</b><small>feedback</small></article>
+            </div>
+          </section>
+
+          <section className="duo-mobile-message-card" id="messages">
+            <div className="duo-mobile-section-title">
+              <span>Mesazhe</span>
+              <h2>Nga fizioterapeuti</h2>
+            </div>
+            {messages.length === 0 && <p>Ende nuk ka mesazhe. Kur fizioterapeuti dërgon udhëzim, shfaqet këtu.</p>}
+            {messages.slice(0, 3).map((message) => (
+              <article key={message.id}>
+                <p>{message.message}</p>
+                <small>{message.created_at ? formatShortDate(message.created_at) : "Sot"}</small>
+              </article>
+            ))}
+          </section>
+
           <nav className="patient-pro-bottom-nav duo-bottom-nav" aria-label="Patient app tabs">
             <a className="active" href="#path">🏠<span>Sot</span></a>
-            <a href="#path">🟢<span>Rruga</span></a>
+            <a href="#progress">📊<span>Progres</span></a>
             <a href="#messages">💬<span>Mesazhe</span></a>
             <form action={patientLogoutAction}><button type="submit">○<span>Dil</span></button></form>
           </nav>
@@ -471,7 +498,7 @@ export default async function PatientDashboardPage() {
             {firstExercise?.exercise_library?.ai_enabled && <a href={`/ai-check?planExerciseId=${firstExercise.id}`}>Kontrollo me AI (opsionale)</a>}
           </section>
 
-          <section id="messages" className="patient-pro-messages">
+          <section className="patient-pro-messages">
             <h3>Mesazhe nga fizioterapeuti</h3>
             {messages.length === 0 && <p>Ende nuk ka mesazhe nga fizioterapeuti.</p>}
             {messages.slice(0, 3).map((message) => (
