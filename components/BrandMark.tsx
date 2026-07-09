@@ -9,8 +9,7 @@ export function BrandMark({ compact = false, href = "/" }: BrandMarkProps) {
       <img
         className={compact ? "brand-image brand-image-icon" : "brand-image brand-image-logo"}
         src={compact ? "/fizioterapia-ime-icon.svg" : "/fizioterapia-ime-logo.svg"}
-        alt=""
-        aria-hidden="true"
+        alt="Fizioterapia ime"
       />
     </a>
   );
