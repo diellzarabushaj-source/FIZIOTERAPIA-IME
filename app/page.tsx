@@ -205,7 +205,7 @@ export default function HomePage() {
       <section className="premium-final-cta fi-container">
         <BrandMark compact />
         <h2>Gati për pilotim me pacientë realë.</h2>
-        <p>Hapi tjetër është ta bëjmë patient portal-in edhe më të thjeshtë dhe pastaj dashboard-in më klinik.</p>
+        <p>Design refresh është gati. Hapi tjetër është visual QA, deployment në production dhe pilotimi me pacientë realë.</p>
         <div className="premium-actions center">
           <a className="button" href="/patient-portal">Testo si pacient</a>
           <a className="button secondary" href="/physiotherapist-portal">Hyr si fizioterapeut</a>
