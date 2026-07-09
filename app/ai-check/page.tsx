@@ -2,9 +2,8 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { BrandMark } from "@/components/BrandMark";
 import { getSupabaseAdmin, normalizePatientCode } from "@/lib/supabase-admin";
+import { getActivePatientBySignedCode, PATIENT_CODE_COOKIE, PATIENT_SESSION_COOKIE } from "@/lib/backend-logic";
 import { MovementCheckClient } from "./MovementCheckClient";
-
-const CODE_COOKIE = "fizioplan_patient_code";
 
 export default async function AiCheckPage({ searchParams }: { searchParams?: Promise<{ planExerciseId?: string }> }) {
   const params = await searchParams;
@@ -28,18 +27,14 @@ export default async function AiCheckPage({ searchParams }: { searchParams?: Pro
   }
 
   const cookieStore = await cookies();
-  const code = normalizePatientCode(cookieStore.get(CODE_COOKIE)?.value || "");
+  const code = normalizePatientCode(cookieStore.get(PATIENT_CODE_COOKIE)?.value || "");
+  const signature = cookieStore.get(PATIENT_SESSION_COOKIE)?.value || "";
 
   if (!code) {
     redirect("/patient-portal");
   }
 
-  const { data: patient } = await supabase
-    .from("patients")
-    .select("id")
-    .eq("patient_code", code)
-    .eq("status", "active")
-    .maybeSingle();
+  const patient = await getActivePatientBySignedCode({ supabase, code, signature });
 
   if (!patient) {
     redirect("/patient-portal");
@@ -48,9 +43,10 @@ export default async function AiCheckPage({ searchParams }: { searchParams?: Pro
   if (planExerciseId) {
     const { data: assignedExercise } = await supabase
       .from("plan_exercises")
-      .select("id,plans!inner(patient_id)")
+      .select("id,plans!inner(patient_id),exercise_library!inner(ai_enabled)")
       .eq("id", planExerciseId)
       .eq("plans.patient_id", patient.id)
+      .eq("exercise_library.ai_enabled", true)
       .maybeSingle();
 
     if (!assignedExercise) {
