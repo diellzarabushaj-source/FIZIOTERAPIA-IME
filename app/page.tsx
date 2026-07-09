@@ -4,37 +4,37 @@ import { BrandMark } from "@/components/BrandMark";
 const workflow = [
   {
     step: "01",
-    title: "Fizioterapeuti cakton ushtrimet",
-    text: "Krijo planin për pacientin shumë thjeshtë: ushtrimet, setet, përsëritjet dhe ditët kur duhet t’i bëjë.",
+    title: "Fizioterapeuti përgatit planin",
+    text: "Në fazën pilot, plani i ushtrimeve përgatitet nga fizioterapeuti dhe prezantohet pacientit në mënyrë të qartë, me udhëzime të thjeshta dhe rregulla sigurie.",
     visual: "plan",
     icon: "PT",
   },
   {
     step: "02",
-    title: "Pacienti i sheh në telefon",
-    text: "Pacienti hyn me kod ose QR dhe e sheh qartë çka duhet të bëjë sot. Pa letra, pa foto në WhatsApp, pa konfuzion.",
+    title: "Pacienti merr udhëzime të qarta",
+    text: "Pacienti e kupton çka duhet të bëjë, kur duhet të ndalojë dhe kur duhet ta kontaktojë fizioterapeutin. Qasja me kod/QR përdoret vetëm për pilot ose përdorim të kontrolluar.",
     visual: "code",
     icon: "QR",
   },
   {
     step: "03",
-    title: "Ti e përcjell progresin",
-    text: "E sheh kush po i kryen ushtrimet, si po ecën pacienti dhe kur duhet kontrollë tjetër. Më afër pacientit, edhe pas seancës.",
+    title: "Progresi kontrollohet nga profesionisti",
+    text: "Qëllimi është të bëhet ndjekja më e pastër për fizioterapeutin, pa e zëvendësuar vendimin klinik. Funksionet e avancuara aktivizohen vetëm kur janë të testuara.",
     visual: "dashboard",
-    icon: "AI",
+    icon: "PT",
   },
 ];
 
 const features = [
-  ["Për pacientë", "Ushtrimet gjithmonë në telefon", "Pacienti e di saktë çka duhet të bëjë çdo ditë dhe i shënon ushtrimet si të kryera."],
-  ["Për fizioterapeutë", "Plane ushtrimesh për pak minuta", "Cakto ushtrimet, përcill progresin dhe mbaje pacientin më afër edhe jashtë ordinancës."],
-  ["Për klinika", "Më shumë rregull në trajtim", "Të gjithë pacientët, planet dhe raportet janë në një vend të qartë për ekipin."],
+  ["Për pacientë", "Udhëzime të thjeshta", "Pacienti kupton planin, ushtrimet dhe rregullat e sigurisë me gjuhë të qartë."],
+  ["Për fizioterapeutë", "Pilot i kontrolluar", "Fizioterapeuti e ruan rolin kryesor: krijon planin, ndjek progresin dhe vendos për trajtimin."],
+  ["Për klinika", "Website i gatshëm për launch", "Faqe publike, support, legal pages dhe onboarding për përdorim të kontrolluar para lansimit të plotë."],
 ];
 
 const stats = [
-  ["29.90€", "për fizioterapeut / muaj"],
-  ["0", "harrim i ushtrimeve"],
-  ["Më mirë", "rezultate me plan të qartë"],
+  ["Pilot", "website-first launch"],
+  ["7/10", "dhimbje = ndalo ushtrimin"],
+  ["PT", "vendimi mbetet te fizioterapeuti"],
 ];
 
 export default function HomePage() {
@@ -44,8 +44,8 @@ export default function HomePage() {
         <BrandMark />
         <div className="nav-actions">
           <a href="#how">Si funksionon</a>
-          <a href="#ai">AI</a>
-          <a href="#pricing">Çmimi</a>
+          <a href="#safety">Siguria</a>
+          <a href="#pilot">Pilot</a>
           <a href="/faq">FAQ</a>
           <AuthControls />
         </div>
@@ -53,15 +53,15 @@ export default function HomePage() {
 
       <section className="landing-hero">
         <div className="landing-hero-copy">
-          <span className="badge">App i thjeshtë për fizioterapi</span>
-          <h1>Caktoja ushtrimet pacientit në telefon.</h1>
+          <span className="badge">Website zyrtar për fizioterapi digjitale</span>
+          <h1>Fizioterapia më e qartë për pacientin, me plan nga fizioterapeuti.</h1>
           <p>
-            Me Fizioterapia Ime pacienti nuk i harron ushtrimet. Ai e sheh planin qartë,
-            i ndjek ushtrimet hap pas hapi dhe ti e përcjell progresin më lehtë.
+            Fizioterapia Ime po lançohet fillimisht si website publik dhe pilot i kontrolluar.
+            Qëllimi është të shpjegojë shërbimin, të edukojë pacientët dhe të përgatisë përdorimin e platformës me fizioterapeutë realë.
           </p>
           <div className="portal-actions">
-            <a className="button" href="/physiotherapist-portal">Hyr si fizioterapeut</a>
-            <a className="button secondary" href="/patient-portal">Hyr si pacient</a>
+            <a className="button" href="/support">Kërko informata</a>
+            <a className="button secondary" href="/clinic-use">Si përdoret në klinikë</a>
           </div>
           <div className="landing-proof">
             {stats.map(([value, label]) => (
@@ -73,16 +73,16 @@ export default function HomePage() {
           </div>
         </div>
 
-        <div className="landing-showcase" aria-label="Fizioterapia ime product preview">
+        <div className="landing-showcase" aria-label="Fizioterapia Ime website and pilot preview">
           <div className="showcase-phone">
             <div className="phone-notch" />
             <div className="phone-app-logo"><BrandMark compact /></div>
-            <span className="mini-badge">Plani sot</span>
-            <h2>Lumbosciatica · Dita 3</h2>
+            <span className="mini-badge">Shembull edukativ</span>
+            <h2>Lumbosciatica · Udhëzime</h2>
             <div className="progress-line"><span style={{ width: "68%" }} /></div>
             {[
-              ["Glute bridge", "3 sete × 12", "AI"],
-              ["Cat cow", "2 sete × 10", "Done"],
+              ["Glute bridge", "3 sete × 12", "PT"],
+              ["Cat cow", "2 sete × 10", "OK"],
               ["Piriformis stretch", "3 × 30 sek", "Sot"],
             ].map(([name, dose, status]) => (
               <div className="phone-exercise" key={name}>
@@ -93,7 +93,7 @@ export default function HomePage() {
                 <em>{status}</em>
               </div>
             ))}
-            <button className="phone-cta">Kontrollo lëvizjen</button>
+            <button className="phone-cta">Shiko udhëzimin</button>
           </div>
 
           <div className="dashboard-preview-card">
@@ -102,15 +102,15 @@ export default function HomePage() {
               <span />
               <span />
             </div>
-            <h3>Dashboard për fizioterapeutin</h3>
+            <h3>Pilot për fizioterapeutin</h3>
             <div className="preview-kpis">
               <div><b>18</b><small>Pacientë</small></div>
-              <div><b>82%</b><small>AI score</small></div>
-              <div><b>3</b><small>Alerts</small></div>
+              <div><b>82%</b><small>Progres</small></div>
+              <div><b>3</b><small>Kujdes</small></div>
             </div>
             <div className="preview-row"><span>Arta Gashi</span><b>Progres 68%</b></div>
             <div className="preview-row"><span>ARB-4821</span><b>Dhimbje 4/10</b></div>
-            <div className="preview-row"><span>Raport PDF</span><b>Gati</b></div>
+            <div className="preview-row"><span>Raport</span><b>Në testim</b></div>
           </div>
         </div>
       </section>
@@ -127,11 +127,10 @@ export default function HomePage() {
 
       <section className="landing-section workflow-showcase-section" id="how">
         <div className="workflow-showcase-head">
-          <span className="badge">Si funksionon</span>
-          <h2>3 hapa të thjeshtë: cakto, pacienti i bën, ti e përcjell.</h2>
+          <span className="badge">Workflow klinik</span>
+          <h2>Proces i thjeshtë, por i kontrolluar nga profesionisti.</h2>
           <p>
-            Plani vjen gjithmonë nga fizioterapeuti. Pacienti vetëm e ndjek planin në telefon,
-            ndërsa ti sheh progresin dhe e di kur duhet me ndërhy.
+            Pacienti nuk e krijon planin vetë. Çdo plan nis nga fizioterapeuti dhe përdoret me kontroll profesional, sidomos në fazën pilot.
           </p>
         </div>
         <div className="premium-workflow-grid premium-workflow-visual-grid">
@@ -153,46 +152,46 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="landing-section ai-section" id="ai">
+      <section className="landing-section ai-section" id="safety">
         <div className="ai-copy">
-          <span className="badge">AI Movement Check</span>
-          <h2>AI e kontrollon lëvizjen, fizioterapeuti vendos.</h2>
+          <span className="badge">Siguri klinike</span>
+          <h2>Teknologjia ndihmon, fizioterapeuti vendos.</h2>
           <p>
-            Pacienti mund ta hapë kamerën dhe të marrë feedback të thjeshtë për lëvizjen.
-            AI nuk jep diagnozë dhe nuk e zëvendëson fizioterapeutin.
+            Fizioterapia Ime nuk jep diagnozë, nuk cakton terapi dhe nuk zëvendëson fizioterapeutin.
+            Çdo udhëzim klinik duhet të kalojë përmes profesionistit përgjegjës.
           </p>
-          <div className="safety-pill">Nëse dhimbja shkon 7/10 ose më shumë, pacienti e ndalon ushtrimin dhe kontakton fizioterapeutin.</div>
+          <div className="safety-pill">Dhimbje 7/10 ose më shumë = ndalo ushtrimin dhe kontakto fizioterapeutin.</div>
         </div>
         <div className="ai-score-card">
-          <span>AI score</span>
-          <strong>82%</strong>
-          <p>Lëvizja duket mirë. Bëje pak më ngadalë kthimin dhe mbaje kontrollin.</p>
+          <span>Rregull kryesor</span>
+          <strong>PT</strong>
+          <p>Vendimi klinik, ndryshimi i planit dhe kontrolli i pacientit mbeten gjithmonë te fizioterapeuti.</p>
         </div>
       </section>
 
-      <section className="landing-section pricing-section" id="pricing">
+      <section className="landing-section pricing-section" id="pilot">
         <div>
-          <span className="badge">Çmimi për MVP</span>
-          <h2>Qasje për fizioterapeutë me 29.90 EUR / muaj.</h2>
+          <span className="badge">Faza pilot</span>
+          <h2>Website live tani. Platforma operative përdoret vetëm me qasje të kontrolluar.</h2>
           <p>
-            Për versionin e parë pagesa është manuale/local-bank. Qasja mujore aktivizohet nga paneli i brendshëm i platformës.
+            Për versionin e parë, qasja për fizioterapeutë menaxhohet manualisht. Funksionet e brendshme testohen me klinika/përdorues të zgjedhur para lansimit të plotë.
           </p>
         </div>
         <div className="price-card">
-          <span>Fizioterapeut Monthly</span>
+          <span>Pilot për fizioterapeutë</span>
           <strong>29.90€</strong>
-          <small>EUR / muaj</small>
-          <a className="button" href="/physiotherapist-portal">Fillo tani</a>
+          <small>EUR / muaj pas aktivizimit</small>
+          <a className="button" href="/support">Apliko për pilot</a>
         </div>
       </section>
 
       <section className="landing-section final-cta">
         <BrandMark compact />
-        <h2>Pacienti nuk harron ushtrimet. Fizioterapeuti sheh progresin. Rezultatet bëhen më të mira.</h2>
+        <h2>Një website më i qartë sot. Një platformë më e fortë për fizioterapi nesër.</h2>
         <div className="portal-actions">
-          <a className="button" href="/patient-portal">Hyr si pacient</a>
-          <a className="button secondary" href="/physiotherapist-portal">Hyr si fizioterapeut</a>
+          <a className="button" href="/support">Kontakto ekipin</a>
           <a className="button secondary" href="/faq">Lexo FAQ</a>
+          <a className="button secondary" href="/clinic-use">Përdorimi në klinikë</a>
         </div>
       </section>
     </main>
@@ -210,7 +209,7 @@ function WorkflowVisual({ visual }: { visual: string }) {
         <span className="scene-bed" />
         <span className="scene-person therapist"><i /><b /><em /></span>
         <span className="scene-person patient"><i /><b /></span>
-        <span className="scene-tablet"><b>Plani i ushtrimeve</b><i /><i /><i /></span>
+        <span className="scene-tablet"><b>Plani i trajtimit</b><i /><i /><i /></span>
       </div>
     );
   }
@@ -225,8 +224,8 @@ function WorkflowVisual({ visual }: { visual: string }) {
           <b className="mini-logo" />
           <strong>Fizioterapia Ime</strong>
           <i>Kodi i pacientit</i>
-          <em>Hyr</em>
-          <small>e hap planin personal</small>
+          <em>Pilot</em>
+          <small>qasje e kontrolluar</small>
         </span>
         <span className="scene-qr-bubble"><i /><i /><i /><i /><i /></span>
         <span className="scene-plant right" />
@@ -240,10 +239,10 @@ function WorkflowVisual({ visual }: { visual: string }) {
       <span className="scene-orb two" />
       <span className="scene-laptop">
         <i className="side" />
-        <strong>Dashboard</strong>
+        <strong>Pilot</strong>
         <b className="chart"><i /><i /><i /></b>
         <b className="ring">85%</b>
-        <em>Progresi i pacientit</em>
+        <em>Kontroll nga PT</em>
       </span>
       <span className="scene-check">✓</span>
       <span className="scene-plant right" />
