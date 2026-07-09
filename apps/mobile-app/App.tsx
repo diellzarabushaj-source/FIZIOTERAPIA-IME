@@ -550,7 +550,7 @@ const styles = StyleSheet.create({
   infoLabel: { color: palette.muted2, fontSize: 12, fontWeight: '800' },
   infoValue: { color: palette.inkSoft, fontSize: 14, fontWeight: '900', marginTop: 4 },
   safetyBox: { backgroundColor: palette.warningSoft, borderWidth: 1, borderColor: 'rgba(245,158,11,0.24)', borderRadius: 18, padding: 14, marginVertical: 12 },
-  safetyText: { color: palette.warning, fontWeight: '850', lineHeight: 21 },
+  safetyText: { color: palette.warning, fontWeight: '800', lineHeight: 21 },
   cameraPrepBox: { backgroundColor: palette.primarySoft, borderRadius: 24, padding: 24, alignItems: 'center', marginBottom: 14, borderWidth: 1, borderColor: 'rgba(15,143,134,0.16)' },
   cameraEmoji: { width: 64, height: 64, borderRadius: 24, backgroundColor: palette.surface, color: palette.primaryStrong, textAlign: 'center', textAlignVertical: 'center', fontSize: 40, fontWeight: '900', overflow: 'hidden', marginBottom: 8 },
   textCenter: { color: palette.muted, fontWeight: '800', textAlign: 'center', lineHeight: 21 },
