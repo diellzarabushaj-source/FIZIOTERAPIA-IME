@@ -5,6 +5,7 @@
   gap: 0;
   line-height: 0;
   text-decoration: none;
+  flex: 0 0 auto;
 }
 
 .brand-mark:hover {
@@ -18,45 +19,95 @@
 }
 
 .brand-image-logo {
-  width: min(232px, 48vw);
-  height: 58px;
+  width: 180px;
+  height: auto;
+  max-height: 42px;
 }
 
 .brand-image-icon {
-  width: 54px;
-  height: 54px;
+  width: 40px;
+  height: 40px;
 }
 
 .brand-mark.compact .brand-image-icon {
+  width: 38px;
+  height: 38px;
+}
+
+.top-nav .brand-image-logo,
+.landing-nav .brand-image-logo,
+header .brand-image-logo,
+nav .brand-image-logo {
+  width: 176px;
+  height: auto;
+  max-height: 40px;
+}
+
+.site-footer .brand-image-logo,
+footer .brand-image-logo {
+  width: 168px;
+  height: auto;
+  max-height: 42px;
+}
+
+.hero-brand-card,
+.brand-preview-card,
+.logo-preview-card {
+  min-height: auto !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  display: flex !important;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 0 !important;
+}
+
+.hero-brand-card .brand-image-logo,
+.brand-preview-card .brand-image-logo,
+.logo-preview-card .brand-image-logo {
+  width: min(230px, 80vw);
+  height: auto;
+  max-height: 56px;
+}
+
+.hero-brand-card .brand-image-icon,
+.brand-preview-card .brand-image-icon,
+.logo-preview-card .brand-image-icon {
   width: 48px;
   height: 48px;
 }
 
-.top-nav .brand-image-logo,
-.landing-nav .brand-image-logo {
-  width: min(230px, 50vw);
-  height: 56px;
-}
-
-.site-footer .brand-image-logo {
-  width: min(250px, 70vw);
-  height: 64px;
-}
-
-.hero-brand-card .brand-image-logo {
-  width: min(420px, 82%);
-  height: 110px;
-}
-
 @media (max-width: 640px) {
-  .brand-image-logo {
-    width: min(190px, 58vw);
-    height: 48px;
+  .brand-image-logo,
+  .top-nav .brand-image-logo,
+  .landing-nav .brand-image-logo,
+  header .brand-image-logo,
+  nav .brand-image-logo {
+    width: 142px;
+    height: auto;
+    max-height: 34px;
   }
 
-  .top-nav .brand-image-logo,
-  .landing-nav .brand-image-logo {
-    width: min(190px, 58vw);
-    height: 48px;
+  .site-footer .brand-image-logo,
+  footer .brand-image-logo {
+    width: 150px;
+    max-height: 38px;
+  }
+
+  .hero-brand-card .brand-image-logo,
+  .brand-preview-card .brand-image-logo,
+  .logo-preview-card .brand-image-logo {
+    width: min(190px, 76vw);
+    max-height: 46px;
+  }
+
+  .brand-image-icon,
+  .brand-mark.compact .brand-image-icon {
+    width: 34px;
+    height: 34px;
   }
 }
