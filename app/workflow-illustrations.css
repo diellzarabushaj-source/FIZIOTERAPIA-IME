@@ -8,20 +8,14 @@
   min-height: 0;
   overflow: hidden;
   padding: 0;
-  border-radius: 34px;
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(255, 255, 255, 0.94)),
-    radial-gradient(circle at 18% 4%, rgba(15, 143, 134, 0.09), transparent 34%);
+  border-radius: 36px;
+  background: linear-gradient(180deg, #ffffff 0%, #fbfeff 100%);
   border: 1px solid rgba(148, 163, 184, 0.22);
-  box-shadow: 0 22px 55px rgba(15, 32, 51, 0.08);
+  box-shadow: 0 24px 58px rgba(15, 32, 51, 0.08);
   isolation: isolate;
   cursor: default;
   transform: translateY(0) scale(1);
-  transition:
-    transform 260ms ease,
-    box-shadow 260ms ease,
-    border-color 260ms ease,
-    background 260ms ease;
+  transition: transform 260ms ease, box-shadow 260ms ease, border-color 260ms ease;
 }
 
 .premium-workflow-grid .workflow-visual-card::before {
@@ -31,7 +25,7 @@
   z-index: -1;
   border-radius: inherit;
   background:
-    radial-gradient(circle at 18% 10%, rgba(52, 199, 89, 0.22), transparent 34%),
+    radial-gradient(circle at 18% 10%, rgba(52, 199, 89, 0.2), transparent 34%),
     radial-gradient(circle at 86% 0%, rgba(15, 143, 134, 0.16), transparent 32%);
   opacity: 0;
   transition: opacity 260ms ease;
@@ -43,7 +37,7 @@
   inset: 0;
   pointer-events: none;
   border-radius: inherit;
-  background: linear-gradient(120deg, transparent 20%, rgba(255, 255, 255, 0.48) 42%, transparent 62%);
+  background: linear-gradient(120deg, transparent 20%, rgba(255, 255, 255, 0.5) 42%, transparent 62%);
   opacity: 0;
   transform: translateX(-70%);
   transition: opacity 280ms ease, transform 520ms ease;
@@ -53,18 +47,18 @@
 .premium-workflow-grid .workflow-visual-card:focus-visible {
   transform: translateY(-10px) scale(1.012);
   border-color: rgba(15, 143, 134, 0.28);
-  background: rgba(255, 255, 255, 0.99);
-  box-shadow: 0 32px 82px rgba(15, 32, 51, 0.15);
+  box-shadow: 0 34px 86px rgba(15, 32, 51, 0.15);
 }
 
 .premium-workflow-grid .workflow-visual-card:hover::before,
-.premium-workflow-grid .workflow-visual-card:focus-visible::before {
+.premium-workflow-grid .workflow-visual-card:focus-visible::before,
+.premium-workflow-grid .workflow-visual-card:hover::after,
+.premium-workflow-grid .workflow-visual-card:focus-visible::after {
   opacity: 1;
 }
 
 .premium-workflow-grid .workflow-visual-card:hover::after,
 .premium-workflow-grid .workflow-visual-card:focus-visible::after {
-  opacity: 1;
   transform: translateX(70%);
 }
 
@@ -75,12 +69,13 @@
 
 .workflow-visual-media {
   position: relative;
-  min-height: 330px;
+  min-height: 332px;
   overflow: hidden;
-  border-radius: 34px 34px 0 0;
+  border-radius: 36px 36px 0 0;
   background:
-    radial-gradient(circle at 30% 16%, rgba(15, 143, 134, 0.1), transparent 30%),
-    linear-gradient(180deg, #f8fcfd 0%, #eaf6f8 100%);
+    radial-gradient(circle at 22% 18%, rgba(15, 143, 134, 0.11), transparent 26%),
+    radial-gradient(circle at 78% 24%, rgba(52, 199, 89, 0.11), transparent 26%),
+    linear-gradient(180deg, #fbfeff 0%, #eaf6f8 100%);
 }
 
 .workflow-visual-media::after {
@@ -92,179 +87,187 @@
   opacity: 0.8;
 }
 
-.workflow-visual-media img {
-  width: 100%;
-  height: 100%;
-  min-height: 330px;
-  display: block;
-  object-fit: cover;
-  transform: scale(1.01);
-  transition: transform 520ms ease, filter 260ms ease;
-}
-
-.premium-workflow-grid .workflow-visual-card:hover .workflow-visual-media img,
-.premium-workflow-grid .workflow-visual-card:focus-visible .workflow-visual-media img {
-  transform: scale(1.055) translateY(-4px);
-  filter: saturate(1.06) contrast(1.02);
-}
-
-.premium-workflow-grid .workflow-visual-media strong {
+.premium-workflow-grid .workflow-visual-media > strong {
   position: absolute;
   top: 20px;
   left: 20px;
   width: 58px;
   height: 58px;
   border-radius: 999px;
+  display: grid;
+  place-items: center;
   background: linear-gradient(135deg, var(--fi-secondary), var(--fi-primary));
   color: #ffffff;
   font-size: 1.05rem;
   box-shadow: 0 16px 36px rgba(15, 143, 134, 0.26);
+  z-index: 5;
   transition: transform 260ms ease, box-shadow 260ms ease;
 }
 
-.premium-workflow-grid .workflow-visual-card:hover .workflow-visual-media strong,
-.premium-workflow-grid .workflow-visual-card:focus-visible .workflow-visual-media strong {
+.premium-workflow-grid .workflow-visual-card:hover .workflow-visual-media > strong,
+.premium-workflow-grid .workflow-visual-card:focus-visible .workflow-visual-media > strong {
   transform: translateY(-2px) scale(1.08);
   box-shadow: 0 18px 42px rgba(15, 143, 134, 0.36);
 }
 
-.workflow-visual-copy {
-  position: relative;
-  display: grid;
-  min-height: 250px;
-  align-content: start;
-  padding: clamp(24px, 2.2vw, 32px);
+.workflow-scene {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  transform: scale(1);
+  transition: transform 520ms ease, filter 260ms ease;
 }
 
-.workflow-visual-copy::after {
+.premium-workflow-grid .workflow-visual-card:hover .workflow-scene,
+.premium-workflow-grid .workflow-visual-card:focus-visible .workflow-scene {
+  transform: scale(1.035) translateY(-3px);
+  filter: saturate(1.04) contrast(1.02);
+}
+
+.scene-orb {
+  position: absolute;
+  border-radius: 999px;
+  background: rgba(15, 143, 134, 0.08);
+}
+
+.scene-orb.one { width: 220px; height: 220px; left: 11%; bottom: -78px; }
+.scene-orb.two { width: 150px; height: 150px; right: 12%; top: 54px; background: rgba(52, 199, 89, 0.08); }
+
+.scene-plant {
+  position: absolute;
+  left: 40px;
+  bottom: 72px;
+  width: 78px;
+  height: 96px;
+  border-bottom: 34px solid #a7d1e8;
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  border-radius: 0 0 16px 16px;
+}
+
+.scene-plant.right { left: auto; right: 54px; bottom: 56px; }
+.scene-plant::before,
+.scene-plant::after {
   content: "";
   position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: 3px;
-  background: linear-gradient(90deg, rgba(52, 199, 89, 0.8), rgba(15, 143, 134, 0.55), transparent);
-  opacity: 0.9;
+  bottom: 24px;
+  width: 30px;
+  height: 72px;
+  border-radius: 999px 999px 8px 999px;
+  background: #34c759;
+  transform: rotate(-28deg);
+  opacity: 0.82;
 }
+.scene-plant::after { left: 34px; height: 82px; background: #0f8f86; transform: rotate(28deg); opacity: 0.74; }
 
-.premium-workflow-grid .workflow-visual-copy h3 {
-  max-width: 92%;
-  margin: 0 0 12px;
-  color: var(--fi-ink);
-  font-size: clamp(1.55rem, 2.05vw, 2rem);
-  line-height: 1.06;
-  letter-spacing: -0.05em;
-  transition: color 220ms ease;
+/* Card 01: physio creates plan */
+.scene-poster {
+  position: absolute;
+  width: 108px;
+  height: 144px;
+  left: 45%;
+  top: 48px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.72);
+  border: 4px solid rgba(189, 225, 240, 0.78);
+  box-shadow: 0 18px 40px rgba(15, 32, 51, 0.06);
 }
+.scene-poster::before { content: ""; position: absolute; width: 42px; height: 76px; left: 31px; top: 31px; border-radius: 24px 24px 16px 16px; background: #bdd9e9; }
+.scene-poster::after { content: ""; position: absolute; width: 34px; height: 34px; left: 35px; top: 15px; border-radius: 999px; background: #bdd9e9; }
+.scene-bed { position: absolute; right: 10%; bottom: 72px; width: 178px; height: 28px; border-radius: 999px; background: #bfe3ef; }
+.scene-person { position: absolute; display: block; }
+.scene-person i, .scene-person b, .scene-person em { position: absolute; display: block; }
+.scene-person.therapist { left: 102px; bottom: 44px; width: 176px; height: 226px; }
+.scene-person.therapist i { width: 82px; height: 92px; left: 32px; top: 6px; border-radius: 54% 46% 48% 52%; background: #222936; box-shadow: -34px 44px 0 6px #222936; }
+.scene-person.therapist b { width: 62px; height: 70px; left: 74px; top: 42px; border-radius: 40px 38px 44px 38px; background: #ffbd8d; }
+.scene-person.therapist em { width: 134px; height: 130px; left: 18px; bottom: 0; border-radius: 58px 58px 12px 12px; background: linear-gradient(135deg, #0f8f86, #23a79d); }
+.scene-person.patient { right: 78px; bottom: 44px; width: 150px; height: 178px; }
+.scene-person.patient i { width: 70px; height: 72px; right: 34px; top: 0; border-radius: 44px; background: #22304a; }
+.scene-person.patient b { width: 118px; height: 104px; right: 10px; bottom: 0; border-radius: 70px 70px 8px 8px; background: #174c7c; }
+.scene-tablet { position: absolute; left: 228px; bottom: 68px; width: 160px; height: 108px; padding: 17px 16px; border-radius: 18px; background: #ffffff; border: 10px solid #172033; transform: rotate(8deg); box-shadow: 0 18px 34px rgba(15, 32, 51, 0.16); }
+.scene-tablet b { display: block; margin-bottom: 12px; color: #0f172a; font-size: 0.56rem; font-weight: 950; }
+.scene-tablet i { display: block; width: 74%; height: 8px; margin: 9px 0; border-radius: 999px; background: linear-gradient(90deg, #34c759 0 18px, #d7e6ee 18px); }
 
+/* Card 02: code + QR */
+.workflow-scene-code .scene-phone-hand { position: absolute; left: 78px; bottom: 42px; width: 160px; height: 188px; border-radius: 70px 86px 30px 30px; background: #ffbd8d; transform: rotate(8deg); }
+.scene-phone { position: absolute; left: 178px; top: 48px; width: 170px; height: 248px; padding: 34px 18px 18px; border-radius: 34px; background: #ffffff; border: 13px solid #111827; transform: rotate(8deg); box-shadow: 0 26px 55px rgba(15, 32, 51, 0.22); text-align: center; }
+.scene-phone::before { content: ""; position: absolute; top: -2px; left: 50%; width: 72px; height: 18px; border-radius: 0 0 14px 14px; background: #111827; transform: translateX(-50%); }
+.scene-phone .mini-logo { display: block; width: 44px; height: 44px; margin: 0 auto 10px; border-radius: 999px; background: conic-gradient(from 40deg, #4f7bff, #34c759, #0f8f86, #4f7bff); }
+.scene-phone strong { display: block; margin-bottom: 16px; color: #0f172a; font-size: 0.9rem; font-weight: 950; }
+.scene-phone i { display: block; margin-bottom: 13px; padding: 10px 8px; border-radius: 12px; color: #8aa0b3; font-size: 0.68rem; font-style: normal; border: 1px solid #d9e8f0; background: #fbfdff; }
+.scene-phone em { display: block; padding: 12px 10px; border-radius: 13px; background: #34c759; color: #ffffff; font-size: 0.82rem; font-style: normal; font-weight: 950; }
+.scene-phone small { display: block; margin-top: 19px; color: #64748b; font-size: 0.57rem; font-weight: 800; }
+.scene-qr-bubble { position: absolute; right: 76px; top: 72px; width: 142px; height: 102px; border-radius: 42px; background: #ffffff; border: 3px solid #274c77; box-shadow: 0 22px 48px rgba(15, 32, 51, 0.1); }
+.scene-qr-bubble::after { content: ""; position: absolute; left: 20px; bottom: -28px; width: 44px; height: 44px; background: #ffffff; border-left: 3px solid #274c77; border-bottom: 3px solid #274c77; transform: rotate(-35deg); }
+.scene-qr-bubble i { position: absolute; width: 20px; height: 20px; background: #111827; }
+.scene-qr-bubble i:nth-child(1) { left: 30px; top: 28px; }
+.scene-qr-bubble i:nth-child(2) { left: 62px; top: 28px; width: 12px; }
+.scene-qr-bubble i:nth-child(3) { right: 30px; top: 28px; }
+.scene-qr-bubble i:nth-child(4) { left: 30px; bottom: 25px; }
+.scene-qr-bubble i:nth-child(5) { right: 34px; bottom: 25px; width: 38px; }
+
+/* Card 03: dashboard */
+.scene-laptop { position: absolute; left: 70px; right: 64px; top: 62px; height: 204px; border-radius: 18px; background: #ffffff; border: 15px solid #101827; box-shadow: 0 28px 60px rgba(15, 32, 51, 0.2); }
+.scene-laptop::after { content: ""; position: absolute; left: -16px; right: -16px; bottom: -46px; height: 28px; border-radius: 0 0 18px 18px; background: #8198b5; }
+.scene-laptop .side { position: absolute; left: 0; top: 0; bottom: 0; width: 86px; background: linear-gradient(180deg, #07435c, #0b6171); }
+.scene-laptop .side::before, .scene-laptop .side::after { content: ""; position: absolute; left: 22px; width: 34px; height: 14px; border-radius: 999px; background: rgba(255, 255, 255, 0.28); box-shadow: 0 44px 0 rgba(255, 255, 255, 0.24), 0 88px 0 rgba(255, 255, 255, 0.2); }
+.scene-laptop .side::before { top: 34px; }
+.scene-laptop .side::after { top: 166px; }
+.scene-laptop > strong { position: absolute; left: 112px; top: 24px; color: #0f172a; font-size: 1.22rem; font-weight: 950; }
+.scene-laptop .chart { position: absolute; left: 112px; top: 74px; width: 178px; height: 90px; border-radius: 16px; background: #ffffff; border: 1px solid #e2e8f0; }
+.scene-laptop .chart::before { content: ""; position: absolute; left: 22px; right: 22px; top: 50px; height: 4px; border-radius: 999px; background: linear-gradient(90deg, #34c759, #0f8f86, #34c759); transform: rotate(-8deg); }
+.scene-laptop .chart i { position: absolute; width: 10px; height: 10px; border-radius: 999px; background: #34c759; }
+.scene-laptop .chart i:nth-child(1) { left: 28px; top: 55px; }
+.scene-laptop .chart i:nth-child(2) { left: 82px; top: 38px; }
+.scene-laptop .chart i:nth-child(3) { right: 28px; top: 28px; }
+.scene-laptop .ring { position: absolute; right: 34px; top: 74px; width: 86px; height: 86px; display: grid; place-items: center; border-radius: 999px; background: radial-gradient(circle, #ffffff 0 48%, transparent 49%), conic-gradient(#0f8f86 0 85%, #dbeafe 85% 100%); color: #0f172a; font-size: 1rem; font-weight: 950; }
+.scene-laptop em { position: absolute; left: 112px; right: 34px; bottom: 18px; padding: 12px 16px; border-radius: 14px; background: #f1f7fb; color: #486276; font-style: normal; font-size: 0.75rem; font-weight: 850; }
+.scene-check { position: absolute; right: 70px; top: 210px; width: 66px; height: 66px; display: grid; place-items: center; border-radius: 999px; background: #34c759; color: white; font-size: 2.2rem; font-weight: 950; box-shadow: 0 18px 38px rgba(52, 199, 89, 0.32); }
+
+.workflow-visual-copy { position: relative; display: grid; min-height: 250px; align-content: start; padding: clamp(24px, 2.2vw, 32px); }
+.workflow-visual-copy::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 3px; background: linear-gradient(90deg, rgba(52, 199, 89, 0.8), rgba(15, 143, 134, 0.55), transparent); opacity: 0.9; }
+.premium-workflow-grid .workflow-visual-copy h3 { max-width: 92%; margin: 0 0 12px; color: var(--fi-ink); font-size: clamp(1.55rem, 2.05vw, 2rem); line-height: 1.06; letter-spacing: -0.05em; transition: color 220ms ease; }
 .premium-workflow-grid .workflow-visual-card:hover .workflow-visual-copy h3,
-.premium-workflow-grid .workflow-visual-card:focus-visible .workflow-visual-copy h3 {
-  color: var(--fi-primary-strong);
-}
-
-.premium-workflow-grid .workflow-visual-copy p {
-  max-width: 96%;
-  margin: 0;
-  color: var(--fi-muted-2);
-  font-size: 0.98rem;
-  line-height: 1.68;
-}
-
-.workflow-card-footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  margin-top: auto;
-  padding-top: 24px;
-}
-
-.workflow-visual-icon {
-  width: 48px;
-  height: 48px;
-  display: inline-grid;
-  place-items: center;
-  border-radius: 18px;
-  background: rgba(15, 143, 134, 0.1);
-  color: var(--fi-primary-strong);
-  font-size: 1.25rem;
-  font-weight: 950;
-  transition: transform 220ms ease, background 220ms ease;
-}
-
-.workflow-visual-cta {
-  width: fit-content;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  color: var(--fi-primary-strong);
-  font-size: 0.9rem;
-  font-weight: 950;
-  opacity: 0;
-  transform: translateY(8px);
-  transition: opacity 220ms ease, transform 220ms ease;
-}
-
+.premium-workflow-grid .workflow-visual-card:focus-visible .workflow-visual-copy h3 { color: var(--fi-primary-strong); }
+.premium-workflow-grid .workflow-visual-copy p { max-width: 96%; margin: 0; color: var(--fi-muted-2); font-size: 0.98rem; line-height: 1.68; }
+.workflow-card-footer { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-top: auto; padding-top: 24px; }
+.workflow-visual-icon { width: 48px; height: 48px; display: inline-grid; place-items: center; border-radius: 18px; background: rgba(15, 143, 134, 0.1); color: var(--fi-primary-strong); font-size: 1.25rem; font-weight: 950; transition: transform 220ms ease, background 220ms ease; }
+.workflow-visual-cta { width: fit-content; display: inline-flex; align-items: center; gap: 6px; color: var(--fi-primary-strong); font-size: 0.9rem; font-weight: 950; opacity: 0; transform: translateY(8px); transition: opacity 220ms ease, transform 220ms ease; }
 .premium-workflow-grid .workflow-visual-card:hover .workflow-visual-icon,
-.premium-workflow-grid .workflow-visual-card:focus-visible .workflow-visual-icon {
-  transform: translateY(-2px) rotate(-2deg);
-  background: rgba(15, 143, 134, 0.16);
-}
-
+.premium-workflow-grid .workflow-visual-card:focus-visible .workflow-visual-icon { transform: translateY(-2px) rotate(-2deg); background: rgba(15, 143, 134, 0.16); }
 .premium-workflow-grid .workflow-visual-card:hover .workflow-visual-cta,
-.premium-workflow-grid .workflow-visual-card:focus-visible .workflow-visual-cta {
-  opacity: 1;
-  transform: translateY(0);
-}
+.premium-workflow-grid .workflow-visual-card:focus-visible .workflow-visual-cta { opacity: 1; transform: translateY(0); }
 
 @media (prefers-reduced-motion: reduce) {
   .premium-workflow-grid .workflow-visual-card,
   .premium-workflow-grid .workflow-visual-card::before,
   .premium-workflow-grid .workflow-visual-card::after,
-  .workflow-visual-media img,
-  .premium-workflow-grid .workflow-visual-media strong,
+  .workflow-scene,
+  .premium-workflow-grid .workflow-visual-media > strong,
   .workflow-visual-copy h3,
   .workflow-visual-icon,
-  .workflow-visual-cta {
-    transition: none !important;
-  }
-
+  .workflow-visual-cta { transition: none !important; }
   .premium-workflow-grid .workflow-visual-card:hover,
   .premium-workflow-grid .workflow-visual-card:focus-visible,
-  .premium-workflow-grid .workflow-visual-card:hover .workflow-visual-media img,
-  .premium-workflow-grid .workflow-visual-card:focus-visible .workflow-visual-media img {
-    transform: none;
-  }
+  .premium-workflow-grid .workflow-visual-card:hover .workflow-scene,
+  .premium-workflow-grid .workflow-visual-card:focus-visible .workflow-scene { transform: none; }
 }
 
 @media (max-width: 1080px) {
-  .workflow-visual-media,
-  .workflow-visual-media img {
-    min-height: 360px;
-  }
-
-  .workflow-visual-copy {
-    min-height: 0;
-  }
-
-  .workflow-visual-cta {
-    opacity: 1;
-    transform: none;
-  }
+  .workflow-visual-media { min-height: 360px; }
+  .workflow-visual-copy { min-height: 0; }
+  .workflow-visual-cta { opacity: 1; transform: none; }
 }
 
 @media (max-width: 620px) {
   .premium-workflow-grid .workflow-visual-card,
-  .workflow-visual-media {
-    border-radius: 28px;
-  }
-
-  .workflow-visual-media,
-  .workflow-visual-media img {
-    min-height: 250px;
-  }
-
-  .workflow-visual-copy {
-    padding: 20px 20px 24px;
-  }
+  .workflow-visual-media { border-radius: 28px; }
+  .workflow-visual-media { min-height: 255px; }
+  .workflow-visual-copy { padding: 20px 20px 24px; }
+  .scene-laptop { left: 38px; right: 30px; transform: scale(0.86); transform-origin: top center; }
+  .scene-phone { left: 145px; transform: rotate(8deg) scale(0.88); transform-origin: top center; }
+  .scene-qr-bubble { right: 34px; transform: scale(0.82); transform-origin: top right; }
+  .scene-person.therapist { left: 62px; transform: scale(0.86); transform-origin: bottom left; }
+  .scene-person.patient { right: 34px; transform: scale(0.84); transform-origin: bottom right; }
+  .scene-tablet { left: 168px; transform: rotate(8deg) scale(0.86); }
 }
