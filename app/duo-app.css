@@ -1,0 +1,350 @@
+.duo-app-page {
+  --duo-green: #58cc02;
+  --duo-green-dark: #46a302;
+  --duo-blue: #1cb0f6;
+  --duo-yellow: #ffc800;
+  --duo-red: #ff4b4b;
+  --duo-purple: #ce82ff;
+  --duo-ink: #102033;
+  --duo-muted: #64748b;
+  background:
+    radial-gradient(circle at 18% 0%, rgba(88, 204, 2, 0.14), transparent 32%),
+    radial-gradient(circle at 88% 6%, rgba(28, 176, 246, 0.12), transparent 28%),
+    linear-gradient(135deg, #f7fff2, #f6fbff 48%, #fffef4);
+}
+
+.duo-app-shell {
+  grid-template-columns: 420px minmax(0, 1fr);
+}
+
+.duo-phone {
+  background: #eef8ea;
+  border: 10px solid #0f172a;
+}
+
+.duo-status,
+.duo-header {
+  background: #fff;
+  color: var(--duo-ink);
+}
+
+.duo-status {
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.duo-header a,
+.duo-header > span {
+  background: #eef8ea;
+  color: var(--duo-green-dark);
+  font-weight: 1000;
+}
+
+.duo-header div span {
+  color: var(--duo-ink);
+}
+
+.duo-header small {
+  color: var(--duo-muted);
+}
+
+.duo-progress-top {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 9px;
+  padding: 12px 14px;
+  background: #fff;
+}
+
+.duo-progress-top div {
+  min-height: 58px;
+  display: grid;
+  place-items: center;
+  gap: 1px;
+  border-radius: 16px;
+  background: #f8fafc;
+  border: 2px solid #e5e7eb;
+  box-shadow: 0 4px 0 #dbe4ee;
+}
+
+.duo-progress-top span {
+  font-size: 18px;
+}
+
+.duo-progress-top b {
+  color: var(--duo-ink);
+  line-height: 1;
+}
+
+.duo-progress-top small {
+  color: var(--duo-muted);
+  font-size: 10px;
+  font-weight: 900;
+}
+
+.duo-lesson-hero {
+  margin: 0 12px 12px;
+  border-radius: 26px;
+  background: linear-gradient(135deg, var(--duo-green), #8ee000);
+  color: #fff;
+  border: 0;
+  box-shadow: 0 8px 0 #46a302, 0 20px 44px rgba(70, 163, 2, 0.22);
+}
+
+.duo-lesson-hero .patient-pro-pill {
+  background: rgba(255, 255, 255, 0.22);
+  color: #fff;
+}
+
+.duo-lesson-hero h1,
+.duo-lesson-hero p,
+.duo-lesson-hero .patient-pro-progress-copy span,
+.duo-lesson-hero .patient-pro-progress-copy b {
+  color: #fff;
+}
+
+.duo-lesson-hero .patient-pro-progress-line {
+  background: rgba(255, 255, 255, 0.32);
+}
+
+.duo-lesson-hero .patient-pro-progress-line i {
+  background: #fff;
+}
+
+.duo-main-cta {
+  margin: 16px 0 4px;
+  min-height: 52px;
+  display: grid;
+  place-items: center;
+  border-radius: 18px;
+  background: #fff;
+  color: var(--duo-green-dark);
+  font-weight: 1000;
+  text-decoration: none;
+  box-shadow: 0 5px 0 rgba(255, 255, 255, 0.5);
+}
+
+.duo-simple-score-grid article {
+  border: 2px solid #e5e7eb;
+  box-shadow: 0 4px 0 #dbe4ee;
+}
+
+.duo-simple-score-grid article:first-child strong {
+  color: var(--duo-blue);
+}
+
+.duo-simple-score-grid article:nth-child(2) strong {
+  color: var(--duo-red);
+}
+
+.duo-warning {
+  margin: 0 12px 12px;
+  border-radius: 18px;
+  border: 2px solid #ffd4d4;
+  background: #fff1f1;
+  color: #b91c1c;
+  box-shadow: 0 4px 0 #ffd4d4;
+}
+
+.duo-path-head {
+  padding: 18px 18px 10px;
+  background: #fff;
+}
+
+.duo-path-head h2 {
+  font-size: 22px;
+}
+
+.duo-path-head > span {
+  background: #ddf4ff;
+  color: var(--duo-blue);
+  box-shadow: 0 3px 0 #b9e6ff;
+}
+
+.duo-rehab-path {
+  position: relative;
+  display: grid;
+  gap: 18px;
+  padding: 12px 18px 20px;
+  background: #fff;
+}
+
+.duo-rehab-path::before {
+  content: "";
+  position: absolute;
+  left: 42px;
+  top: 18px;
+  bottom: 26px;
+  width: 8px;
+  border-radius: 999px;
+  background: #e5e7eb;
+}
+
+.duo-lesson-node {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: 58px 1fr;
+  gap: 12px;
+  align-items: start;
+}
+
+.duo-lesson-node:nth-child(odd) {
+  transform: translateX(12px);
+}
+
+.duo-lesson-node:nth-child(even) {
+  transform: translateX(-2px);
+}
+
+.duo-lesson-circle {
+  width: 58px;
+  height: 58px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: #f1f5f9;
+  border: 3px solid #e5e7eb;
+  box-shadow: 0 6px 0 #dbe4ee;
+  color: var(--duo-muted);
+  font-size: 22px;
+  font-weight: 1000;
+}
+
+.duo-lesson-node.done .duo-lesson-circle,
+.duo-lesson-node.current .duo-lesson-circle {
+  background: var(--duo-green);
+  border-color: var(--duo-green);
+  box-shadow: 0 6px 0 var(--duo-green-dark);
+  color: #fff;
+}
+
+.duo-lesson-node.locked {
+  opacity: 0.58;
+}
+
+.duo-lesson-card {
+  padding: 14px;
+  border-radius: 20px;
+  border: 2px solid #e5e7eb;
+  background: #fff;
+  box-shadow: 0 5px 0 #dbe4ee;
+}
+
+.duo-lesson-node.current .duo-lesson-card {
+  border-color: #b8ee88;
+  box-shadow: 0 5px 0 #b8ee88;
+}
+
+.duo-lesson-title-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.duo-lesson-title-row span {
+  display: inline-flex;
+  color: var(--duo-green-dark);
+  font-size: 11px;
+  font-weight: 1000;
+  text-transform: uppercase;
+}
+
+.duo-lesson-title-row h3 {
+  margin: 4px 0 0;
+  color: var(--duo-ink);
+  font-size: 16px;
+  letter-spacing: -0.02em;
+}
+
+.duo-lesson-title-row em {
+  padding: 6px 8px;
+  border-radius: 999px;
+  background: #e0f2fe;
+  color: var(--duo-blue);
+  font-style: normal;
+  font-size: 11px;
+  font-weight: 1000;
+}
+
+.duo-lesson-card p,
+.duo-lesson-card small {
+  color: var(--duo-muted);
+  font-size: 12px;
+}
+
+.duo-lesson-card details {
+  margin-top: 10px;
+}
+
+.duo-lesson-card summary {
+  cursor: pointer;
+  color: var(--duo-green-dark);
+  font-weight: 1000;
+}
+
+.duo-complete-form button,
+.duo-bottom-nav .active,
+.duo-next-card a {
+  background: var(--duo-green) !important;
+  color: #fff !important;
+}
+
+.duo-complete-form button,
+.duo-next-card a {
+  box-shadow: 0 4px 0 var(--duo-green-dark);
+}
+
+.duo-safety-card {
+  background: #fff;
+  border-top: 2px solid #e5e7eb;
+}
+
+.duo-bottom-nav {
+  border: 2px solid #e5e7eb;
+  box-shadow: 0 -8px 0 rgba(219, 228, 238, 0.72), 0 -18px 38px rgba(15, 32, 51, 0.10);
+}
+
+.duo-bottom-nav a,
+.duo-bottom-nav button {
+  font-size: 18px;
+}
+
+.duo-bottom-nav .active {
+  border-radius: 16px;
+  margin: 8px;
+}
+
+.duo-side-panel .patient-pro-welcome,
+.duo-code-card,
+.duo-insights article,
+.duo-day-strip,
+.duo-next-card {
+  border: 2px solid #e5e7eb;
+  box-shadow: 0 5px 0 #dbe4ee;
+}
+
+.duo-code-card {
+  background: linear-gradient(135deg, #fff, #f7fff2);
+}
+
+.duo-code-card strong {
+  color: var(--duo-green-dark);
+}
+
+.duo-day-strip span.active {
+  background: #ddf8c8;
+  color: var(--duo-green-dark);
+  box-shadow: 0 3px 0 #b8ee88;
+}
+
+@media (max-width: 520px) {
+  .duo-phone {
+    border: 0;
+  }
+
+  .duo-lesson-node:nth-child(odd),
+  .duo-lesson-node:nth-child(even) {
+    transform: none;
+  }
+}
