@@ -48,7 +48,7 @@ Para lansimit publik:
 
 ## Deployment note
 
-Admin route guards now live in `proxy.ts` only. `middleware.ts` is intentionally not used.
+Admin route guards now live in `proxy.ts` only. `middleware.ts` is intentionally not used. This note also confirms the latest `main` branch should trigger a clean Vercel production rebuild.
 
 ## Figma design
 
