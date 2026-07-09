@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
 import { SiteFooter } from "@/components/SiteFooter";
 import "./globals.css";
+import "./design-system.css";
 import "./brand.css";
 import "./brand-uploaded.css";
 import "./phase3.css";
@@ -16,6 +17,9 @@ import "./patient-pro.css";
 import "./duo-app.css";
 import "./home-refresh.css";
 import "./ui-friendly.css";
+import "./patient-login-refresh.css";
+import "./physio-dashboard-refresh.css";
+import "./admin-dashboard-refresh.css";
 
 export const metadata: Metadata = {
   title: "Fizioterapia ime – Digital physiotherapy platform",

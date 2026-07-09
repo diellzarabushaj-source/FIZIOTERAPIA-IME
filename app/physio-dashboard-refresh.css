@@ -1,0 +1,515 @@
+/* Physio dashboard refresh: clinical focus without changing data/actions. */
+
+.physio-dashboard-page {
+  background:
+    radial-gradient(circle at 4% 2%, rgba(15, 143, 134, 0.16), transparent 30%),
+    radial-gradient(circle at 96% 0%, rgba(52, 199, 89, 0.12), transparent 28%),
+    linear-gradient(180deg, #fbfeff 0%, #f6fbfb 48%, #eef8f7 100%) !important;
+}
+
+.physio-dashboard-page .clinic-pro-shell {
+  width: min(1480px, calc(100vw - 28px)) !important;
+  gap: 18px !important;
+  align-items: start !important;
+}
+
+.physio-dashboard-page .clinic-pro-sidebar {
+  position: sticky;
+  top: 14px;
+  min-height: calc(100vh - 28px) !important;
+  border-radius: 34px !important;
+  background: rgba(255, 255, 255, 0.88) !important;
+  border: 1px solid var(--fi-line-soft) !important;
+  box-shadow: var(--fi-shadow-sm) !important;
+  backdrop-filter: saturate(180%) blur(18px);
+  -webkit-backdrop-filter: saturate(180%) blur(18px);
+}
+
+.physio-dashboard-page .clinic-pro-brand {
+  align-items: flex-start !important;
+  padding-bottom: 4px;
+}
+
+.physio-dashboard-page .clinic-pro-brand .brand-image-logo {
+  width: 136px !important;
+  max-height: 34px !important;
+}
+
+.physio-dashboard-page .clinic-pro-brand small {
+  max-width: 190px;
+  color: var(--fi-muted) !important;
+  line-height: 1.45;
+}
+
+.physio-dashboard-page .clinic-pro-menu {
+  gap: 7px !important;
+}
+
+.physio-dashboard-page .clinic-pro-menu a {
+  min-height: 44px;
+  border-radius: 17px !important;
+  color: var(--fi-muted) !important;
+  font-weight: 900 !important;
+}
+
+.physio-dashboard-page .clinic-pro-menu a span {
+  width: 26px;
+  height: 26px;
+  display: inline-grid;
+  place-items: center;
+  border-radius: 10px;
+  background: rgba(15, 143, 134, 0.1);
+  color: var(--fi-primary-strong);
+  font-size: 0.75rem;
+}
+
+.physio-dashboard-page .clinic-pro-menu a.active,
+.physio-dashboard-page .clinic-pro-menu a:hover {
+  color: var(--fi-ink) !important;
+  background: linear-gradient(135deg, rgba(15, 143, 134, 0.12), rgba(52, 199, 89, 0.08)) !important;
+}
+
+.physio-dashboard-page .clinic-help-card {
+  border-radius: 24px !important;
+  border: 1px solid rgba(15, 143, 134, 0.14) !important;
+  background: linear-gradient(145deg, #ffffff, var(--fi-primary-soft)) !important;
+  box-shadow: none !important;
+}
+
+.physio-dashboard-page .clinic-help-card b {
+  color: var(--fi-ink) !important;
+}
+
+.physio-dashboard-page .clinic-help-card p {
+  color: var(--fi-muted) !important;
+}
+
+.physio-dashboard-page .clinic-pro-main {
+  gap: 16px !important;
+}
+
+.physio-dashboard-page .clinic-pro-topbar {
+  position: sticky;
+  top: 14px;
+  z-index: 20;
+  border-radius: 34px !important;
+  border: 1px solid var(--fi-line-soft) !important;
+  background: rgba(255, 255, 255, 0.82) !important;
+  box-shadow: var(--fi-shadow-sm) !important;
+  backdrop-filter: saturate(180%) blur(18px);
+  -webkit-backdrop-filter: saturate(180%) blur(18px);
+}
+
+.physio-dashboard-page .clinic-eyebrow,
+.physio-dashboard-page .mini-badge,
+.physio-dashboard-page .badge {
+  background: var(--fi-primary-soft) !important;
+  border: 1px solid rgba(15, 143, 134, 0.18) !important;
+  color: var(--fi-primary-strong) !important;
+}
+
+.physio-dashboard-page .clinic-pro-topbar h1 {
+  color: var(--fi-ink) !important;
+  font-size: clamp(2rem, 3.8vw, 4rem) !important;
+  line-height: 0.98 !important;
+  letter-spacing: -0.065em !important;
+}
+
+.physio-dashboard-page .clinic-pro-topbar p {
+  color: var(--fi-muted) !important;
+  font-size: 1rem !important;
+}
+
+.physio-dashboard-page .clinic-top-actions {
+  align-items: center !important;
+}
+
+.physio-dashboard-page .clinic-date-pill,
+.physio-dashboard-page .clinic-notification-dot,
+.physio-dashboard-page .clinic-profile-pill {
+  border: 1px solid var(--fi-line-soft) !important;
+  background: rgba(255, 255, 255, 0.92) !important;
+  box-shadow: none !important;
+}
+
+.physio-dashboard-page .clinic-notification-dot span {
+  background: var(--fi-danger) !important;
+}
+
+.physio-dashboard-page .clinic-stat-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  gap: 12px !important;
+}
+
+.physio-dashboard-page .clinic-stat-card {
+  min-height: 168px !important;
+  border-radius: 28px !important;
+  border: 1px solid var(--fi-line-soft) !important;
+  background: rgba(255, 255, 255, 0.9) !important;
+  box-shadow: var(--fi-shadow-xs) !important;
+}
+
+.physio-dashboard-page .clinic-stat-card:hover,
+.physio-dashboard-page .clinic-panel:hover,
+.physio-dashboard-page .clinic-form-panel:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--fi-shadow-sm) !important;
+}
+
+.physio-dashboard-page .clinic-stat-card span {
+  color: var(--fi-muted) !important;
+  font-weight: 900 !important;
+}
+
+.physio-dashboard-page .clinic-stat-card strong {
+  color: var(--fi-ink) !important;
+  letter-spacing: -0.06em !important;
+}
+
+.physio-dashboard-page .clinic-stat-card small {
+  color: var(--fi-muted-2) !important;
+  line-height: 1.4;
+}
+
+.physio-dashboard-page .clinic-stat-icon {
+  box-shadow: none !important;
+}
+
+.physio-dashboard-page .clinic-alert-banner {
+  border-radius: 26px !important;
+  border: 1px solid rgba(15, 143, 134, 0.16) !important;
+  background: linear-gradient(135deg, #ffffff, var(--fi-primary-soft)) !important;
+  box-shadow: var(--fi-shadow-xs) !important;
+}
+
+.physio-dashboard-page .clinic-alert-banner.danger {
+  border-color: rgba(220, 38, 38, 0.2) !important;
+  background: linear-gradient(135deg, #ffffff, var(--fi-danger-soft)) !important;
+}
+
+.physio-dashboard-page .clinic-alert-banner b {
+  color: var(--fi-ink) !important;
+}
+
+.physio-dashboard-page .clinic-alert-banner span {
+  color: var(--fi-muted) !important;
+}
+
+.physio-dashboard-page .clinic-alert-banner a {
+  color: var(--fi-primary-strong) !important;
+  font-weight: 950 !important;
+}
+
+.physio-dashboard-page .clinic-content-grid {
+  grid-template-columns: minmax(0, 1.45fr) minmax(340px, 0.55fr) !important;
+  gap: 16px !important;
+}
+
+.physio-dashboard-page .clinic-panel,
+.physio-dashboard-page .clinic-form-panel,
+.physio-dashboard-page .clinic-phone-preview-card,
+.physio-dashboard-page .clinic-paywall-card,
+.physio-dashboard-page .clinic-action-zone {
+  border: 1px solid var(--fi-line-soft) !important;
+  background: rgba(255, 255, 255, 0.9) !important;
+  border-radius: 30px !important;
+  box-shadow: var(--fi-shadow-xs) !important;
+}
+
+.physio-dashboard-page .clinic-panel-large {
+  overflow: hidden;
+}
+
+.physio-dashboard-page .clinic-section-head {
+  gap: 14px !important;
+  border-bottom: 1px solid rgba(226, 232, 240, 0.74);
+  padding-bottom: 16px;
+  margin-bottom: 16px;
+}
+
+.physio-dashboard-page .clinic-section-head h2,
+.physio-dashboard-page .clinic-form-panel h2,
+.physio-dashboard-page .clinic-paywall-card h2,
+.physio-dashboard-page .green-soft-card h2 {
+  color: var(--fi-ink) !important;
+  letter-spacing: -0.055em !important;
+}
+
+.physio-dashboard-page .clinic-section-head p,
+.physio-dashboard-page .clinic-form-panel p,
+.physio-dashboard-page .clinic-panel p {
+  color: var(--fi-muted) !important;
+  line-height: 1.65;
+}
+
+.physio-dashboard-page .clinic-outline-button,
+.physio-dashboard-page .clinic-table-action {
+  min-height: 38px !important;
+  border-radius: var(--fi-radius-pill) !important;
+  border: 1px solid rgba(15, 143, 134, 0.18) !important;
+  background: rgba(255, 255, 255, 0.92) !important;
+  color: var(--fi-primary-strong) !important;
+  box-shadow: none !important;
+}
+
+.physio-dashboard-page .clinic-table-wrap {
+  border-radius: 24px !important;
+  border: 1px solid var(--fi-line-soft) !important;
+  overflow: auto !important;
+  background: #ffffff !important;
+}
+
+.physio-dashboard-page .clinic-table {
+  min-width: 920px;
+}
+
+.physio-dashboard-page .clinic-table th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  color: var(--fi-muted-2) !important;
+  background: #f8fafc !important;
+  font-size: 0.73rem !important;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.physio-dashboard-page .clinic-table td {
+  vertical-align: middle;
+  color: var(--fi-ink-soft) !important;
+}
+
+.physio-dashboard-page .clinic-table tr:hover td {
+  background: rgba(15, 143, 134, 0.035);
+}
+
+.physio-dashboard-page .clinic-patient-cell span {
+  background: linear-gradient(135deg, var(--fi-primary), var(--fi-secondary)) !important;
+  color: #ffffff !important;
+  box-shadow: 0 8px 18px rgba(15, 143, 134, 0.18);
+}
+
+.physio-dashboard-page .clinic-patient-cell b {
+  color: var(--fi-ink) !important;
+}
+
+.physio-dashboard-page .clinic-patient-cell small {
+  color: var(--fi-muted-2) !important;
+}
+
+.physio-dashboard-page .clinic-status {
+  min-height: 28px;
+  display: inline-flex;
+  align-items: center;
+  border-radius: var(--fi-radius-pill) !important;
+  padding: 0 10px !important;
+  font-size: 0.74rem !important;
+}
+
+.physio-dashboard-page .clinic-status.active {
+  color: #166534 !important;
+  background: var(--fi-success-soft) !important;
+}
+
+.physio-dashboard-page .clinic-status.waiting {
+  color: #92400e !important;
+  background: #fef3c7 !important;
+}
+
+.physio-dashboard-page .code-chip {
+  border-radius: var(--fi-radius-pill) !important;
+  background: #f1f5f9 !important;
+  color: var(--fi-ink-soft) !important;
+  letter-spacing: 0.05em;
+}
+
+.physio-dashboard-page .clinic-phone-preview-card {
+  align-self: start;
+  position: sticky;
+  top: 128px;
+}
+
+.physio-dashboard-page .clinic-phone-frame {
+  border-color: #0b1220 !important;
+  box-shadow: 0 24px 70px rgba(15, 23, 42, 0.2) !important;
+}
+
+.physio-dashboard-page .clinic-phone-exercise {
+  border-radius: 18px !important;
+}
+
+.physio-dashboard-page .clinic-phone-exercise span {
+  background: var(--fi-primary-soft) !important;
+  color: var(--fi-primary-strong) !important;
+}
+
+.physio-dashboard-page .clinic-phone-note {
+  border-radius: 18px !important;
+  background: var(--fi-warning-soft) !important;
+  color: #92400e !important;
+  border: 1px solid rgba(245, 158, 11, 0.18);
+}
+
+.physio-dashboard-page .clinic-lower-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 14px !important;
+}
+
+.physio-dashboard-page .clinic-line-chart,
+.physio-dashboard-page .clinic-donut {
+  background: linear-gradient(135deg, var(--fi-primary-soft), #ffffff) !important;
+}
+
+.physio-dashboard-page .clinic-action-zone {
+  grid-template-columns: minmax(340px, 0.82fr) minmax(0, 1.18fr) !important;
+  gap: 16px !important;
+  padding: 0 !important;
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+.physio-dashboard-page .clinic-form-panel,
+.physio-dashboard-page .clinic-action-zone > .clinic-panel,
+.physio-dashboard-page .clinic-action-zone > .green-soft-card {
+  padding: clamp(18px, 2.4vw, 26px) !important;
+}
+
+.physio-dashboard-page .clinic-form-panel {
+  align-self: start;
+}
+
+.physio-dashboard-page .clinic-form-panel .label {
+  color: var(--fi-ink-soft) !important;
+  font-weight: 900 !important;
+}
+
+.physio-dashboard-page .clinic-form-panel .input {
+  min-height: 48px !important;
+  border-radius: 16px !important;
+}
+
+.physio-dashboard-page .clinic-form-panel textarea.input {
+  min-height: 118px !important;
+}
+
+.physio-dashboard-page .clinic-form-panel .button {
+  min-height: 54px !important;
+  border-radius: 18px !important;
+}
+
+.physio-dashboard-page .generated-box {
+  border-radius: 18px !important;
+  background: #f8fafc !important;
+  border-color: var(--fi-line-soft) !important;
+  color: var(--fi-muted) !important;
+}
+
+.physio-dashboard-page .program-template-grid {
+  gap: 12px !important;
+}
+
+.physio-dashboard-page .program-template-card,
+.physio-dashboard-page .clinic-library-list div {
+  border: 1px solid var(--fi-line-soft) !important;
+  background: #ffffff !important;
+  box-shadow: none !important;
+}
+
+.physio-dashboard-page .program-template-card {
+  border-radius: 22px !important;
+}
+
+.physio-dashboard-page .clinic-library-list div {
+  border-radius: 18px !important;
+}
+
+.physio-dashboard-page .green-soft-card {
+  background: linear-gradient(145deg, #ffffff, var(--fi-secondary-soft)) !important;
+  border-color: rgba(22, 163, 74, 0.18) !important;
+}
+
+@media (max-width: 1240px) {
+  .physio-dashboard-page .clinic-content-grid,
+  .physio-dashboard-page .clinic-action-zone {
+    grid-template-columns: 1fr !important;
+  }
+
+  .physio-dashboard-page .clinic-phone-preview-card {
+    position: static;
+  }
+}
+
+@media (max-width: 1040px) {
+  .physio-dashboard-page .clinic-pro-sidebar,
+  .physio-dashboard-page .clinic-pro-topbar {
+    position: static;
+  }
+
+  .physio-dashboard-page .clinic-stat-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .physio-dashboard-page .clinic-lower-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+@media (max-width: 720px) {
+  .physio-dashboard-page .clinic-pro-shell {
+    width: min(100%, calc(100vw - 14px)) !important;
+    margin-top: 7px !important;
+  }
+
+  .physio-dashboard-page .clinic-pro-sidebar,
+  .physio-dashboard-page .clinic-pro-topbar,
+  .physio-dashboard-page .clinic-panel,
+  .physio-dashboard-page .clinic-form-panel,
+  .physio-dashboard-page .clinic-phone-preview-card {
+    border-radius: 24px !important;
+  }
+
+  .physio-dashboard-page .clinic-pro-menu {
+    display: flex !important;
+    overflow-x: auto !important;
+    grid-template-columns: unset !important;
+    padding-bottom: 6px;
+  }
+
+  .physio-dashboard-page .clinic-pro-menu a {
+    flex: 0 0 auto;
+    white-space: nowrap;
+  }
+
+  .physio-dashboard-page .clinic-stat-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .physio-dashboard-page .clinic-stat-card {
+    min-height: 136px !important;
+    padding: 14px !important;
+  }
+
+  .physio-dashboard-page .clinic-stat-card strong {
+    font-size: 1.8rem !important;
+  }
+
+  .physio-dashboard-page .clinic-profile-pill span,
+  .physio-dashboard-page .clinic-date-pill {
+    display: none !important;
+  }
+}
+
+@media (max-width: 520px) {
+  .physio-dashboard-page .clinic-stat-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .physio-dashboard-page .clinic-section-head {
+    align-items: flex-start !important;
+  }
+
+  .physio-dashboard-page .clinic-table {
+    min-width: 820px;
+  }
+}

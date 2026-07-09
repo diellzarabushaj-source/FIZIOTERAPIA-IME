@@ -1,85 +1,92 @@
 import { BrandMark } from "@/components/BrandMark";
 import { patientLoginAction } from "./actions";
 
+const patientSteps = [
+  "Merr kodin nga fizioterapeuti",
+  "Shkruaje kodin këtu",
+  "Hyr direkt në planin tënd",
+];
+
+const safetyNotes = [
+  "Nuk ke nevojë për llogari.",
+  "Plani është krijuar nga fizioterapeuti.",
+  "Dhimbje 7/10+ = ndalo dhe kontakto terapistin.",
+];
+
 export default async function PatientPortalPage({ searchParams }: { searchParams?: Promise<{ error?: string; code?: string }> }) {
   const params = await searchParams;
   const error = params?.error;
   const code = params?.code || "";
 
   return (
-    <main className="page patient-login-page">
-      <nav className="top-nav patient-nav">
+    <main className="page patient-entry-page">
+      <nav className="top-nav patient-entry-nav">
         <BrandMark />
         <div className="nav-actions">
           <a href="/">Home</a>
-          <a href="/physiotherapist-portal">Fizioterapeut Portal</a>
+          <a href="/physiotherapist-portal">Fizioterapeut</a>
           <a href="/faq">FAQ</a>
         </div>
       </nav>
 
-      <section className="patient-login-hero">
-        <div className="patient-login-copy">
-          <span className="badge">Patient Portal · Vetëm me kod</span>
-          <h1>Hyr thjesht me kodin personal.</h1>
-          <p>
-            Pacienti nuk krijon llogari dhe nuk shkruan username. Fizioterapeuti gjeneron një kod unik për një pacient.
-            Pacienti e shkruan kodin ose skanon QR code dhe hyn direkt në planin e vet.
-          </p>
-          <div className="patient-login-highlights">
-            <div><strong>01</strong><span>Merr kodin unik nga fizioterapeuti</span></div>
-            <div><strong>02</strong><span>Shkruaje kodin ose skano QR</span></div>
-            <div><strong>03</strong><span>Hyn në planin personal</span></div>
-          </div>
-        </div>
-
-        <form action={patientLoginAction} className="patient-login-card">
+      <section className="patient-entry-shell fi-container">
+        <form action={patientLoginAction} className="patient-entry-card" aria-label="Hyrja e pacientit me kod">
           <BrandMark compact />
+          <span className="fi-badge">Hyrja e pacientit</span>
           <div>
-            <span className="mini-badge">Qasje e sigurt</span>
-            <h2>Hyr me kod</h2>
-            <p>Shkruaj vetëm kodin që ta ka dhënë fizioterapeuti. Asgjë tjetër.</p>
+            <h1>Hyr në planin tënd</h1>
+            <p>Kodin e merr nga fizioterapeuti. Shkruaje këtu dhe vazhdo me ushtrimet e tua.</p>
           </div>
-          <label className="label">Kodi i pacientit</label>
-          <input className="input patient-code-input" name="code" defaultValue={code} placeholder="p.sh. ARB-482193" required />
-          {error === "invalid" && <div className="role-warning">Kodi nuk është i saktë ose nuk është aktiv.</div>}
-          {error === "missing" && <div className="role-warning">Shkruaj kodin e pacientit.</div>}
-          <button className="button" type="submit">Hyr në dashboard</button>
+
+          <div className="patient-code-field">
+            <label className="fi-label" htmlFor="patient-code">Kodi i pacientit</label>
+            <input
+              id="patient-code"
+              className="fi-input patient-code-input"
+              name="code"
+              defaultValue={code}
+              placeholder="p.sh. ARB-482193"
+              autoCapitalize="characters"
+              autoComplete="one-time-code"
+              inputMode="text"
+              required
+            />
+          </div>
+
+          {error === "invalid" && <div className="fi-alert danger">Kodi nuk është i saktë ose nuk është aktiv.</div>}
+          {error === "missing" && <div className="fi-alert danger">Shkruaj kodin e pacientit.</div>}
+
+          <button className="button patient-entry-submit" type="submit">Hyr në plan</button>
+          <small className="patient-entry-helper">Nuk ke kod? Kontakto fizioterapeutin tënd.</small>
         </form>
-      </section>
 
-      <section className="patient-preview-section">
-        <div className="patient-phone-preview">
-          <div className="phone-notch" />
-          <span className="mini-badge">Plani sot</span>
-          <h2>Program rehabilitimi</h2>
-          <div className="progress-line"><span style={{ width: "62%" }} /></div>
-          <div className="patient-task"><b>Glute bridge</b><span>3 sete × 12</span><em>AI</em></div>
-          <div className="patient-task"><b>Cat cow</b><span>2 sete × 10</span><em>Done</em></div>
-          <div className="patient-task"><b>Pain score</b><span>Raporto pas ushtrimit</span><em>0–10</em></div>
-        </div>
+        <aside className="patient-entry-preview" aria-label="Si funksionon hyrja e pacientit">
+          <div className="patient-mini-phone">
+            <div className="patient-mini-status"><span>9:41</span><span>Plani im</span></div>
+            <div className="patient-mini-card">
+              <span>Sot</span>
+              <h2>Program rehabilitimi</h2>
+              <p>Ushtrime të kryera: 2/3</p>
+              <div className="patient-mini-progress"><i style={{ width: "66%" }} /></div>
+            </div>
+            <div className="patient-mini-task done"><b>✓</b><span>Glute bridge</span><small>3 sete × 12</small></div>
+            <div className="patient-mini-task done"><b>✓</b><span>Cat cow</span><small>2 sete × 10</small></div>
+            <div className="patient-mini-task"><b>○</b><span>Pain score</span><small>Raporto 0–10</small></div>
+          </div>
 
-        <div className="patient-info-grid">
-          <article>
-            <span className="mini-badge">Për pacientë</span>
-            <h2>Qasje vetëm me kod</h2>
-            <p>Pacienti nuk ka username/password. Kodi unik e lidh direkt me planin që e ka krijuar fizioterapeuti.</p>
-          </article>
-          <article>
-            <span className="mini-badge">QR Code</span>
-            <h2>Skano dhe hyr</h2>
-            <p>Fizioterapeuti mund t’ia japë pacientit QR code. QR hap linkun e kodit dhe pacienti hyn direkt.</p>
-          </article>
-          <article>
-            <span className="mini-badge">Siguri klinike</span>
-            <h2>Dhimbje 7/10 = ndalo</h2>
-            <p>Nëse dhimbja është 7 ose më shumë, pacienti ndalon ushtrimin dhe kontakton fizioterapeutin.</p>
-          </article>
-          <article>
-            <span className="mini-badge">AI Movement Check</span>
-            <h2>Feedback, jo diagnozë</h2>
-            <p>AI jep vetëm feedback për cilësinë e lëvizjes dhe nuk e zëvendëson fizioterapeutin.</p>
-          </article>
-        </div>
+          <div className="patient-entry-info">
+            <span className="fi-badge success">E thjeshtë për pacientë</span>
+            <h2>Vetëm një veprim: shkruaj kodin.</h2>
+            <div className="patient-entry-steps">
+              {patientSteps.map((step, index) => (
+                <div key={step}><b>{index + 1}</b><span>{step}</span></div>
+              ))}
+            </div>
+            <div className="patient-safety-notes">
+              {safetyNotes.map((note) => <span key={note}>✓ {note}</span>)}
+            </div>
+          </div>
+        </aside>
       </section>
     </main>
   );

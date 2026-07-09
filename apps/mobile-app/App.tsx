@@ -224,14 +224,14 @@ export default function App() {
             <View style={styles.heroBlue}>
               <Text style={styles.logoMark}>FI</Text>
               <Text style={styles.heroTitle}>Fizioterapia ime</Text>
-              <Text style={styles.heroText}>App për pacientin · i lidhur me web backend</Text>
+              <Text style={styles.heroText}>App për pacientin · plan i udhëhequr nga fizioterapeuti</Text>
             </View>
 
             <View style={styles.cardLifted}>
-              <Text style={styles.title}>Hyr me kodin e pacientit</Text>
-              <Text style={styles.text}>Kodi merret nga fizioterapeuti. Pacienti nuk krijon plan vetë.</Text>
+              <Text style={styles.title}>Hyr në planin tënd</Text>
+              <Text style={styles.text}>Kodin e merr nga fizioterapeuti. Shkruaje këtu dhe vazhdo me ushtrimet e tua.</Text>
               <View style={styles.inputWrap}>
-                <Text style={styles.inputIcon}>🔐</Text>
+                <Text style={styles.inputIcon}>⌁</Text>
                 <TextInput
                   value={code}
                   onChangeText={setCode}
@@ -247,7 +247,7 @@ export default function App() {
               <TouchableOpacity style={styles.primaryButton} onPress={() => void handleLogin()} activeOpacity={0.86} disabled={loadingLogin}>
                 <Text style={styles.primaryButtonText}>{loadingLogin ? 'Duke hyrë...' : 'Hyr në plan'}</Text>
               </TouchableOpacity>
-              {loadingLogin && <ActivityIndicator color="#2D9E5F" style={{ marginTop: 14 }} />}
+              {loadingLogin && <ActivityIndicator color="#0F8F86" style={{ marginTop: 14 }} />}
               <Text style={styles.helper}>Demo code: ARB-4821</Text>
             </View>
           </View>
@@ -335,7 +335,7 @@ export default function App() {
               <Text style={styles.eyebrow}>AI Movement Check</Text>
               <Text style={styles.title}>Përgatitu për kontrollin me kamerë</Text>
               <View style={styles.cameraPrepBox}>
-                <Text style={styles.cameraEmoji}>📱</Text>
+                <Text style={styles.cameraEmoji}>▭</Text>
                 <Text style={styles.textCenter}>Telefoni duhet të shohë trupin qartë.</Text>
               </View>
               <Instruction text="Vendose telefonin në një vend stabil." />
@@ -362,7 +362,7 @@ export default function App() {
               </>
             ) : (
               <>
-                <ActivityIndicator color="#62D6A4" size="large" />
+                <ActivityIndicator color="#34C759" size="large" />
                 <Text style={styles.analyzing}>Duke analizuar lëvizjen...</Text>
               </>
             )}
@@ -397,13 +397,13 @@ export default function App() {
                 </TouchableOpacity>
               ))}
             </View>
-            {saving && <ActivityIndicator color="#2D9E5F" style={{ marginTop: 16 }} />}
+            {saving && <ActivityIndicator color="#0F8F86" style={{ marginTop: 16 }} />}
           </View>
         )}
 
         {screen === 'pain-warning' && (
           <View style={styles.warningCard}>
-            <Text style={styles.warningIcon}>⚠️</Text>
+            <Text style={styles.warningIcon}>!</Text>
             <Text style={styles.title}>Ndalo ushtrimin</Text>
             <Text style={styles.text}>Dhimbja është {painScore}/10. Ndalo ushtrimin dhe kontakto fizioterapeutin para se të vazhdosh.</Text>
             <TouchableOpacity style={styles.primaryButton} onPress={() => void saveResult()} activeOpacity={0.86}>
@@ -457,86 +457,121 @@ function InfoPill({ label, value }: { label: string; value: string }) {
   );
 }
 
+const palette = {
+  primary: '#0F8F86',
+  primaryStrong: '#0B6F68',
+  primarySoft: '#E8F7F6',
+  secondary: '#34C759',
+  secondarySoft: '#EAF8F1',
+  ink: '#0F172A',
+  inkSoft: '#102033',
+  muted: '#486276',
+  muted2: '#64748B',
+  surface: '#FFFFFF',
+  surfaceSoft: '#F7FAFC',
+  line: '#E2E8F0',
+  warningSoft: '#FFF7ED',
+  warning: '#92400E',
+  danger: '#DC2626',
+  dangerSoft: '#FEF2F2',
+};
+
+const softShadow = {
+  shadowColor: '#0F2033',
+  shadowOpacity: 0.08,
+  shadowRadius: 20,
+  shadowOffset: { width: 0, height: 10 },
+  elevation: 3,
+};
+
+const liftShadow = {
+  shadowColor: '#0F2033',
+  shadowOpacity: 0.12,
+  shadowRadius: 28,
+  shadowOffset: { width: 0, height: 14 },
+  elevation: 5,
+};
+
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#F5FAFD' },
+  safe: { flex: 1, backgroundColor: palette.surfaceSoft },
   container: { padding: 18, paddingBottom: 42 },
   header: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 18, marginTop: 4 },
-  headerLogo: { width: 46, height: 46, borderRadius: 16, backgroundColor: '#2C6EAB', alignItems: 'center', justifyContent: 'center' },
-  headerLogoText: { color: '#FFFFFF', fontWeight: '900', fontSize: 18 },
-  headerTitle: { fontSize: 22, fontWeight: '900', color: '#102033' },
-  headerSubtitle: { fontSize: 13, color: '#6B7A90', marginTop: 2 },
-  heroBlue: { backgroundColor: '#2C6EAB', borderRadius: 30, padding: 28, alignItems: 'center', marginBottom: -18 },
-  logoMark: { width: 76, height: 76, borderRadius: 38, backgroundColor: '#FFFFFF', color: '#2C6EAB', textAlign: 'center', textAlignVertical: 'center', fontSize: 28, fontWeight: '900', overflow: 'hidden', marginBottom: 14 },
-  heroTitle: { color: '#FFFFFF', fontSize: 30, fontWeight: '900', letterSpacing: -0.5 },
-  heroText: { color: 'rgba(255,255,255,0.82)', fontSize: 15, marginTop: 8, textAlign: 'center' },
-  card: { backgroundColor: '#FFFFFF', borderRadius: 26, padding: 22, borderWidth: 1, borderColor: '#DCEAF2', shadowColor: '#134162', shadowOpacity: 0.08, shadowRadius: 18, shadowOffset: { width: 0, height: 10 }, elevation: 3 },
-  cardLifted: { backgroundColor: '#FFFFFF', borderRadius: 26, padding: 22, borderWidth: 1, borderColor: '#DCEAF2', shadowColor: '#134162', shadowOpacity: 0.12, shadowRadius: 24, shadowOffset: { width: 0, height: 12 }, elevation: 5 },
-  title: { fontSize: 27, lineHeight: 32, fontWeight: '900', color: '#102033', letterSpacing: -0.5, marginBottom: 10 },
-  text: { fontSize: 16, lineHeight: 24, color: '#496175', marginBottom: 16 },
-  smallText: { fontSize: 13, lineHeight: 18, color: '#6B7A90' },
-  helper: { fontSize: 13, color: '#6B7A90', marginTop: 10, textAlign: 'center' },
-  eyebrow: { color: '#2C6EAB', fontSize: 13, fontWeight: '900', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 },
-  inputWrap: { flexDirection: 'row', alignItems: 'center', gap: 10, borderWidth: 2, borderColor: '#D1E5F8', borderRadius: 16, paddingHorizontal: 14, backgroundColor: '#FBFDFF', marginBottom: 12 },
-  inputIcon: { fontSize: 18 },
-  input: { flex: 1, paddingVertical: 16, fontSize: 18, color: '#102033', fontWeight: '800', letterSpacing: 1.2 },
-  error: { color: '#EF4444', backgroundColor: '#FEF2F2', borderWidth: 1, borderColor: '#FCA5A5', borderRadius: 12, padding: 12, marginBottom: 12 },
-  primaryButton: { backgroundColor: '#2D9E5F', borderRadius: 18, paddingVertical: 17, paddingHorizontal: 18, alignItems: 'center', marginTop: 10, shadowColor: '#2D9E5F', shadowOpacity: 0.18, shadowRadius: 14, shadowOffset: { width: 0, height: 8 }, elevation: 2 },
-  primaryButtonText: { color: '#FFFFFF', fontSize: 17, fontWeight: '900' },
-  secondaryButton: { backgroundColor: '#E8F4FD', borderRadius: 18, paddingVertical: 17, paddingHorizontal: 18, alignItems: 'center', marginTop: 10 },
-  secondaryButtonText: { color: '#2C6EAB', fontSize: 17, fontWeight: '900' },
-  planHeader: { backgroundColor: '#2C6EAB', borderRadius: 28, padding: 22, marginBottom: 14, flexDirection: 'row', justifyContent: 'space-between', gap: 14 },
-  whiteSmall: { color: 'rgba(255,255,255,0.75)', fontSize: 13, fontWeight: '800' },
-  whiteTitle: { color: '#FFFFFF', fontSize: 25, fontWeight: '900', marginTop: 2 },
-  whiteText: { color: 'rgba(255,255,255,0.84)', fontSize: 14, marginTop: 6, maxWidth: 230 },
-  dayBadge: { backgroundColor: '#FFFFFF', borderRadius: 16, paddingHorizontal: 12, paddingVertical: 8, alignSelf: 'flex-start' },
-  dayBadgeText: { color: '#2C6EAB', fontWeight: '900' },
-  progressCard: { backgroundColor: '#FFFFFF', borderRadius: 22, padding: 18, borderWidth: 1, borderColor: '#DCEAF2', marginBottom: 14 },
+  headerLogo: { width: 46, height: 46, borderRadius: 16, backgroundColor: palette.primary, alignItems: 'center', justifyContent: 'center' },
+  headerLogoText: { color: palette.surface, fontWeight: '900', fontSize: 18 },
+  headerTitle: { fontSize: 22, fontWeight: '900', color: palette.inkSoft, letterSpacing: -0.4 },
+  headerSubtitle: { fontSize: 13, color: palette.muted2, marginTop: 2, fontWeight: '700' },
+  heroBlue: { backgroundColor: palette.inkSoft, borderRadius: 32, padding: 28, alignItems: 'center', marginBottom: -18, borderWidth: 1, borderColor: 'rgba(255,255,255,0.16)' },
+  logoMark: { width: 76, height: 76, borderRadius: 38, backgroundColor: palette.surface, color: palette.primaryStrong, textAlign: 'center', textAlignVertical: 'center', fontSize: 28, fontWeight: '900', overflow: 'hidden', marginBottom: 14 },
+  heroTitle: { color: palette.surface, fontSize: 30, fontWeight: '900', letterSpacing: -0.7 },
+  heroText: { color: 'rgba(255,255,255,0.82)', fontSize: 15, marginTop: 8, textAlign: 'center', lineHeight: 21, fontWeight: '700' },
+  card: { backgroundColor: palette.surface, borderRadius: 28, padding: 22, borderWidth: 1, borderColor: palette.line, ...softShadow },
+  cardLifted: { backgroundColor: palette.surface, borderRadius: 30, padding: 24, borderWidth: 1, borderColor: palette.line, ...liftShadow },
+  title: { fontSize: 29, lineHeight: 34, fontWeight: '900', color: palette.ink, letterSpacing: -0.8, marginBottom: 10 },
+  text: { fontSize: 16, lineHeight: 25, color: palette.muted, marginBottom: 16 },
+  smallText: { fontSize: 13, lineHeight: 18, color: palette.muted2, fontWeight: '700' },
+  helper: { fontSize: 13, color: palette.muted2, marginTop: 10, textAlign: 'center', fontWeight: '800' },
+  eyebrow: { color: palette.primaryStrong, fontSize: 12, fontWeight: '900', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 },
+  inputWrap: { flexDirection: 'row', alignItems: 'center', gap: 10, borderWidth: 2, borderColor: 'rgba(15,143,134,0.22)', borderRadius: 20, paddingHorizontal: 14, backgroundColor: palette.surface, marginBottom: 12 },
+  inputIcon: { width: 30, height: 30, borderRadius: 12, backgroundColor: palette.primarySoft, color: palette.primaryStrong, textAlign: 'center', textAlignVertical: 'center', fontSize: 18, fontWeight: '900', overflow: 'hidden' },
+  input: { flex: 1, paddingVertical: 17, fontSize: 19, color: palette.inkSoft, fontWeight: '900', letterSpacing: 1.4, textTransform: 'uppercase' },
+  error: { color: '#991B1B', backgroundColor: palette.dangerSoft, borderWidth: 1, borderColor: 'rgba(220,38,38,0.22)', borderRadius: 16, padding: 12, marginBottom: 12, fontWeight: '800' },
+  primaryButton: { backgroundColor: palette.primary, borderRadius: 20, paddingVertical: 18, paddingHorizontal: 18, alignItems: 'center', marginTop: 10, shadowColor: palette.primary, shadowOpacity: 0.22, shadowRadius: 18, shadowOffset: { width: 0, height: 9 }, elevation: 3 },
+  primaryButtonText: { color: palette.surface, fontSize: 17, fontWeight: '900' },
+  secondaryButton: { backgroundColor: palette.primarySoft, borderRadius: 20, paddingVertical: 18, paddingHorizontal: 18, alignItems: 'center', marginTop: 10, borderWidth: 1, borderColor: 'rgba(15,143,134,0.16)' },
+  secondaryButtonText: { color: palette.primaryStrong, fontSize: 17, fontWeight: '900' },
+  planHeader: { backgroundColor: palette.inkSoft, borderRadius: 30, padding: 22, marginBottom: 14, flexDirection: 'row', justifyContent: 'space-between', gap: 14, ...softShadow },
+  whiteSmall: { color: 'rgba(255,255,255,0.74)', fontSize: 13, fontWeight: '800' },
+  whiteTitle: { color: palette.surface, fontSize: 26, fontWeight: '900', marginTop: 2, letterSpacing: -0.5 },
+  whiteText: { color: 'rgba(255,255,255,0.84)', fontSize: 14, marginTop: 6, maxWidth: 230, lineHeight: 20, fontWeight: '700' },
+  dayBadge: { backgroundColor: palette.surface, borderRadius: 16, paddingHorizontal: 12, paddingVertical: 8, alignSelf: 'flex-start' },
+  dayBadgeText: { color: palette.primaryStrong, fontWeight: '900' },
+  progressCard: { backgroundColor: palette.surface, borderRadius: 24, padding: 18, borderWidth: 1, borderColor: palette.line, marginBottom: 14, ...softShadow },
   rowBetween: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  progressTitle: { color: '#102033', fontWeight: '900', fontSize: 15 },
-  progressPercent: { color: '#2D9E5F', fontWeight: '900', fontSize: 20 },
-  progressTrack: { height: 10, backgroundColor: '#E8F4FD', borderRadius: 99, overflow: 'hidden', marginTop: 12 },
-  progressFill: { height: '100%', backgroundColor: '#2D9E5F', borderRadius: 99 },
-  sectionTitle: { fontSize: 20, fontWeight: '900', color: '#102033', marginVertical: 12 },
-  exerciseCard: { backgroundColor: '#FFFFFF', borderRadius: 22, padding: 16, flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 12, borderWidth: 1, borderColor: '#DCEAF2' },
-  exerciseDone: { backgroundColor: '#F0FBF6', borderColor: '#B9EBCF' },
-  exerciseIcon: { width: 42, height: 42, borderRadius: 15, backgroundColor: '#E8F4FD', alignItems: 'center', justifyContent: 'center' },
-  exerciseIconDone: { backgroundColor: '#2D9E5F' },
-  exerciseIconText: { fontSize: 20, fontWeight: '900', color: '#2C6EAB' },
+  progressTitle: { color: palette.inkSoft, fontWeight: '900', fontSize: 15 },
+  progressPercent: { color: palette.primaryStrong, fontWeight: '900', fontSize: 21 },
+  progressTrack: { height: 10, backgroundColor: palette.primarySoft, borderRadius: 99, overflow: 'hidden', marginTop: 12 },
+  progressFill: { height: '100%', backgroundColor: palette.secondary, borderRadius: 99 },
+  sectionTitle: { fontSize: 21, fontWeight: '900', color: palette.ink, marginVertical: 12, letterSpacing: -0.4 },
+  exerciseCard: { backgroundColor: palette.surface, borderRadius: 24, padding: 16, flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 12, borderWidth: 1, borderColor: palette.line, ...softShadow },
+  exerciseDone: { backgroundColor: palette.secondarySoft, borderColor: 'rgba(22,163,74,0.22)' },
+  exerciseIcon: { width: 42, height: 42, borderRadius: 15, backgroundColor: palette.primary, alignItems: 'center', justifyContent: 'center' },
+  exerciseIconDone: { backgroundColor: '#16A34A' },
+  exerciseIconText: { fontSize: 20, fontWeight: '900', color: palette.surface },
   exerciseInfo: { flex: 1 },
-  exerciseName: { color: '#102033', fontSize: 17, fontWeight: '900', marginBottom: 3 },
-  aiMini: { color: '#2D9E5F', fontSize: 12, fontWeight: '900', marginTop: 4 },
-  chevron: { color: '#92A5B5', fontSize: 32, fontWeight: '300' },
-  back: { color: '#2C6EAB', fontWeight: '900', marginBottom: 12, fontSize: 16 },
-  videoBox: { height: 160, borderRadius: 22, backgroundColor: '#102033', alignItems: 'center', justifyContent: 'center', marginBottom: 14 },
-  videoIcon: { color: '#FFFFFF', fontSize: 34, marginBottom: 8 },
+  exerciseName: { color: palette.ink, fontSize: 17, fontWeight: '900', marginBottom: 3 },
+  aiMini: { color: palette.primaryStrong, fontSize: 12, fontWeight: '900', marginTop: 4 },
+  chevron: { color: '#94A3B8', fontSize: 32, fontWeight: '300' },
+  back: { color: palette.primaryStrong, fontWeight: '900', marginBottom: 12, fontSize: 16 },
+  videoBox: { height: 160, borderRadius: 24, backgroundColor: palette.ink, alignItems: 'center', justifyContent: 'center', marginBottom: 14 },
+  videoIcon: { color: palette.surface, fontSize: 34, marginBottom: 8 },
   videoText: { color: 'rgba(255,255,255,0.82)', fontWeight: '800' },
   infoGrid: { flexDirection: 'row', gap: 10, marginBottom: 14 },
-  infoPill: { flex: 1, backgroundColor: '#F5FAFD', borderRadius: 16, padding: 12, borderWidth: 1, borderColor: '#DCEAF2' },
-  infoLabel: { color: '#6B7A90', fontSize: 12, fontWeight: '800' },
-  infoValue: { color: '#102033', fontSize: 14, fontWeight: '900', marginTop: 4 },
-  safetyBox: { backgroundColor: '#FFF8E7', borderWidth: 1, borderColor: '#F4D47C', borderRadius: 16, padding: 14, marginVertical: 12 },
-  safetyText: { color: '#755C13', fontWeight: '800', lineHeight: 20 },
-  cameraPrepBox: { backgroundColor: '#E8F4FD', borderRadius: 22, padding: 24, alignItems: 'center', marginBottom: 14 },
-  cameraEmoji: { fontSize: 42, marginBottom: 8 },
-  textCenter: { color: '#496175', fontWeight: '800', textAlign: 'center' },
+  infoPill: { flex: 1, backgroundColor: palette.surfaceSoft, borderRadius: 18, padding: 12, borderWidth: 1, borderColor: palette.line },
+  infoLabel: { color: palette.muted2, fontSize: 12, fontWeight: '800' },
+  infoValue: { color: palette.inkSoft, fontSize: 14, fontWeight: '900', marginTop: 4 },
+  safetyBox: { backgroundColor: palette.warningSoft, borderWidth: 1, borderColor: 'rgba(245,158,11,0.24)', borderRadius: 18, padding: 14, marginVertical: 12 },
+  safetyText: { color: palette.warning, fontWeight: '800', lineHeight: 21 },
+  cameraPrepBox: { backgroundColor: palette.primarySoft, borderRadius: 24, padding: 24, alignItems: 'center', marginBottom: 14, borderWidth: 1, borderColor: 'rgba(15,143,134,0.16)' },
+  cameraEmoji: { width: 64, height: 64, borderRadius: 24, backgroundColor: palette.surface, color: palette.primaryStrong, textAlign: 'center', textAlignVertical: 'center', fontSize: 40, fontWeight: '900', overflow: 'hidden', marginBottom: 8 },
+  textCenter: { color: palette.muted, fontWeight: '800', textAlign: 'center', lineHeight: 21 },
   instruction: { flexDirection: 'row', gap: 10, alignItems: 'flex-start', marginBottom: 10 },
-  check: { color: '#2D9E5F', fontSize: 16, fontWeight: '900' },
-  instructionText: { color: '#496175', fontSize: 15, lineHeight: 21, flex: 1 },
-  darkScreen: { backgroundColor: '#07111F', borderRadius: 28, padding: 22, minHeight: 560, alignItems: 'center', justifyContent: 'center' },
+  check: { color: palette.primaryStrong, fontSize: 16, fontWeight: '900' },
+  instructionText: { color: palette.muted, fontSize: 15, lineHeight: 22, flex: 1 },
+  darkScreen: { backgroundColor: '#07111F', borderRadius: 30, padding: 22, minHeight: 560, alignItems: 'center', justifyContent: 'center' },
   darkSmall: { color: 'rgba(255,255,255,0.74)', fontWeight: '900', marginBottom: 18 },
-  cameraFrame: { width: '100%', height: 310, borderRadius: 26, borderWidth: 2, borderColor: '#62D6A4', alignItems: 'center', justifyContent: 'center', marginBottom: 26 },
-  cameraBody: { color: '#62D6A4', fontSize: 90 },
-  countdownHint: { color: 'rgba(255,255,255,0.82)', fontSize: 16, marginBottom: 8 },
-  countdown: { color: '#FFFFFF', fontSize: 58, fontWeight: '900' },
-  analyzing: { color: '#FFFFFF', marginTop: 12, fontWeight: '800' },
-  resultCard: { backgroundColor: '#FFFFFF', borderRadius: 28, padding: 24, alignItems: 'center', borderWidth: 1, borderColor: '#DCEAF2' },
-  score: { color: '#2D9E5F', fontSize: 64, fontWeight: '900', marginBottom: 4 },
-  resultBadge: { backgroundColor: '#E8F8EF', borderRadius: 99, paddingHorizontal: 14, paddingVertical: 8, marginBottom: 14 },
-  resultBadgeText: { color: '#2D9E5F', fontWeight: '900' },
+  cameraFrame: { width: '100%', height: 310, borderRadius: 28, borderWidth: 2, borderColor: palette.secondary, alignItems: 'center', justifyContent: 'center', marginBottom: 26 },
+  cameraBody: { color: palette.secondary, fontSize: 90 },
+  countdownHint: { color: 'rgba(255,255,255,0.82)', fontSize: 16, marginBottom: 8, fontWeight: '800' },
+  countdown: { color: palette.surface, fontSize: 58, fontWeight: '900' },
+  analyzing: { color: palette.surface, marginTop: 12, fontWeight: '800' },
+  resultCard: { backgroundColor: palette.surface, borderRadius: 30, padding: 24, alignItems: 'center', borderWidth: 1, borderColor: palette.line, ...softShadow },
+  score: { color: palette.primaryStrong, fontSize: 66, fontWeight: '900', marginBottom: 4, letterSpacing: -1.2 },
+  resultBadge: { backgroundColor: palette.secondarySoft, borderRadius: 99, paddingHorizontal: 14, paddingVertical: 8, marginBottom: 14, borderWidth: 1, borderColor: 'rgba(22,163,74,0.18)' },
+  resultBadgeText: { color: '#166534', fontWeight: '900' },
   painGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginTop: 10 },
-  painButton: { width: 52, height: 52, borderRadius: 18, backgroundColor: '#E8F4FD', alignItems: 'center', justifyContent: 'center' },
-  painText: { color: '#2C6EAB', fontWeight: '900', fontSize: 18 },
-  warningCard: { backgroundColor: '#FFF7ED', borderColor: '#FDBA74', borderWidth: 1, borderRadius: 28, padding: 24, alignItems: 'center' },
-  warningIcon: { fontSize: 48, marginBottom: 8 },
-  savedIcon: { width: 70, height: 70, borderRadius: 35, backgroundColor: '#2D9E5F', color: '#FFFFFF', textAlign: 'center', textAlignVertical: 'center', fontSize: 38, fontWeight: '900', overflow: 'hidden', marginBottom: 14 },
+  painButton: { width: 52, height: 52, borderRadius: 18, backgroundColor: palette.primarySoft, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: 'rgba(15,143,134,0.16)' },
+  painText: { color: palette.primaryStrong, fontWeight: '900', fontSize: 18 },
+  warningCard: { backgroundColor: palette.warningSoft, borderColor: 'rgba(245,158,11,0.28)', borderWidth: 1, borderRadius: 30, padding: 24, alignItems: 'center' },
+  warningIcon: { width: 64, height: 64, borderRadius: 32, backgroundColor: '#F59E0B', color: palette.surface, textAlign: 'center', textAlignVertical: 'center', fontSize: 40, fontWeight: '900', overflow: 'hidden', marginBottom: 10 },
+  savedIcon: { width: 70, height: 70, borderRadius: 35, backgroundColor: palette.primary, color: palette.surface, textAlign: 'center', textAlignVertical: 'center', fontSize: 38, fontWeight: '900', overflow: 'hidden', marginBottom: 14 },
 });
