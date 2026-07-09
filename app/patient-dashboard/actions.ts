@@ -8,6 +8,8 @@ import { notifyPhysioHighPain, notifyPhysioLowAiScore } from "@/lib/clinical-not
 
 const USERNAME_COOKIE = "fizioplan_patient_username";
 const CODE_COOKIE = "fizioplan_patient_code";
+const MAX_PATIENT_COMMENT_LENGTH = 500;
+const MAX_AI_FEEDBACK_LENGTH = 600;
 
 async function getCurrentPatient() {
   const supabase = getSupabaseAdmin();
@@ -28,6 +30,22 @@ async function getCurrentPatient() {
   return patient;
 }
 
+function parseBoundedNumber(value: FormDataEntryValue | null, fallback: number | null, min: number, max: number, label: string) {
+  const raw = String(value ?? "").trim();
+  if (!raw) return fallback;
+
+  const parsed = Number(raw);
+  if (!Number.isFinite(parsed) || parsed < min || parsed > max) {
+    throw new Error(`${label} must be ${min}–${max}.`);
+  }
+
+  return parsed;
+}
+
+function limitText(value: FormDataEntryValue | null, maxLength: number) {
+  return String(value || "").trim().slice(0, maxLength);
+}
+
 export async function patientLogoutAction() {
   const cookieStore = await cookies();
   cookieStore.delete(USERNAME_COOKIE);
@@ -43,12 +61,10 @@ export async function completeExerciseAction(formData: FormData) {
   if (!patient) redirect("/patient-portal");
 
   const planExerciseId = String(formData.get("planExerciseId") || "");
-  const painScoreRaw = String(formData.get("painScore") || "");
-  const comment = String(formData.get("comment") || "").trim();
-  const painScore = painScoreRaw === "" ? null : Number(painScoreRaw);
+  const painScore = parseBoundedNumber(formData.get("painScore"), null, 0, 10, "Pain score");
+  const comment = limitText(formData.get("comment"), MAX_PATIENT_COMMENT_LENGTH);
 
   if (!planExerciseId) throw new Error("Plan exercise is required.");
-  if (painScore !== null && (painScore < 0 || painScore > 10)) throw new Error("Pain score must be 0–10.");
 
   const { data: planExercise } = await supabase
     .from("plan_exercises")
@@ -88,8 +104,11 @@ export async function saveAiCheckAction(formData: FormData) {
   if (!patient) redirect("/patient-portal");
 
   const planExerciseId = String(formData.get("planExerciseId") || "");
-  const score = Number(formData.get("score") || 82);
-  const feedback = String(formData.get("feedback") || "Lëvizje e kontrolluar. Mbaje ritmin më të ngadalshëm në fazën e kthimit.");
+  const score = parseBoundedNumber(formData.get("score"), 82, 0, 100, "AI score");
+  const feedback = limitText(
+    formData.get("feedback") || "Lëvizje e kontrolluar. Mbaje ritmin më të ngadalshëm në fazën e kthimit.",
+    MAX_AI_FEEDBACK_LENGTH,
+  );
   const alertType = score < 60 ? "contact_physio" : score < 80 ? "needs_attention" : "good";
 
   if (!planExerciseId) throw new Error("Plan exercise is required.");
