@@ -17,7 +17,7 @@ apps/studio/package.json
 Deploy now runs non-interactively:
 
 ```bash
-sanity deploy --yes --url fizioterapia-ime-blog --schema-required
+sanity deploy --yes --url fizioterapia-ime-blog
 ```
 
 Expected hosted Studio URL:
@@ -25,6 +25,16 @@ Expected hosted Studio URL:
 ```text
 https://fizioterapia-ime-blog.sanity.studio
 ```
+
+## Why schema-required was removed
+
+A previous deploy attempt used:
+
+```bash
+sanity deploy --yes --url fizioterapia-ime-blog --schema-required
+```
+
+That can fail with a token-only deploy role if schema publishing is stricter than Studio hosting deploy. The Studio can still deploy without forcing schema upload failure to block the whole workflow.
 
 ### GitHub Actions workflow
 
@@ -49,7 +59,7 @@ apps/studio/**
 
 ### Secret validation
 
-The workflow now checks if this secret exists:
+The workflow checks if this secret exists:
 
 ```text
 SANITY_AUTH_TOKEN
@@ -59,7 +69,7 @@ If the secret is missing, the workflow fails with a clear message.
 
 ## What should happen next
 
-Because `apps/studio/README.md` was updated after the auto-run trigger was added, GitHub Actions should start the Studio deploy workflow automatically.
+Because `apps/studio/package.json` was updated, GitHub Actions should start the Studio deploy workflow automatically.
 
 Check:
 
