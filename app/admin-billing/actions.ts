@@ -17,6 +17,54 @@ async function requireOwner() {
   }
 }
 
+export async function createPhysioProfileAction(formData: FormData) {
+  await requireOwner();
+  const supabase = getSupabaseAdmin();
+  if (!supabase) throw new Error("Missing Supabase service key.");
+
+  const email = String(formData.get("email") || "").trim().toLowerCase();
+  const fullName = String(formData.get("fullName") || "").trim().slice(0, 160);
+  const clinicName = String(formData.get("clinicName") || "").trim().slice(0, 160);
+
+  if (!email || !email.includes("@")) throw new Error("Valid physiotherapist email is required.");
+
+  const { data: existing } = await supabase
+    .from("profiles")
+    .select("id,email,role,status")
+    .eq("email", email)
+    .maybeSingle();
+
+  if (existing) {
+    const updates: Record<string, string> = {
+      role: existing.role || "physio",
+      status: existing.status === "suspended" || existing.status === "blocked" ? existing.status : "active",
+    };
+
+    if (fullName) updates.full_name = fullName;
+    if (clinicName) updates.clinic_name = clinicName;
+
+    const { error } = await supabase
+      .from("profiles")
+      .update(updates)
+      .eq("id", existing.id);
+
+    if (error) throw new Error(error.message);
+    revalidatePath("/admin-billing");
+    return;
+  }
+
+  const { error } = await supabase.from("profiles").insert({
+    email,
+    role: "physio",
+    full_name: fullName || email,
+    clinic_name: clinicName || "Fizioterapia ime Clinic",
+    status: "active",
+  });
+
+  if (error) throw new Error(error.message);
+  revalidatePath("/admin-billing");
+}
+
 export async function activateSubscriptionAction(formData: FormData) {
   await requireOwner();
   const supabase = getSupabaseAdmin();

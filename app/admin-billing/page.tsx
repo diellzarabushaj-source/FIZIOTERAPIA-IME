@@ -4,7 +4,9 @@ import { AuthControls } from "@/components/AuthControls";
 import { BrandMark } from "@/components/BrandMark";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import { getBillingStatusLabel, hasActivePhysioAccess, PHYSIO_MONTHLY_PRICE_LABEL } from "@/lib/billing";
-import { activateSubscriptionAction, suspendSubscriptionAction } from "./actions";
+import { activateSubscriptionAction, createPhysioProfileAction, suspendSubscriptionAction } from "./actions";
+
+const defaultAdminEmail = "diellzarabushaj@gmail.com";
 
 type Physio = {
   id: string;
@@ -35,7 +37,8 @@ function formatDate(value?: string | null) {
 export default async function AdminBillingPage() {
   const user = await currentUser();
   const email = user?.primaryEmailAddress?.emailAddress?.toLowerCase();
-  if (email !== "diellzarabushaj@gmail.com") redirect("/admin-hidden");
+  const adminEmail = (process.env.ADMIN_EMAIL || defaultAdminEmail).toLowerCase();
+  if (email !== adminEmail) redirect("/admin-hidden");
 
   const supabase = getSupabaseAdmin();
   if (!supabase) {
@@ -78,7 +81,7 @@ export default async function AdminBillingPage() {
           <span className="badge">Manual Billing · Local bank ready</span>
           <h1>Qasja e fizioterapeutëve: {PHYSIO_MONTHLY_PRICE_LABEL}.</h1>
           <p>
-            Stripe nuk përdoret tani. Admini e aktivizon manualisht qasjen mujore pasi fizioterapeuti paguan.
+            Stripe nuk përdoret tani. Admini e krijon fizioterapeutin dhe e aktivizon manualisht qasjen mujore pasi fizioterapeuti paguan.
             Më vonë kjo lidhet me bankë lokale.
           </p>
         </div>
@@ -87,6 +90,34 @@ export default async function AdminBillingPage() {
           <strong>{activeCount}/{rows.length}</strong>
           <small>fizioterapeutë</small>
         </div>
+      </section>
+
+      <section className="dashboard-card wide admin-billing-table-card">
+        <div className="section-header-row">
+          <div>
+            <h2>Shto fizioterapeut</h2>
+            <p>Krijo profilin klinik para se fizioterapeuti të hyjë në dashboard. Pastaj aktivizo +1 muaj kur pagesa konfirmohet.</p>
+          </div>
+          <span className="badge">Admin only</span>
+        </div>
+        <form action={createPhysioProfileAction} className="kpis plan-grid">
+          <div>
+            <label className="label">Email</label>
+            <input className="input" name="email" type="email" placeholder="physio@example.com" required />
+          </div>
+          <div>
+            <label className="label">Emri</label>
+            <input className="input" name="fullName" placeholder="Emri i fizioterapeutit" />
+          </div>
+          <div>
+            <label className="label">Klinika</label>
+            <input className="input" name="clinicName" placeholder="Emri i klinikës" />
+          </div>
+          <div>
+            <label className="label">Veprim</label>
+            <button className="button" type="submit">Krijo profilin</button>
+          </div>
+        </form>
       </section>
 
       <section className="dashboard-card wide admin-billing-table-card">
