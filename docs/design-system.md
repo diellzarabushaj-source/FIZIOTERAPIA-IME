@@ -1,13 +1,15 @@
 # Fizioterapia Ime Design System
 
-Phase 1 centralizes the visual foundation. Phase 2 starts migrating the public homepage into the premium app-first direction.
+Phase 1 centralizes the visual foundation. Phase 2 migrates the public homepage into the premium app-first direction. Phase 3 simplifies the patient login portal for older and non-technical patients.
 
 ## Files
 
 - `app/design-system.css` — shared brand tokens, layout helpers, cards, buttons, inputs, badges, alerts, statuses and table primitives.
-- `app/layout.tsx` — imports the design system globally after `globals.css`.
+- `app/layout.tsx` — imports the design system globally after `globals.css`, plus page-specific refresh layers.
 - `app/page.tsx` — homepage migrated to a simpler app-first premium story.
 - `app/home-refresh.css` — homepage-specific premium layout using the shared tokens.
+- `app/patient-portal/page.tsx` — simplified patient code-login flow.
+- `app/patient-login-refresh.css` — patient-login-specific mobile-first styling.
 
 ## Brand direction
 
@@ -99,12 +101,23 @@ The homepage now follows a simpler app-first story:
 6. Safety section states that AI gives feedback only and does not make clinical decisions.
 7. Pricing remains visible and simple.
 
+## Patient portal simplification
+
+The patient login flow now follows one main rule: one screen, one job.
+
+1. The first visual priority is the code input.
+2. The title is direct: “Hyr në planin tënd”.
+3. The helper copy explains only that the code comes from the physiotherapist.
+4. The form uses larger touch targets and a centered uppercase code field.
+5. Error states use the shared `.fi-alert danger` style.
+6. The preview area shows what the patient will see after login, without adding extra decisions.
+7. Safety notes remain visible: no account needed, plan is created by the physiotherapist, pain 7/10+ means stop and contact the therapist.
+
 ## Next migration order
 
-1. Patient portal: simplify login screen and use `fi-panel`, `fi-input`, `fi-button`.
-2. Physio dashboard: convert stat cards, alert banners and tables to shared primitives.
-3. Admin dashboard: convert owner metrics and lists to shared primitives.
-4. Mobile app: mirror the same token values in React Native styles.
+1. Physio dashboard: convert stat cards, alert banners and tables to shared primitives.
+2. Admin dashboard: convert owner metrics and lists to shared primitives.
+3. Mobile app: mirror the same token values in React Native styles.
 
 ## Rules
 
