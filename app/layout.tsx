@@ -3,6 +3,7 @@ import { ClerkProvider } from "@clerk/nextjs";
 import { SiteFooter } from "@/components/SiteFooter";
 import "./globals.css";
 import "./brand.css";
+import "./brand-uploaded.css";
 import "./phase3.css";
 import "./phase4.css";
 import "./phase5.css";
