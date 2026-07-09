@@ -22,17 +22,32 @@ import "./patient-login-refresh.css";
 import "./physio-dashboard-refresh.css";
 import "./admin-dashboard-refresh.css";
 
+const siteUrl = process.env.NEXT_PUBLIC_APP_URL || "https://fizioterapia-ime.vercel.app";
+
 export const metadata: Metadata = {
-  title: "Fizioterapia ime – Digital physiotherapy platform",
-  description: "Platformë SaaS për fizioterapi me patient app, physiotherapist dashboard, AI Movement Check dhe billing 29.90 EUR/muaj.",
+  metadataBase: new URL(siteUrl),
+  title: "Fizioterapia Ime – Platformë digjitale për fizioterapi",
+  description: "Website dhe platformë digjitale për plane fizioterapie, udhëzime të qarta për pacientë dhe mbështetje për fizioterapeutë.",
+  alternates: {
+    canonical: "/",
+  },
   icons: {
     icon: "/brand-mark.svg",
     shortcut: "/brand-mark.svg",
     apple: "/app-icon.svg",
   },
   openGraph: {
-    title: "Fizioterapia ime",
-    description: "Lëviz më mirë, jeto më mirë. Platformë moderne për fizioterapi digjitale.",
+    type: "website",
+    url: "/",
+    siteName: "Fizioterapia Ime",
+    title: "Fizioterapia Ime",
+    description: "Lëviz më mirë, jeto më mirë. Website dhe platformë moderne për fizioterapi digjitale.",
+    images: ["/app-icon.svg"],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Fizioterapia Ime",
+    description: "Website dhe platformë moderne për fizioterapi digjitale.",
     images: ["/app-icon.svg"],
   },
 };
