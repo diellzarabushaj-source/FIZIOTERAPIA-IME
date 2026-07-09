@@ -11,6 +11,9 @@ const recommendedWebEnv = [
   "RESEND_FROM_EMAIL",
   "RESEND_REPLY_TO_EMAIL",
   "NEXT_PUBLIC_APP_URL",
+  "NEXT_PUBLIC_SANITY_PROJECT_ID",
+  "NEXT_PUBLIC_SANITY_DATASET",
+  "NEXT_PUBLIC_SANITY_API_VERSION",
 ];
 
 const requiredMobileEnv = [
@@ -53,4 +56,5 @@ if (missingRequired.length) {
   console.log("\nRequired environment variables are present.");
 }
 
+console.log("\nSanity note: NEXT_PUBLIC_SANITY_PROJECT_ID, NEXT_PUBLIC_SANITY_DATASET and NEXT_PUBLIC_SANITY_API_VERSION are recommended. If they are missing, /blog uses static fallback.");
 console.log("\nSecurity reminder: never print or commit secret values. This script only reports presence/missing status.");
