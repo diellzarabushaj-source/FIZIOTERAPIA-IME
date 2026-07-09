@@ -4,10 +4,24 @@ import { hasSanityConfig, sanityClient } from "./client";
 
 export type SanityBlock = Record<string, unknown>;
 
+export type SanityImage = {
+  url?: string | null;
+  alt?: string | null;
+};
+
+export type SanitySeo = {
+  title?: string | null;
+  description?: string | null;
+  keywords?: string[] | null;
+  image?: SanityImage | null;
+};
+
 export type SanityBlogPost = Omit<BlogPost, "sections"> & {
   body?: SanityBlock[] | null;
   sections?: BlogPost["sections"];
   safetyReviewed?: boolean | null;
+  mainImage?: SanityImage | null;
+  seo?: SanitySeo | null;
 };
 
 const blogPostFields = groq`
@@ -21,7 +35,20 @@ const blogPostFields = groq`
   readingTime,
   hero,
   body,
-  safetyReviewed
+  safetyReviewed,
+  "mainImage": {
+    "url": mainImage.asset->url,
+    "alt": mainImage.alt
+  },
+  "seo": {
+    "title": seo.title,
+    "description": seo.description,
+    "keywords": seo.keywords,
+    "image": {
+      "url": seo.image.asset->url,
+      "alt": seo.image.alt
+    }
+  }
 `;
 
 const postsQuery = groq`
@@ -55,6 +82,13 @@ function staticToSanityShape(post: BlogPost): SanityBlogPost {
     body: null,
     sections: post.sections,
     safetyReviewed: true,
+    mainImage: null,
+    seo: {
+      title: post.title,
+      description: post.description,
+      keywords: ["Fizioterapia ime", "fizioterapi", "ushtrime", post.category],
+      image: null,
+    },
   };
 }
 
