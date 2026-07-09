@@ -1,0 +1,11 @@
+node_modules
+.next
+out
+.env
+.env.*
+!.env.example
+apps/mobile-app/.expo
+apps/mobile-app/dist
+apps/studio/.sanity
+apps/studio/dist
+reports/*.json
