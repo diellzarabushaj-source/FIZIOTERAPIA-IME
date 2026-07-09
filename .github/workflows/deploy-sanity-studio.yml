@@ -1,0 +1,32 @@
+name: Deploy Sanity Studio
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy-studio:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/studio
+    env:
+      SANITY_AUTH_TOKEN: ${{ secrets.SANITY_AUTH_TOKEN }}
+      SANITY_STUDIO_PROJECT_ID: a3wcdlcy
+      SANITY_STUDIO_DATASET: production
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Studio dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Build Studio
+        run: npm run build
+
+      - name: Deploy Studio to Sanity hosting
+        run: npm run deploy
