@@ -5,11 +5,14 @@ import { revalidatePath } from "next/cache";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import { PHYSIO_MONTHLY_PRICE_EUR } from "@/lib/billing";
 
+const defaultAdminEmail = "diellzarabushaj@gmail.com";
+
 async function requireOwner() {
   const user = await currentUser();
   const email = user?.primaryEmailAddress?.emailAddress?.toLowerCase();
+  const adminEmail = (process.env.ADMIN_EMAIL || defaultAdminEmail).toLowerCase();
 
-  if (email !== "diellzarabushaj@gmail.com") {
+  if (email !== adminEmail) {
     throw new Error("Only owner/admin can manage billing.");
   }
 }
@@ -20,8 +23,9 @@ export async function activateSubscriptionAction(formData: FormData) {
   if (!supabase) throw new Error("Missing Supabase service key.");
 
   const physioId = String(formData.get("physioId") || "");
-  const invoiceReference = String(formData.get("invoiceReference") || "").trim();
-  const months = Math.max(1, Number(formData.get("months") || 1));
+  const invoiceReference = String(formData.get("invoiceReference") || "").trim().slice(0, 120);
+  const monthsRaw = Number(formData.get("months") || 1);
+  const months = Number.isFinite(monthsRaw) ? Math.min(12, Math.max(1, Math.floor(monthsRaw))) : 1;
 
   if (!physioId) throw new Error("Missing physio ID.");
 
