@@ -28,7 +28,7 @@ const workflow = [
 const features = [
   ["Për pacientë", "Plan i thjeshtë ditor", "Pacienti sheh vetëm ushtrimet e caktuara nga fizioterapeuti dhe i shënon si të kryera."],
   ["Për fizioterapeutë", "Dashboard klinik", "Krijo pacientë, plane, ushtrime private dhe përcill progresin në kohë reale."],
-  ["Për klinika", "Menaxhim më i pastër", "Admin/owner kontrollon subscription, bibliotekën e ushtrimeve dhe raportet."],
+  ["Për klinika", "Menaxhim më i pastër", "Menaxheri i klinikës kontrollon qasjen mujore, bibliotekën e ushtrimeve dhe raportet e rikontrollit."],
 ];
 
 const stats = [
@@ -102,7 +102,7 @@ export default function HomePage() {
               <span />
               <span />
             </div>
-            <h3>Physio dashboard</h3>
+            <h3>Dashboard për fizioterapeutin</h3>
             <div className="preview-kpis">
               <div><b>18</b><small>Pacientë</small></div>
               <div><b>82%</b><small>AI score</small></div>
@@ -174,7 +174,7 @@ export default function HomePage() {
           <span className="badge">Çmimi për MVP</span>
           <h2>Qasje për fizioterapeutë me 29.90 EUR / muaj.</h2>
           <p>
-            Për versionin e parë pagesa është manuale/local-bank. Admini e aktivizon qasjen mujore nga paneli i billing.
+            Për versionin e parë pagesa është manuale/local-bank. Qasja mujore aktivizohet nga paneli i brendshëm i platformës.
           </p>
         </div>
         <div className="price-card">
