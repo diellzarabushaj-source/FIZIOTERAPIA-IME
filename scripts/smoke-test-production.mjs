@@ -6,6 +6,8 @@ const REPORT_PATH = process.env.SMOKE_REPORT_PATH || "reports/production-smoke-t
 
 const publicRoutes = [
   "/",
+  "/blog",
+  "/blog/si-funksionon-plani-digjital-i-fizioterapise",
   "/faq",
   "/support",
   "/clinic-use",
@@ -30,6 +32,8 @@ const publicRoutes = [
 
 const expectedContent = {
   "/": "Fizioterapia ime",
+  "/blog": "Artikuj të thjeshtë",
+  "/blog/si-funksionon-plani-digjital-i-fizioterapise": "Si funksionon plani digjital",
   "/pilot-launch": "Paketa finale",
   "/pilot-readiness": "Final gate para pilotit",
   "/pilot-runbook": "Runbook 7-ditor",
