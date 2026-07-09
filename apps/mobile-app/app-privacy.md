@@ -1,4 +1,4 @@
-# App privacy answers — draft
+# App privacy answers - draft
 
 These answers are a draft for App Store Connect / Google Play Data Safety. They must be reviewed before final submission.
 
@@ -17,7 +17,7 @@ Purpose: app functionality, account access, physiotherapist-patient communicatio
 - Diagnosis/problem description added by physiotherapist
 - Exercise plan
 - Exercise completion logs
-- Pain score 0–10
+- Pain score 0-10
 - AI Movement Check score and feedback
 
 Purpose: app functionality, rehabilitation follow-up, patient progress, clinical communication.
@@ -33,7 +33,7 @@ Purpose: communication and app functionality.
 
 - Camera access for movement check
 
-Purpose: AI Movement Check. Video is used for movement analysis and is not stored as video in the MVP. The app stores only score, feedback and alert type.
+Purpose: AI Movement Check. Video is used for movement-quality feedback and is not stored as video in the MVP. The app stores only score, feedback, alert type and optional pain score.
 
 ## Data linked to user
 
@@ -59,3 +59,5 @@ https://fizioterapia-ime.vercel.app/data-deletion
 ## Safety statement
 
 The app does not provide diagnosis or emergency services. AI Movement Check is movement-quality feedback only and does not replace a licensed physiotherapist or healthcare professional.
+
+If pain reaches 7/10 or more, the user is instructed to stop the exercise and contact their physiotherapist before continuing.
