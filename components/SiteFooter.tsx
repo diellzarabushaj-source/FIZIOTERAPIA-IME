@@ -5,6 +5,7 @@ const footerSections = [
     title: "Platforma",
     links: [
       ["Home", "/"],
+      ["Blog", "/blog"],
       ["Patient Portal", "/patient-portal"],
       ["Physio Portal", "/physiotherapist-portal"],
       ["AI Movement Check", "/ai-check"],
