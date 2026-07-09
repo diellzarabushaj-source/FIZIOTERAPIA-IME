@@ -2,42 +2,51 @@
 
 ## Current status
 
-Sanity Studio already exists as a separate module:
+Sanity Studio exists as a separate module:
 
 ```text
 apps/studio
 ```
 
-The public website already has safe static blog routes:
+The public website has connected blog routes:
 
 ```text
 /blog
 /blog/[slug]
 ```
 
-The current public blog uses:
+The public blog now uses Sanity queries when Sanity env vars are present, with static fallback when they are missing:
 
 ```text
+lib/sanity/client.ts
+lib/sanity/queries.ts
+components/PortableContentRenderer.tsx
 lib/blog-content.ts
 ```
 
-This keeps the Vercel web build stable during pilot-freeze.
-
-## Goal
-
-After pilot-freeze, connect `/blog` and `/blog/[slug]` to Sanity content so articles can be created and edited in Sanity Studio.
+This keeps the Vercel web build stable even if Sanity is not configured yet.
 
 ## Important rule
 
 Do not make the main Vercel web build depend on Studio build.
 
-Sanity Studio and the Next.js public website should stay separate:
+Sanity Studio and the Next.js public website stay separate:
 
 ```text
 apps/studio          = content editing UI
 app/blog             = public blog pages
 lib/sanity           = read client for public website
 ```
+
+## What is already connected
+
+- `next-sanity` added to root dependencies.
+- `@portabletext/react` added to root dependencies.
+- `/blog` uses `getBlogPosts()`.
+- `/blog/[slug]` uses `getBlogPostBySlug()`.
+- `/blog/[slug]` renders Sanity Portable Text body.
+- If Sanity env vars are missing, `/blog` and `/blog/[slug]` fall back to `lib/blog-content.ts`.
+- Safety disclaimer remains visible on blog posts.
 
 ## Phase 1 — Finish Studio setup
 
@@ -87,29 +96,17 @@ Sanity Studio opens locally.
 Schemas visible: Post, Author, Category.
 ```
 
-## Phase 2 — Prepare public web read client
+## Phase 2 — Add web/Vercel Sanity env vars
 
-Add Sanity dependencies to the root web app only when ready:
-
-```bash
-npm install next-sanity @portabletext/react
-```
-
-Create:
-
-```text
-lib/sanity/client.ts
-lib/sanity/queries.ts
-components/PortableContent.tsx
-```
-
-Environment variables for Vercel/public web:
+Add these in Vercel Project → Settings → Environment Variables:
 
 ```bash
 NEXT_PUBLIC_SANITY_PROJECT_ID=
 NEXT_PUBLIC_SANITY_DATASET=production
 NEXT_PUBLIC_SANITY_API_VERSION=2026-07-09
 ```
+
+These are public read config values.
 
 If reading only published public content, do not use a token in the frontend.
 
@@ -121,53 +118,47 @@ SANITY_API_READ_TOKEN=
 
 Do not expose `SANITY_API_READ_TOKEN` in client/mobile.
 
-## Phase 3 — Connect `/blog`
+## Phase 3 — Add first content in Studio
 
-Replace the static content source in:
+Create these in Studio:
 
-```text
-app/blog/page.tsx
-```
-
-Current:
-
-```text
-import { blogPosts } from "@/lib/blog-content";
-```
-
-Future:
+1. Author: `Fizioterapia ime`
+2. Category: `Pacientë`
+3. Category: `AI & Siguri`
+4. Category: `Pilot`
+5. First Post with slug:
 
 ```text
-import { getBlogPosts } from "@/lib/sanity/queries";
+si-funksionon-plani-digjital-i-fizioterapise
 ```
 
-The `/blog` page should show:
-
-- title
-- description
-- category
-- author
-- published date
-- reading time
-- link to `/blog/[slug]`
-
-## Phase 4 — Connect `/blog/[slug]`
-
-Replace static post lookup in:
+For medical/AI posts, set:
 
 ```text
-app/blog/[slug]/page.tsx
+safetyReviewed = true
 ```
 
-Future behavior:
+## Phase 4 — Deploy and test
 
-- fetch post by slug
-- return `notFound()` if no post exists
-- render Portable Text body
-- preserve safety disclaimer block
-- preserve AI feedback-only language
+Run:
 
-## Phase 5 — Add Sanity preview later
+```bash
+npm install
+npm run check:env
+npm run preflight:routes
+npm run build
+vercel deploy --prod
+npm run smoke:production
+```
+
+Then open:
+
+```text
+/blog
+/blog/si-funksionon-plani-digjital-i-fizioterapise
+```
+
+## Phase 5 — Preview later
 
 Preview is not required before pilot.
 
@@ -182,24 +173,7 @@ Future routes may be:
 
 Keep preview token server-side only.
 
-## Phase 6 — Deployment
-
-### Studio deploy
-
-```bash
-npm run studio:deploy
-```
-
-### Public web deploy
-
-```bash
-npm run preflight:routes
-npm run build
-vercel deploy --prod
-npm run smoke:production
-```
-
-## Phase 7 — Content workflow
+## Content workflow
 
 1. Editor logs into Sanity Studio.
 2. Creates Author.
@@ -221,25 +195,15 @@ Every post touching AI, rehab, pain, exercise, diagnosis or therapy must preserv
 - No claim that the app cures conditions.
 - No promise of guaranteed results.
 
-## Recommended order for this project
-
-Because pilot-freeze is active, use this order:
-
-1. Keep static blog routes active now.
-2. Use Sanity Studio only as separate module.
-3. Run pilot.
-4. After pilot, connect web blog to Sanity queries.
-5. Add preview only after public Sanity blog works.
-6. Add SEO enhancements after content workflow is stable.
-
 ## Acceptance criteria
 
 Sanity integration is complete when:
 
 - `npm run studio:dev` works locally.
 - `npm run studio:build` works.
-- `/blog` loads posts from Sanity.
-- `/blog/[slug]` loads one post from Sanity.
+- `/blog` loads posts from Sanity when env vars are set.
+- `/blog/[slug]` loads one post from Sanity when env vars are set.
+- `/blog` still works with static fallback when env vars are missing.
 - Vercel web build passes.
 - Studio is still excluded from normal Vercel web build.
 - No secret token is exposed in frontend/mobile.
