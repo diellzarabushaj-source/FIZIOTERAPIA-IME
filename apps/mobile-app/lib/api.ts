@@ -49,14 +49,24 @@ export type SaveProgressPayload = {
   painScore?: number;
 };
 
-async function postJson<T>(path: string, payload: Record<string, unknown>): Promise<T> {
+export type MobileHealth = {
+  app: string;
+  service: "mobile-api";
+  ok: boolean;
+  status: "ready" | "missing-required-env";
+  checks: Record<string, boolean>;
+  timestamp: string;
+  note: string;
+};
+
+async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(`${API_BASE_URL}${path}`, {
-    method: "POST",
     headers: {
       "content-type": "application/json",
       "x-fizioterapia-ime-client": "mobile-app",
+      ...(init?.headers || {}),
     },
-    body: JSON.stringify(payload),
+    ...init,
   });
 
   const data = await response.json().catch(() => ({}));
@@ -66,6 +76,17 @@ async function postJson<T>(path: string, payload: Record<string, unknown>): Prom
   }
 
   return data as T;
+}
+
+function postJson<T>(path: string, payload: Record<string, unknown>): Promise<T> {
+  return requestJson<T>(path, {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function checkMobileBackendHealth() {
+  return requestJson<MobileHealth>("/api/mobile/health");
 }
 
 export async function loginPatientWithCode(code: string) {
