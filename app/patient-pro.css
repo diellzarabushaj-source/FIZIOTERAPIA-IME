@@ -592,13 +592,42 @@
     min-height: 100vh;
     border-radius: 0;
     padding: 0;
+    box-shadow: none;
+    border: none;
   }
 
   .patient-pro-statusbar {
-    border-radius: 0;
+    display: none !important; /* Hide fake status bar mock on actual mobile screens */
+  }
+
+  .patient-pro-header {
+    padding-top: 18px; /* Extra top spacing for statusbar replacement */
   }
 
   .patient-pro-desktop-panel {
     display: none;
   }
+
+  .patient-pro-bottom-nav {
+    position: fixed !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    margin: 0 !important;
+    border-radius: 0 !important;
+    border-top: 1px solid rgba(226, 232, 240, 0.94) !important;
+    border-left: none !important;
+    border-right: none !important;
+    border-bottom: none !important;
+    background: rgba(255, 255, 255, 0.90) !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+    z-index: 9999 !important;
+    box-shadow: 0 -8px 24px rgba(15, 32, 51, 0.06) !important;
+  }
+
+  .patient-pro-safety-card {
+    padding-bottom: 110px !important; /* Spacing so fixed bottom nav doesn't overlap content */
+  }
 }
+

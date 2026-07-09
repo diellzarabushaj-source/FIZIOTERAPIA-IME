@@ -394,10 +394,30 @@
     font-size: 1rem;
   }
 
-  .refreshed-home .landing-proof,
   .landing-hero-media,
-  .hero-side-stack,
   .outcome-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .refreshed-home .landing-proof {
+    grid-template-columns: repeat(3, 1fr) !important; /* Keep as 3 columns on mobile for compactness */
+    gap: 8px;
+  }
+
+  .refreshed-home .landing-proof div {
+    padding: 10px;
+    border-radius: 16px;
+  }
+
+  .refreshed-home .landing-proof strong {
+    font-size: 1.25rem;
+  }
+
+  .refreshed-home .landing-proof span {
+    font-size: 10px;
+  }
+
+  .hero-side-stack {
     grid-template-columns: 1fr;
   }
 
@@ -409,9 +429,12 @@
   }
 
   .hero-photo-large,
-  .hero-photo-small,
   .ai-visual-card {
-    height: 360px;
+    height: 340px;
+  }
+
+  .hero-photo-small {
+    display: none; /* Hide secondary image on mobile to prevent extreme height */
   }
 
   .hero-session-card {
@@ -446,6 +469,11 @@
   .refreshed-home .portal-actions .button {
     width: 100%;
   }
+
+  /* Hide regular links in navigation on mobile to prevent wrapping */
+  .landing-nav .nav-actions a:not(.auth-button):not([href="/patient-portal"]):not([href="/physiotherapist-portal"]) {
+    display: none;
+  }
 }
 
 @media (max-width: 520px) {
@@ -454,9 +482,8 @@
   }
 
   .hero-photo-large,
-  .hero-photo-small,
   .ai-visual-card {
-    height: 310px;
+    height: 300px;
   }
 
   .hero-photo-caption {
@@ -470,3 +497,4 @@
     padding: 20px;
   }
 }
+
