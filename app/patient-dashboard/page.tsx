@@ -211,6 +211,13 @@ function getStreakDays(logs: ExerciseLog[]) {
   return streak;
 }
 
+function getPainHearts(pain?: number) {
+  if (typeof pain !== "number") return 5;
+  if (pain >= 7) return 1;
+  if (pain >= 4) return 3;
+  return 5;
+}
+
 function formatShortDate(value?: string | null) {
   if (!value) return "—";
   return new Date(value).toLocaleDateString("sq-AL", { day: "2-digit", month: "short" });
@@ -225,7 +232,7 @@ export default async function PatientDashboardPage() {
 
   if (data.error) {
     return (
-      <main className="page patient-dashboard-page patient-pro-page">
+      <main className="page patient-dashboard-page patient-pro-page duo-app-page">
         <nav className="top-nav">
           <BrandMark />
           <div className="nav-actions"><a href="/patient-portal">Patient Portal</a></div>
@@ -242,7 +249,6 @@ export default async function PatientDashboardPage() {
 
   const dashboard = data as DashboardData;
   const { patient, physio, activePlan, planExercises, logs, aiChecks, messages } = dashboard;
-  const patientName = `${patient.first_name} ${patient.last_name || ""}`.trim();
   const currentDay = getCurrentPlanDay(activePlan);
   const days = uniqueDays(planExercises);
   const completedCount = planExercises.filter((exercise) => findLatestLog(logs, exercise.id)?.completed).length;
@@ -260,141 +266,157 @@ export default async function PatientDashboardPage() {
   const activeExercises = visibleExercises.filter((exercise) => !findLatestLog(logs, exercise.id)?.completed);
   const aiEnabledExercises = planExercises.filter((exercise) => exercise.exercise_library?.ai_enabled);
   const recoveryScore = averageAi ?? Math.max(0, Math.min(100, 100 - (averagePain ?? 3) * 8));
-  const recoveryLabel = recoveryScore >= 85 ? "Excellent progress" : recoveryScore >= 65 ? "Good progress" : "Needs attention";
+  const recoveryLabel = recoveryScore >= 85 ? "Shumë mirë" : recoveryScore >= 65 ? "Mirë" : "Kërkon kujdes";
   const streakDays = getStreakDays(logs);
   const todayDone = visibleExercises.filter((exercise) => findLatestLog(logs, exercise.id)?.completed).length;
   const firstExercise = activeExercises[0] || visibleExercises[0] || null;
+  const hearts = getPainHearts(latestPain);
+  const xp = completedCount * 10 + aiChecks.length * 5;
 
   return (
-    <main className="patient-pro-page">
-      <section className="patient-pro-shell">
-        <div className="patient-pro-phone">
-          <div className="patient-pro-statusbar"><span>9:41</span><span>●●●</span></div>
+    <main className="patient-pro-page duo-app-page">
+      <section className="patient-pro-shell duo-app-shell">
+        <div className="patient-pro-phone duo-phone">
+          <div className="patient-pro-statusbar duo-status"><span>9:41</span><span>●●●</span></div>
 
-          <header className="patient-pro-header">
+          <header className="patient-pro-header duo-header">
             <a href="/patient-portal" aria-label="Back">‹</a>
             <div>
-              <span>Plani im i ushtrimeve</span>
-              <small>{physio?.clinic_name || "Fizioterapia ime"}</small>
+              <span>Fizioterapia ime</span>
+              <small>{physio?.clinic_name || "Plani yt"}</small>
             </div>
             <span>🔔</span>
           </header>
 
-          <section className="patient-pro-plan-card">
+          <section className="duo-progress-top">
+            <div><span>🔥</span><b>{streakDays}</b><small>ditë</small></div>
+            <div><span>💚</span><b>{hearts}</b><small>siguri</small></div>
+            <div><span>⭐</span><b>{xp}</b><small>pikë</small></div>
+          </section>
+
+          <section className="patient-pro-plan-card duo-lesson-hero">
             <div>
               <span className="patient-pro-pill">Dita {currentDay}</span>
-              <h1>{activePlan?.title || "Program rehabilitimi"}</h1>
-              <p>{patient.diagnosis || "Plan personal nga fizioterapeuti"}</p>
+              <h1>{firstExercise?.exercise_library?.name || activePlan?.title || "Ushtrimi i sotëm"}</h1>
+              <p>{firstExercise ? formatDosage(firstExercise) : patient.diagnosis || "Plan personal nga fizioterapeuti"}</p>
             </div>
+            <a className="duo-main-cta" href={firstExercise ? `#exercise-${firstExercise.id}` : "#path"}>Vazhdo</a>
             <div className="patient-pro-progress-copy">
-              <span>{completedCount} nga {planExercises.length || 0} ushtrime të përfunduara</span>
+              <span>{completedCount} nga {planExercises.length || 0} ushtrime</span>
               <b>{progress}%</b>
             </div>
             <div className="patient-pro-progress-line"><i style={{ width: `${progress}%` }} /></div>
           </section>
 
-          <section className="patient-pro-score-grid">
+          <section className="patient-pro-score-grid duo-simple-score-grid">
             <article>
-              <span>Recovery Score</span>
+              <span>Recovery</span>
               <strong>{recoveryScore}</strong>
               <small>{recoveryLabel}</small>
             </article>
             <article>
               <span>Dhimbja</span>
               <strong>{latestPain !== undefined ? `${latestPain}/10` : "—"}</strong>
-              <small>{highPain ? "Ndalo ushtrimin" : "Raporto pas ushtrimit"}</small>
+              <small>{highPain ? "Ndalo" : "OK"}</small>
             </article>
           </section>
 
           {(highPain || lowAi) && (
-            <div className="patient-pro-warning">
+            <div className="patient-pro-warning duo-warning">
               <b>Kujdes</b>
               <span>{highPain ? `Dhimbja e fundit është ${latestPain}/10. Ndalo dhe kontakto fizioterapeutin.` : `AI score është ${latestAi}%. Kontrollo teknikën.`}</span>
             </div>
           )}
 
-          <section className="patient-pro-today-head">
+          <section className="patient-pro-today-head duo-path-head" id="path">
             <div>
-              <h2>Ushtrimet e sotme</h2>
-              <p>{todayDone} nga {visibleExercises.length || 0} të përfunduara</p>
+              <h2>Rruga e rikuperimit</h2>
+              <p>{todayDone} nga {visibleExercises.length || 0} sot</p>
             </div>
-            <span>🔥 {streakDays} ditë</span>
+            <span>Dita {currentDay}</span>
           </section>
 
-          <section className="patient-pro-exercise-list">
+          <section className="duo-rehab-path">
             {visibleExercises.length === 0 && <p className="patient-pro-empty">Ende nuk ka ushtrime në plan.</p>}
-            {visibleExercises.map((planExercise) => {
+            {visibleExercises.map((planExercise, index) => {
               const exercise = planExercise.exercise_library;
               const latestLog = findLatestLog(logs, planExercise.id);
               const latestAiCheck = findLatestAi(aiChecks, planExercise.id);
               const isDone = Boolean(latestLog?.completed);
               const isHighPain = typeof latestLog?.pain_score === "number" && latestLog.pain_score >= 7;
+              const isLocked = (planExercise.day_number || 1) > currentDay;
+              const nodeState = isLocked ? "locked" : isDone ? "done" : index === activeExercises.findIndex((item) => item.id === planExercise.id) ? "current" : "open";
 
               return (
-                <article className={isDone ? "patient-pro-exercise done" : "patient-pro-exercise"} key={planExercise.id}>
-                  <div className="patient-pro-exercise-icon">🏃</div>
-                  <div className="patient-pro-exercise-body">
-                    <div className="patient-pro-exercise-title">
-                      <h3>{exercise?.name || "Ushtrim"}</h3>
-                      <span>{isDone ? "✓" : "○"}</span>
+                <article className={`duo-lesson-node ${nodeState}`} id={`exercise-${planExercise.id}`} key={planExercise.id}>
+                  <div className="duo-lesson-circle">{isLocked ? "🔒" : isDone ? "✓" : exercise?.ai_enabled ? "🤖" : "▶"}</div>
+                  <div className="duo-lesson-card">
+                    <div className="duo-lesson-title-row">
+                      <div>
+                        <span>Dita {planExercise.day_number || 1}</span>
+                        <h3>{exercise?.name || "Ushtrim"}</h3>
+                      </div>
+                      {exercise?.ai_enabled && <em>AI</em>}
                     </div>
                     <p>{formatDosage(planExercise)} · {planExercise.frequency || "Sipas planit"}</p>
-                    <small>Dita {planExercise.day_number || 1} · Dhimbje {latestLog?.pain_score ?? "—"}/10 · AI {latestAiCheck?.score ? `${latestAiCheck.score}%` : "—"}</small>
-                    <details>
-                      <summary>Instruksione + përfundo</summary>
-                      <p>{planExercise.instructions || exercise?.instructions_sq || "Kryeje ushtrimin ngadalë dhe me kontroll."}</p>
-                      {isHighPain && <div className="patient-pro-warning mini">Dhimbje {latestLog?.pain_score}/10: mos vazhdo pa kontaktuar fizioterapeutin.</div>}
-                      <form action={completeExerciseAction} className="patient-pro-complete-form">
-                        <input type="hidden" name="planExerciseId" value={planExercise.id} />
-                        <select name="painScore" defaultValue="3" aria-label="Dhimbja pas ushtrimit">
-                          {Array.from({ length: 11 }, (_, score) => <option key={score} value={score}>{score}/10</option>)}
-                        </select>
-                        <input name="comment" placeholder="Koment opsional" />
-                        <button type="submit">E përfundova</button>
-                      </form>
-                      {exercise?.ai_enabled && <a className="patient-pro-ai-button" href={`/ai-check?planExerciseId=${planExercise.id}`}>AI Movement Check</a>}
-                    </details>
+                    <small>Dhimbje {latestLog?.pain_score ?? "—"}/10 · AI {latestAiCheck?.score ? `${latestAiCheck.score}%` : "—"}</small>
+                    {!isLocked && (
+                      <details>
+                        <summary>Hape ushtrimin</summary>
+                        <p>{planExercise.instructions || exercise?.instructions_sq || "Kryeje ushtrimin ngadalë dhe me kontroll."}</p>
+                        {isHighPain && <div className="patient-pro-warning mini">Dhimbje {latestLog?.pain_score}/10: mos vazhdo pa kontaktuar fizioterapeutin.</div>}
+                        <form action={completeExerciseAction} className="patient-pro-complete-form duo-complete-form">
+                          <input type="hidden" name="planExerciseId" value={planExercise.id} />
+                          <select name="painScore" defaultValue="3" aria-label="Dhimbja pas ushtrimit">
+                            {Array.from({ length: 11 }, (_, score) => <option key={score} value={score}>{score}/10</option>)}
+                          </select>
+                          <input name="comment" placeholder="Koment opsional" />
+                          <button type="submit">U kry ✅</button>
+                        </form>
+                        {exercise?.ai_enabled && <a className="patient-pro-ai-button" href={`/ai-check?planExerciseId=${planExercise.id}`}>AI Movement Check</a>}
+                      </details>
+                    )}
                   </div>
                 </article>
               );
             })}
           </section>
 
-          <div className="patient-pro-safety-card">
+          <div className="patient-pro-safety-card duo-safety-card">
             <b>Kujdes</b>
-            <span>Nëse ndjeni dhimbje të mprehtë, ndaloni ushtrimin dhe kontaktoni fizioterapeutin tuaj.</span>
+            <span>Dhimbje 7/10 ose më shumë = ndalo ushtrimin dhe kontakto fizioterapeutin.</span>
           </div>
 
-          <nav className="patient-pro-bottom-nav" aria-label="Patient app tabs">
-            <a className="active" href="#top">⌂<span>Përmbledhje</span></a>
-            <a href="#top">✓<span>Ushtrimet</span></a>
-            <a href="#messages">☰<span>Mesazhet</span></a>
+          <nav className="patient-pro-bottom-nav duo-bottom-nav" aria-label="Patient app tabs">
+            <a className="active" href="#path">🏠<span>Sot</span></a>
+            <a href="#path">🟢<span>Rruga</span></a>
+            <a href="#messages">💬<span>Mesazhe</span></a>
             <form action={patientLogoutAction}><button type="submit">○<span>Dil</span></button></form>
           </nav>
         </div>
 
-        <aside className="patient-pro-desktop-panel">
+        <aside className="patient-pro-desktop-panel duo-side-panel">
           <BrandMark />
           <div className="patient-pro-welcome">
-            <span>Patient Dashboard · Vetëm me kod</span>
-            <h2>Mirë se erdhe, {patient.first_name}.</h2>
-            <p>Pacienti hyn vetëm me kod unik ose QR. Këtu sheh vetëm planin personal që e ka caktuar fizioterapeuti.</p>
+            <span>App për pacientë + fizioterapeutë</span>
+            <h2>Shumë thjeshtë: sot, ushtrim, progres.</h2>
+            <p>Pacienti sheh vetëm rrugën e rikuperimit. Fizioterapeuti e krijon planin dhe e kontrollon sigurinë.</p>
           </div>
 
-          <div className="patient-pro-code-card">
+          <div className="patient-pro-code-card duo-code-card">
             <span>Kodi personal</span>
             <strong>{patient.patient_code}</strong>
-            <small>Mos e ndaj me persona të tjerë.</small>
+            <small>QR/code është qasja e vetme e pacientit.</small>
           </div>
 
-          <div className="patient-pro-insight-grid">
+          <div className="patient-pro-insight-grid duo-insights">
             <article><span>Fizioterapeut</span><b>{physio?.full_name || "—"}</b></article>
             <article><span>AI checks</span><b>{aiChecks.length}</b></article>
             <article><span>Mesazhe</span><b>{messages.length}</b></article>
             <article><span>AI exercises</span><b>{aiEnabledExercises.length}</b></article>
           </div>
 
-          <section className="patient-pro-timeline">
+          <section className="patient-pro-timeline duo-day-strip">
             <h3>Ditët e planit</h3>
             <div>
               {days.length === 0 && <span className="active">Dita 1</span>}
@@ -425,7 +447,7 @@ export default async function PatientDashboardPage() {
             </article>
           </section>
 
-          <section className="patient-pro-next-card">
+          <section className="patient-pro-next-card duo-next-card">
             <span>Ushtrimi i radhës</span>
             <h3>{firstExercise?.exercise_library?.name || "—"}</h3>
             <p>{firstExercise?.instructions || firstExercise?.exercise_library?.instructions_sq || "Kryeje me kontroll."}</p>
