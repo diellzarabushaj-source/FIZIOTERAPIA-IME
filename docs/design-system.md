@@ -1,6 +1,6 @@
 # Fizioterapia Ime Design System
 
-Phase 1 centralizes the visual foundation. Phase 2 migrates the public homepage into the premium app-first direction. Phase 3 simplifies the patient login portal for older and non-technical patients. Phase 4 refreshes the physiotherapist dashboard visually without changing backend logic. Phase 5 refreshes the owner/admin dashboard into a clearer control center. Phase 6 aligns the Expo mobile app with the same visual system.
+Phase 1 centralizes the visual foundation. Phase 2 migrates the public homepage into the premium app-first direction. Phase 3 simplifies the patient login portal for older and non-technical patients. Phase 4 refreshes the physiotherapist dashboard visually without changing backend logic. Phase 5 refreshes the owner/admin dashboard into a clearer control center. Phase 6 aligns the Expo mobile app with the same visual system. Phase 7 adds a visual QA and merge-readiness checklist.
 
 ## Files
 
@@ -13,6 +13,7 @@ Phase 1 centralizes the visual foundation. Phase 2 migrates the public homepage 
 - `app/physio-dashboard-refresh.css` — clinical visual cleanup for the physiotherapist dashboard.
 - `app/admin-dashboard-refresh.css` — owner/admin control-center visual cleanup.
 - `apps/mobile-app/App.tsx` — Expo mobile app aligned to the shared brand tokens and patient-first flow.
+- `docs/visual-qa-checklist.md` — manual QA checklist and merge-readiness criteria for PR #4.
 
 ## Brand direction
 
@@ -151,9 +152,28 @@ The Expo mobile app now mirrors the same visual language as the web product whil
 5. Pain score and warning screens keep the 7/10 stop rule visually prominent.
 6. Demo/live fallback behavior and `saveMobileProgress` flow remain unchanged.
 
+## Visual QA and merge readiness
+
+Use `docs/visual-qa-checklist.md` before merging PR #4.
+
+Required commands:
+
+1. `npm run lint`
+2. `npm run build`
+3. `npm run preflight:routes`
+4. `npm run mobile:typecheck`
+
+Required screens:
+
+1. Homepage `/`
+2. Patient portal `/patient-portal`
+3. Physiotherapist portal `/physiotherapist-portal`
+4. Admin dashboard `/admin-dashboard`
+5. Expo mobile app login, plan, exercise, AI, pain and saved screens
+
 ## Next migration order
 
-1. Visual QA: run the web app and Expo app and check homepage, patient login, physio dashboard, admin dashboard and mobile app.
+1. Run visual QA using `docs/visual-qa-checklist.md`.
 2. Merge PR #4 once visual QA passes.
 3. Continue with functional cleanup only if needed.
 
