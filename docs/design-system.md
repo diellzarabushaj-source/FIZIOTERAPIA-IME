@@ -1,6 +1,6 @@
 # Fizioterapia Ime Design System
 
-Phase 1 centralizes the visual foundation. Phase 2 migrates the public homepage into the premium app-first direction. Phase 3 simplifies the patient login portal for older and non-technical patients. Phase 4 refreshes the physiotherapist dashboard visually without changing backend logic.
+Phase 1 centralizes the visual foundation. Phase 2 migrates the public homepage into the premium app-first direction. Phase 3 simplifies the patient login portal for older and non-technical patients. Phase 4 refreshes the physiotherapist dashboard visually without changing backend logic. Phase 5 refreshes the owner/admin dashboard into a clearer control center.
 
 ## Files
 
@@ -11,6 +11,7 @@ Phase 1 centralizes the visual foundation. Phase 2 migrates the public homepage 
 - `app/patient-portal/page.tsx` — simplified patient code-login flow.
 - `app/patient-login-refresh.css` — patient-login-specific mobile-first styling.
 - `app/physio-dashboard-refresh.css` — clinical visual cleanup for the physiotherapist dashboard.
+- `app/admin-dashboard-refresh.css` — owner/admin control-center visual cleanup.
 
 ## Brand direction
 
@@ -126,10 +127,22 @@ The physio dashboard refresh keeps all server-side data queries and form actions
 6. Forms and action zones are separated into cleaner panels with consistent spacing and larger touch targets.
 7. Mobile layout switches to horizontal dashboard navigation and simplified stat grids.
 
+## Admin dashboard cleanup
+
+The admin dashboard refresh turns the owner page into a clearer platform control center while leaving Supabase reads, Clerk protection and data logic unchanged.
+
+1. Admin nav and sidebar use the same premium glass treatment as the rest of the product.
+2. Owner hero emphasizes platform control and MRR.
+3. KPI cards are standardized for physios, patients, plans and clinical alerts.
+4. Alert cards for pain, AI and notifications become easier to scan.
+5. Tables get sticky headers, cleaner spacing and horizontal overflow for mobile.
+6. Billing/access pills are visually clearer.
+7. Template and safety sections use the same card system as the clinical dashboard.
+
 ## Next migration order
 
-1. Admin dashboard: convert owner metrics and lists to shared primitives.
-2. Mobile app: mirror the same token values in React Native styles.
+1. Mobile app: mirror the same token values in React Native styles.
+2. After visual QA, merge PR #4 and continue with functional cleanup only if needed.
 
 ## Rules
 
