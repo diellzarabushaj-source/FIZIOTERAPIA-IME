@@ -46,6 +46,7 @@ export default async function BlogPage() {
       <section className="launch-grid readiness-grid">
         {posts.map((post) => (
           <article className="launch-card" key={post.slug}>
+            {post.mainImage?.url && <img src={post.mainImage.url} alt={post.mainImage.alt || post.title} className="blog-card-image" />}
             <span className="mini-badge">{post.category} · {post.readingTime}</span>
             <h2>{post.title}</h2>
             <p>{post.description}</p>
