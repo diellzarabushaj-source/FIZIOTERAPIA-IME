@@ -1,12 +1,17 @@
 import { BrandMark } from "@/components/BrandMark";
-import { blogPosts } from "@/lib/blog-content";
+import { hasSanityConfig } from "@/lib/sanity/client";
+import { getBlogPosts } from "@/lib/sanity/queries";
 
 export const metadata = {
   title: "Blog | Fizioterapia ime",
   description: "Artikuj për pacientë, fizioterapeutë, AI Movement Check dhe pilotimin e Fizioterapia ime.",
 };
 
-export default function BlogPage() {
+export const revalidate = 60;
+
+export default async function BlogPage() {
+  const posts = await getBlogPosts();
+
   return (
     <main className="page launch-page blog-page">
       <nav className="top-nav">
@@ -23,8 +28,8 @@ export default function BlogPage() {
           <span className="badge">Blog · Fizioterapia ime</span>
           <h1>Artikuj të thjeshtë për pacientë dhe fizioterapeutë.</h1>
           <p>
-            Blogu është gati si route i ndarë. Për momentin përdor content statik që nuk e prish Vercel build-in;
-            më vonë lidhet me Sanity Studio pas pilotit.
+            Blogu tani lexon artikuj nga Sanity kur env vars janë të vendosura. Nëse Sanity nuk është konfiguruar ende,
+            faqja përdor fallback statik që Vercel build të mos prishet.
           </p>
           <div className="hero-actions">
             <a className="button" href="/pilot-readiness">Pilot readiness</a>
@@ -33,13 +38,13 @@ export default function BlogPage() {
         </div>
         <div className="launch-status-card ready">
           <span className="mini-badge">Status</span>
-          <strong>Sanity-ready module</strong>
-          <p>Route-at /blog dhe /blog/[slug] janë gati pa e bërë web build-in të varur nga Studio.</p>
+          <strong>{hasSanityConfig ? "Sanity connected" : "Static fallback"}</strong>
+          <p>{hasSanityConfig ? "Blogu po lexon postime nga Sanity dataset." : "Shto NEXT_PUBLIC_SANITY_PROJECT_ID për me aktivizu Sanity live."}</p>
         </div>
       </section>
 
       <section className="launch-grid readiness-grid">
-        {blogPosts.map((post) => (
+        {posts.map((post) => (
           <article className="launch-card" key={post.slug}>
             <span className="mini-badge">{post.category} · {post.readingTime}</span>
             <h2>{post.title}</h2>
