@@ -5,6 +5,7 @@ const appDir = join(process.cwd(), "app");
 
 const requiredPublicRoutes = [
   "/",
+  "/blog",
   "/faq",
   "/support",
   "/clinic-use",
@@ -46,6 +47,7 @@ const requiredApiRoutes = [
 
 const dynamicRoutes = new Set([
   "/reports/demo",
+  "/blog/si-funksionon-plani-digjital-i-fizioterapise",
 ]);
 
 function routeToPageFile(route) {
