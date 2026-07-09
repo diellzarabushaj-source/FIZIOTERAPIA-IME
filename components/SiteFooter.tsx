@@ -2,22 +2,20 @@ import { BrandMark } from "./BrandMark";
 
 const footerSections = [
   {
-    title: "Platforma",
+    title: "Website",
     links: [
       ["Home", "/"],
       ["Blog", "/blog"],
-      ["Patient Portal", "/patient-portal"],
-      ["Physio Portal", "/physiotherapist-portal"],
-      ["AI Movement Check", "/ai-check"],
       ["FAQ", "/faq"],
+      ["Si përdoret në klinikë", "/clinic-use"],
     ],
   },
   {
     title: "Support",
     links: [
       ["Support Center", "/support"],
-      ["Clinic Use Guide", "/clinic-use"],
       ["Patient Handout", "/patient-handout"],
+      ["Pilot onboarding", "/pilot-onboarding"],
       ["Contact", "/support"],
     ],
   },
@@ -40,11 +38,12 @@ export function SiteFooter() {
         <div className="footer-brand-card">
           <BrandMark />
           <p>
-            Platformë digjitale për fizioterapi: plan ushtrimesh, monitorim progresi, AI Movement Check dhe raporte për rikontroll.
+            Website dhe pilot i kontrolluar për fizioterapi digjitale: udhëzime më të qarta për pacientë,
+            support për fizioterapeutë dhe rregulla të qarta klinike para lansimit të plotë.
           </p>
           <div className="footer-status-row">
-            <span>29.90 EUR / muaj për fizioterapeutë</span>
-            <span>AI feedback only</span>
+            <span>Website-first launch</span>
+            <span>Fizioterapeuti mbetet vendimmarrësi klinik</span>
           </div>
         </div>
 
@@ -61,8 +60,8 @@ export function SiteFooter() {
       </div>
 
       <div className="footer-bottom">
-        <p>© {new Date().getFullYear()} Fizioterapia ime. Lëviz më mirë, jeto më mirë.</p>
-        <p>AI nuk diagnostikon dhe nuk zëvendëson fizioterapeutin. Në urgjencë kontakto shërbimet emergjente.</p>
+        <p>© {new Date().getFullYear()} Fizioterapia Ime. Lëviz më mirë, jeto më mirë.</p>
+        <p>Nuk jep diagnozë dhe nuk zëvendëson fizioterapeutin. Në urgjencë kontakto shërbimet emergjente.</p>
       </div>
     </footer>
   );
