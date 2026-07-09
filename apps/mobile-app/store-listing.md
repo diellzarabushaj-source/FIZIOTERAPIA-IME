@@ -1,4 +1,4 @@
-# Fizioterapia ime — App Store / Play Store listing draft
+# Fizioterapia ime - App Store / Play Store listing draft
 
 ## App name
 
@@ -10,20 +10,20 @@ Plane ushtrimesh nga fizioterapeuti, progres dhe AI Movement Check.
 
 ## Full description
 
-Fizioterapia ime është app për pacientë që marrin plan ushtrimesh nga fizioterapeuti i tyre.
+Fizioterapia ime eshte app per paciente qe marrin plan ushtrimesh nga fizioterapeuti i tyre.
 
-Pacienti hyn me username dhe kod të dhënë nga fizioterapeuti, sheh ushtrimet e caktuara, lexon udhëzimet, raporton dhimbjen 0–10 dhe mund të përdorë AI Movement Check si feedback për cilësinë e lëvizjes.
+Pacienti hyn me kod te dhene nga fizioterapeuti, sheh ushtrimet e caktuara, lexon udhezimet, raporton dhimbjen 0-10 dhe mund te perdore AI Movement Check si feedback per cilesine e levizjes.
 
-Fizioterapeuti mbetet vendimmarrësi kryesor. AI nuk diagnostikon, nuk përshkruan terapi dhe nuk zëvendëson vlerësimin profesional.
+Fizioterapeuti mbetet vendimmarresi kryesor. AI nuk diagnostikon, nuk pershkruan terapi dhe nuk zevendeson vleresimin profesional.
 
 ## Key features
 
 - Hyrje me kod pacienti
 - Plan ushtrimesh i personalizuar
-- Video / udhëzime për ushtrime
-- Raportim i dhimbjes 0–10
-- Paralajmërim kur dhimbja është 7/10 ose më shumë
-- AI Movement Check për feedback të lëvizjes
+- Udhezime per ushtrime
+- Raportim i dhimbjes 0-10
+- Paralajmerim kur dhimbja eshte 7/10 ose me shume
+- AI Movement Check per feedback te levizjes
 - Progres ditor dhe histori ushtrimesh
 - Komunikim me fizioterapeutin
 
@@ -65,12 +65,13 @@ https://fizioterapia-ime.vercel.app/data-deletion
 2. Patient plan overview
 3. Exercise detail
 4. AI Movement Check safety screen
-5. Pain score 0–10
-6. Progress / saved result
+5. Pain score 0-10
+6. Warning state for pain 7/10
+7. Saved result / progress
 
 ## Assets needed before submission
 
-- App icon 1024 × 1024 PNG
+- App icon 1024 x 1024 PNG
 - Adaptive Android icon foreground/background
 - Splash screen image
 - iPhone screenshots
