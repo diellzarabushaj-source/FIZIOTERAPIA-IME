@@ -13,8 +13,36 @@ export const postType = defineType({
     defineField({ name: "publishedAt", title: "Published at", type: "datetime" }),
     defineField({ name: "readingTime", title: "Reading time", type: "string", initialValue: "4 min" }),
     defineField({ name: "hero", title: "Hero text", type: "text", rows: 3 }),
+    defineField({
+      name: "mainImage",
+      title: "Main image",
+      type: "image",
+      options: { hotspot: true },
+      fields: [
+        defineField({ name: "alt", title: "Alt text", type: "string", validation: (rule) => rule.required().warning("Alt text helps accessibility and SEO.") }),
+      ],
+    }),
     defineField({ name: "body", title: "Body", type: "blockContent" }),
     defineField({ name: "safetyReviewed", title: "Safety reviewed", type: "boolean", initialValue: false }),
+    defineField({
+      name: "seo",
+      title: "SEO",
+      type: "object",
+      fields: [
+        defineField({ name: "title", title: "SEO title", type: "string", validation: (rule) => rule.max(70) }),
+        defineField({ name: "description", title: "SEO description", type: "text", rows: 3, validation: (rule) => rule.max(170) }),
+        defineField({ name: "keywords", title: "Keywords", type: "array", of: [{ type: "string" }] }),
+        defineField({
+          name: "image",
+          title: "SEO image",
+          type: "image",
+          options: { hotspot: true },
+          fields: [
+            defineField({ name: "alt", title: "Alt text", type: "string" }),
+          ],
+        }),
+      ],
+    }),
   ],
   preview: {
     select: {
