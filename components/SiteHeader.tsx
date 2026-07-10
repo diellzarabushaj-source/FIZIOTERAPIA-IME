@@ -5,7 +5,7 @@ import { AuthControls } from "@/components/AuthControls";
 import { BrandMark } from "@/components/BrandMark";
 
 const links = [
-  { href: "/si-perdoret-ne-klinike", label: "Si përdoret", key: "clinic" },
+  { href: "/clinic-use", label: "Si përdoret", key: "clinic" },
   { href: "/#patient", label: "Për pacientin", key: "patient" },
   { href: "/#physio", label: "Për fizioterapeutin", key: "physio" },
   { href: "/#pricing", label: "Çmimi", key: "pricing" },
@@ -23,7 +23,7 @@ export function SiteHeader() {
           {links.map((link) => {
             const active =
               (link.key === "blog" && pathname.startsWith("/blog")) ||
-              (link.key === "clinic" && pathname === "/si-perdoret-ne-klinike");
+              (link.key === "clinic" && (pathname === "/clinic-use" || pathname === "/si-perdoret-ne-klinike"));
             return (
               <a key={link.key} className={active ? "active" : undefined} href={link.href}>
                 {link.label}
