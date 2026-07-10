@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { requirePhysioActor } from "@/lib/backend/access";
+import { writeAuditEvent } from "@/lib/backend/audit";
 import { updatePatientForActor } from "@/lib/backend/patient-profile";
 import { createPatientForActor, getPatientForActor } from "@/lib/backend/patients";
 import { cleanText } from "@/lib/backend/validation";
@@ -23,7 +24,6 @@ export type PatientEditFormState = {
 export type SessionFormState = {
   status: "idle" | "success" | "error";
   message: string;
-  sessionNumber?: number;
   fieldErrors?: Record<string, string>;
 };
 
@@ -136,12 +136,21 @@ export async function createPatientSessionAction(
     if (patientResult.ok === false) {
       return { status: "error", message: patientResult.error.message, fieldErrors: {} };
     }
-    if (!patientResult.data.physio_id) {
-      return { status: "error", message: "Pacienti nuk ka fizioterapeut të caktuar.", fieldErrors: {} };
+
+    const patient = patientResult.data;
+    if (!patient.physio_id || patient.physio_id !== actor.profileId) {
+      return { status: "error", message: "Nuk ke qasje në këtë pacient.", fieldErrors: {} };
+    }
+    if (patient.archived_at || patient.status !== "active") {
+      return { status: "error", message: "Pacienti nuk është aktiv dhe nuk mund të ketë seancë të re.", fieldErrors: {} };
     }
 
     const sessionDate = cleanText(formData.get("sessionDate"), 10);
     const treatment = cleanText(formData.get("treatment"), 4000);
+    const subjective = cleanText(formData.get("subjective"), 3000);
+    const objective = cleanText(formData.get("objective"), 3000);
+    const response = cleanText(formData.get("response"), 3000);
+    const nextPlan = cleanText(formData.get("nextPlan"), 3000);
     const painBefore = parsePain(formData.get("painBefore"), "painBefore");
     const painAfter = parsePain(formData.get("painAfter"), "painAfter");
     const fieldErrors: Record<string, string> = {};
@@ -168,20 +177,36 @@ export async function createPatientSessionAction(
       return { status: "error", message: "Databaza nuk është konfiguruar.", fieldErrors: {} };
     }
 
-    const { data, error } = await supabase.rpc("create_patient_session_safely", {
-      p_patient_id: patientId,
-      p_physio_id: patientResult.data.physio_id,
-      p_session_date: sessionDate,
-      p_pain_before: painBefore.value,
-      p_pain_after: painAfter.value,
-      p_subjective: cleanText(formData.get("subjective"), 3000),
-      p_objective: cleanText(formData.get("objective"), 3000),
-      p_treatment: treatment,
-      p_response: cleanText(formData.get("response"), 3000),
-      p_next_plan: cleanText(formData.get("nextPlan"), 3000),
-    });
+    const clinicalNotes = [
+      subjective ? `Subjektive:\n${subjective}` : "",
+      objective ? `Objektive:\n${objective}` : "",
+      response ? `Reagimi pas seancës:\n${response}` : "",
+    ].filter(Boolean).join("\n\n") || null;
 
-    if (error) {
+    const { data, error } = await supabase
+      .from("patient_sessions")
+      .insert({
+        patient_id: patientId,
+        physio_id: actor.profileId,
+        created_by: actor.profileId,
+        session_date: `${sessionDate}T12:00:00.000Z`,
+        status: "completed",
+        pain_before: painBefore.value,
+        pain_after: painAfter.value,
+        treatment_summary: treatment,
+        clinical_notes: clinicalNotes,
+        next_steps: nextPlan || null,
+      })
+      .select("id,session_date,status,pain_before,pain_after,treatment_summary,clinical_notes,next_steps")
+      .single();
+
+    if (error || !data) {
+      console.error("patient_session_save_failed", {
+        patientId,
+        physioId: actor.profileId,
+        code: error?.code,
+        message: error?.message,
+      });
       return {
         status: "error",
         message: "Seanca nuk u ruajt. Të dhënat nuk u humbën; kontrollo lidhjen dhe provo përsëri.",
@@ -189,33 +214,27 @@ export async function createPatientSessionAction(
       };
     }
 
-    let sessionNumber: number | undefined;
-    const rpcRow = Array.isArray(data) ? data[0] : data;
-    if (rpcRow && typeof rpcRow === "object") {
-      const candidate = (rpcRow as { session_number?: unknown }).session_number;
-      if (typeof candidate === "number") sessionNumber = candidate;
-    }
-
-    if (!sessionNumber) {
-      const { data: latest } = await supabase
-        .from("patient_sessions")
-        .select("session_number")
-        .eq("patient_id", patientId)
-        .order("session_number", { ascending: false })
-        .limit(1)
-        .maybeSingle<{ session_number: number }>();
-      sessionNumber = latest?.session_number;
-    }
+    await writeAuditEvent({
+      actor,
+      action: "patient.session_created",
+      entityType: "patient_session",
+      entityId: data.id,
+      after: {
+        patient_id: patientId,
+        session_date: data.session_date,
+        status: data.status,
+        pain_before: data.pain_before,
+        pain_after: data.pain_after,
+      },
+    });
 
     revalidatePath(`/physiotherapist-portal/patients/${patientId}`);
+    revalidatePath(`/physiotherapist-portal/patients/${patientId}/history`);
     revalidatePath("/physiotherapist-portal/overview");
 
     return {
       status: "success",
-      message: sessionNumber
-        ? `Seanca ${sessionNumber} u ruajt me sukses.`
-        : "Seanca u ruajt me sukses.",
-      sessionNumber,
+      message: "Seanca u ruajt me sukses në historikun klinik.",
       fieldErrors: {},
     };
   } catch (error) {
