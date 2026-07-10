@@ -66,7 +66,16 @@ export default async function PatientSessionPage() {
   const signature = cookieStore.get(PATIENT_SESSION_COOKIE)?.value || "";
   if (!code) redirect("/patient-portal");
 
-  const patient = await getActivePatientBySignedCode({ supabase, code, signature }) as Patient | null;
+  const session = await getActivePatientBySignedCode({ supabase, code, signature });
+  if (!session) redirect("/patient-portal");
+
+  const { data: patient } = await supabase
+    .from("patients")
+    .select("id,physio_id,first_name,diagnosis")
+    .eq("id", session.id)
+    .eq("status", "active")
+    .maybeSingle<Patient>();
+
   if (!patient) redirect("/patient-portal");
 
   const { data: physio } = patient.physio_id
