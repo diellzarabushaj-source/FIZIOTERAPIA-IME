@@ -10,6 +10,7 @@ const links = [
   { href: "/per-fizioterapeutin", label: "Për fizioterapeutin", key: "physio" },
   { href: "/cmimi", label: "Çmimi", key: "pricing" },
   { href: "/support", label: "Ndihmë", key: "support" },
+  { href: "/contact", label: "Kontakt", key: "contact" },
   { href: "/blog", label: "Blog", key: "blog" },
 ];
 
@@ -24,6 +25,7 @@ export function SiteHeader() {
           {links.map((link) => {
             const active =
               (link.key === "blog" && pathname.startsWith("/blog")) ||
+              (link.key === "contact" && pathname === "/contact") ||
               (link.key === "support" && pathname === "/support") ||
               (link.key === "pricing" && pathname === "/cmimi") ||
               (link.key === "patient" && pathname === "/per-pacientin") ||
