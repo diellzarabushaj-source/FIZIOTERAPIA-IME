@@ -7,19 +7,40 @@ const isClerkConfigured = Boolean(
 
 const protectedRoutePrefixes = [
   "/physio",
-  "/owner-hidden",
+  "/physiotherapist-portal",
   "/physiotherapist-dashboard",
+  "/patient-access",
+  "/owner-hidden",
   "/admin-dashboard",
   "/admin-billing",
   "/admin-feedback",
   "/pilot-decision",
+  "/pilot-launch",
+  "/pilot-readiness",
+  "/pilot-runbook",
+  "/pilot-communications",
+  "/pilot-onboarding",
+  "/launch-checklist",
+  "/qa-checklist",
+  "/mobile-submission",
+  "/final-handoff",
 ];
 
 const adminRoutePrefixes = [
+  "/owner-hidden",
   "/admin-dashboard",
   "/admin-billing",
   "/admin-feedback",
   "/pilot-decision",
+  "/pilot-launch",
+  "/pilot-readiness",
+  "/pilot-runbook",
+  "/pilot-communications",
+  "/pilot-onboarding",
+  "/launch-checklist",
+  "/qa-checklist",
+  "/mobile-submission",
+  "/final-handoff",
 ];
 
 function matchesPath(pathname: string, prefixes: string[]) {
@@ -27,9 +48,7 @@ function matchesPath(pathname: string, prefixes: string[]) {
 }
 
 const protectedProxy = clerkMiddleware(async (auth, req) => {
-  if (!matchesPath(req.nextUrl.pathname, protectedRoutePrefixes)) {
-    return NextResponse.next();
-  }
+  if (!matchesPath(req.nextUrl.pathname, protectedRoutePrefixes)) return NextResponse.next();
 
   const { userId } = await auth();
   if (userId) return NextResponse.next();
@@ -44,15 +63,12 @@ const protectedProxy = clerkMiddleware(async (auth, req) => {
 export const proxy: NextProxy = (request, event) => {
   const { pathname } = request.nextUrl;
 
-  if (!isClerkConfigured) {
-    if (matchesPath(pathname, adminRoutePrefixes)) {
-      const url = request.nextUrl.clone();
-      url.pathname = "/admin-hidden";
-      url.searchParams.set("reason", "auth-not-configured");
-      return NextResponse.redirect(url);
-    }
-
-    return NextResponse.next();
+  if (!isClerkConfigured && matchesPath(pathname, protectedRoutePrefixes)) {
+    const url = request.nextUrl.clone();
+    url.pathname = matchesPath(pathname, adminRoutePrefixes) ? "/admin-hidden" : "/sign-in";
+    url.search = "";
+    url.searchParams.set("reason", "auth-not-configured");
+    return NextResponse.redirect(url);
   }
 
   return protectedProxy(request, event);
