@@ -1,8 +1,10 @@
 import type { ReactNode } from "react";
+import { PatientNetworkStatus } from "@/components/PatientNetworkStatus";
 import { getCurrentPatientSession } from "@/lib/patient-session";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import "./patient-safety.css";
 import "./patient-completion.css";
+import "./patient-polish.css";
 
 export default async function PatientDashboardLayout({ children }: { children: ReactNode }) {
   const session = await getCurrentPatientSession();
@@ -28,7 +30,9 @@ export default async function PatientDashboardLayout({ children }: { children: R
 
   return (
     <>
-      {children}
+      <a className="patient-skip-link" href="#patient-content">Kalo direkt te plani</a>
+      <PatientNetworkStatus />
+      <div id="patient-content" tabIndex={-1}>{children}</div>
       <a
         className={`patient-floating-contact ${hasContact ? "" : "muted"}`}
         href="/patient-contact"
