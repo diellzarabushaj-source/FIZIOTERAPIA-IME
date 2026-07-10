@@ -65,7 +65,7 @@ export default async function OverviewPage() {
     .eq("status", "draft");
   const highPainQuery = supabase
     .from("exercise_logs")
-    .select("id", { count: "exact", head: true })
+    .select("id,patients!inner(physio_id)", { count: "exact", head: true })
     .gte("completed_at", startOfDay.toISOString())
     .lt("completed_at", endOfDay.toISOString())
     .gte("pain_score", 7);
@@ -88,7 +88,7 @@ export default async function OverviewPage() {
     sessionCountQuery.eq("physio_id", actor.profileId);
     activePlanQuery.eq("physio_id", actor.profileId);
     draftPlanQuery.eq("physio_id", actor.profileId);
-    highPainQuery.eq("patient_id", actor.profileId);
+    highPainQuery.eq("patients.physio_id", actor.profileId);
     recentPatientQuery = recentPatientQuery.eq("physio_id", actor.profileId);
     recentPlanQuery = recentPlanQuery.eq("physio_id", actor.profileId);
   }
