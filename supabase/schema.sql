@@ -1,4 +1,4 @@
--- FizioPlan MVP Supabase schema draft
+-- FizioPlan MVP Supabase schema draft.
 -- Run carefully in Supabase SQL editor after review.
 
 create table if not exists profiles (
@@ -20,8 +20,10 @@ create table if not exists patients (
   phone text,
   age int,
   diagnosis text,
+  patient_username text unique,
   patient_code text unique not null,
   status text default 'active',
+  notes text,
   created_at timestamptz default now()
 );
 
@@ -34,7 +36,11 @@ create table if not exists exercise_library (
   instructions_sq text,
   ai_enabled boolean default false,
   scoring_rules jsonb default '{}'::jsonb,
-  created_at timestamptz default now()
+  is_default boolean not null default false,
+  owner_physio_id uuid references profiles(id) on delete set null,
+  status text not null default 'published',
+  created_at timestamptz default now(),
+  updated_at timestamptz
 );
 
 create table if not exists plans (
@@ -89,10 +95,19 @@ create table if not exists physio_messages (
 
 create table if not exists subscriptions (
   id uuid primary key default gen_random_uuid(),
-  physio_id uuid references profiles(id) on delete cascade,
+  physio_id uuid references profiles(id),
   plan_name text,
   price numeric,
+  currency text default 'EUR',
   status text default 'trial',
   trial_ends_at timestamptz,
+  current_period_end timestamptz,
+  invoice_reference text,
+  notes text,
   created_at timestamptz default now()
 );
+
+create index if not exists patients_physio_status_idx on patients (physio_id, status);
+create index if not exists exercise_library_owner_status_idx on exercise_library (owner_physio_id, status);
+create index if not exists exercise_library_default_status_idx on exercise_library (is_default, status);
+create index if not exists plans_patient_status_idx on plans (patient_id, status);
