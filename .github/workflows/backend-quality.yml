@@ -40,6 +40,9 @@ jobs:
       - name: Environment separation contract
         run: npm run check:env:contract
 
+      - name: Backup, restore and retention contract
+        run: npm run check:recovery
+
       - name: Backend unit and contract tests
         run: npm run test:backend
 
