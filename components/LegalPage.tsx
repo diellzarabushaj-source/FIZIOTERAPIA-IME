@@ -1,3 +1,5 @@
+import type { ReactNode } from "react";
+
 type LegalSection = {
   title: string;
   body: string;
@@ -9,6 +11,7 @@ type LegalPageProps = {
   intro: string;
   lastUpdated?: string;
   sections: LegalSection[];
+  afterContent?: ReactNode;
 };
 
 function sectionId(title: string, index: number) {
@@ -22,7 +25,7 @@ function sectionId(title: string, index: number) {
   return normalized || `seksioni-${index + 1}`;
 }
 
-export function LegalPage({ badge, title, intro, lastUpdated = "Korrik 2026", sections = [] }: LegalPageProps) {
+export function LegalPage({ badge, title, intro, lastUpdated = "Korrik 2026", sections = [], afterContent }: LegalPageProps) {
   const documentText = `${badge} ${title}`.toLowerCase();
   const isTerms = documentText.includes("kusht") || documentText.includes("term");
   const isMedical = documentText.includes("medical") || documentText.includes("mjek") || documentText.includes("disclaimer");
@@ -53,12 +56,12 @@ export function LegalPage({ badge, title, intro, lastUpdated = "Korrik 2026", se
       : isDeletion
         ? {
             label: "Kontrolli yt",
-            title: "Mund të kërkosh fshirjen e të dhënave.",
+            title: "Mund të kërkosh qasje, korrigjim ose fshirje.",
             text: "Kjo faqe shpjegon si bëhet kërkesa dhe çfarë mund të duhet të ruhet sipas ligjit.",
             icon: "🗑️",
-            noteTitle: "Kërkesa duhet të verifikohet.",
-            noteText: "Për siguri, mund të kërkojmë konfirmim të identitetit para se të veprojmë.",
-            contactTitle: "Dëshiron të kërkosh fshirje?",
+            noteTitle: "Kërkesa verifikohet për sigurinë tënde.",
+            noteText: "Mund të kërkohet konfirmim i identitetit para se të ndryshohen ose fshihen të dhënat.",
+            contactTitle: "Ke pyetje për kërkesën?",
             subject: "Fshirja e të dhënave - Fizioterapia Ime",
           }
         : {
@@ -99,6 +102,7 @@ export function LegalPage({ badge, title, intro, lastUpdated = "Korrik 2026", se
               {section.title}
             </a>
           ))}
+          {afterContent && <a href="#dergo-kerkesen">Dërgo kërkesën</a>}
         </nav>
 
         <article className="legal-content">
@@ -124,6 +128,8 @@ export function LegalPage({ badge, title, intro, lastUpdated = "Korrik 2026", se
               <p>{section.body}</p>
             </section>
           ))}
+
+          {afterContent && <div id="dergo-kerkesen">{afterContent}</div>}
 
           <section className="legal-contact">
             <h3>{summary.contactTitle}</h3>
