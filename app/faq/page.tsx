@@ -1,58 +1,69 @@
-import { AuthControls } from "@/components/AuthControls";
-import { BrandMark } from "@/components/BrandMark";
+import type { Metadata } from "next";
+import { FaqExplorer } from "@/components/FaqExplorer";
+import { SafetyNotice } from "@/components/PublicPageKit";
 import { getFaqItems } from "@/lib/sanity/queries";
+import styles from "./faq.module.css";
 
 export const revalidate = 60;
 
+export const metadata: Metadata = {
+  title: "Pyetje të shpeshta | Fizioterapia Ime",
+  description: "Përgjigje të qarta për pacientët, fizioterapeutët, planet, kodet, pagesën, AI dhe sigurinë.",
+  alternates: { canonical: "/faq" },
+};
+
+const fallbackFaqs = [
+  { category: "Pacienti", question: "Si hyj në planin tim?", answer: "Përdor kodin ose QR-në që ta ka dërguar fizioterapeuti. Pacienti nuk ka nevojë të krijojë plan vetë." },
+  { category: "Pacienti", question: "A mund ta përdor nga telefoni?", answer: "Po. Portali është ndërtuar për telefon, tablet dhe kompjuter." },
+  { category: "Pacienti", question: "A mund t’i shoh ushtrimet e mëparshme?", answer: "Po. Mund ta shohësh historinë e planit dhe përparimin tënd." },
+  { category: "Fizioterapeuti", question: "Kush e krijon dhe e ndryshon planin?", answer: "Vetëm fizioterapeuti e krijon, e ndryshon dhe e aprovon planin e pacientit." },
+  { category: "Planet", question: "A mund të caktoj sete, përsëritje dhe frekuencë?", answer: "Po. Për çdo ushtrim mund të caktohen setet, përsëritjet, frekuenca dhe udhëzimet." },
+  { category: "AI", question: "A e zëvendëson AI fizioterapeutin?", answer: "Jo. AI jep vetëm sugjerime ose feedback. Vendimi klinik mbetet te fizioterapeuti." },
+  { category: "Siguria", question: "Çfarë bëj nëse dhimbja është 7/10 ose më shumë?", answer: "Ndalo ushtrimin dhe kontakto fizioterapeutin. Për simptoma urgjente kërko ndihmë mjekësore." },
+  { category: "Pagesa", question: "Sa kushton platforma?", answer: "Çmimi fillestar është 9.90 € në muaj për fizioterapeutin. Pacienti nuk paguan veçmas." },
+  { category: "Llogaria", question: "E harrova kodin. Çfarë bëj?", answer: "Kontakto fizioterapeutin që ta rigjenerojë ose ta dërgojë përsëri kodin." },
+];
+
 export default async function FaqPage() {
-  const allFaqs = await getFaqItems();
-  const faqs = allFaqs.filter((item) => !`${item.question} ${item.answer} ${item.category || ""}`.toLowerCase().includes("ai"));
+  const sanityFaqs = await getFaqItems();
+  const source = sanityFaqs.length > 0 ? sanityFaqs : fallbackFaqs;
+  const faqs = source.map((item) => ({
+    question: item.question,
+    answer: item.answer,
+    category: item.category || "Të tjera",
+  }));
 
   return (
-    <main className="page">
-      <nav className="top-nav">
-        <BrandMark />
-        <div className="nav-actions">
-          <a href="/patient-portal">Patient</a>
-          <a href="/physiotherapist-portal">Physio</a>
-          <a href="/pricing">Pricing</a>
-          <a href="/privacy">Privacy</a>
-          <AuthControls />
-        </div>
-      </nav>
-
-      <section className="hero">
-        <span className="badge">FAQ · Pyetje të shpeshta</span>
-        <h1>Pyetje të shpeshta për Fizioterapia Ime.</h1>
-        <p>Përgjigjet kryesore për pacientë dhe fizioterapeutë rreth planeve, hyrjes me kod, pagesës dhe sigurisë klinike.</p>
-      </section>
-
-      <section className="grid">
-        <div className="card green">
-          <span className="badge">Për pacientë</span>
-          <h2>Hyrje me kod</h2>
-          <p>Pacienti nuk krijon vetë plan. Ai hyn me kod që ia jep fizioterapeuti.</p>
-        </div>
-        <div className="card blue">
-          <span className="badge">Për fizioterapeutë</span>
-          <h2>29.90 EUR / muaj</h2>
-          <p>Qasja për dashboard aktivizohet nga admini pas pagesës manuale.</p>
-        </div>
-        <div className="card">
-          <span className="badge">Siguria</span>
-          <h2>Fizioterapeuti vendos</h2>
-          <p>Planin, ushtrimet dhe çdo ndryshim klinik i cakton fizioterapeuti përgjegjës.</p>
+    <main className={styles.page}>
+      <section className={styles.hero}>
+        <span className={styles.eyebrow}>Pyetje të shpeshta</span>
+        <h1>Përgjigje të qarta.<span> Pa fjalë të komplikuara.</span></h1>
+        <p>Kërko pyetjen tënde ose zgjidh një kategori. Përgjigjet përditësohen pa e prishur përmbajtjen që menaxhohet nga Sanity.</p>
+        <div className={styles.trust}>
+          <span>✓ Për pacientë</span><span>✓ Për fizioterapeutë</span><span>✓ Siguri klinike</span>
         </div>
       </section>
 
-      <section className="dashboard-card wide" style={{ marginTop: 24 }}>
-        <div className="section-header-row">
-          <div><h2>FAQ</h2><p>Përgjigje të shkurta dhe të qarta për përdorimin e platformës.</p></div>
-          <a className="button secondary" href="/">Kthehu në ballinë</a>
+      <section className={styles.body}>
+        <div className={styles.introGrid}>
+          <article className={styles.introCard}><span>📱</span><h2>Për pacientin</h2><p>Kodi, videot, përparimi dhe dhimbja.</p></article>
+          <article className={styles.introCard}><span>🧑‍⚕️</span><h2>Për fizioterapeutin</h2><p>Pacientët, planet, ushtrimet dhe raportet.</p></article>
+          <article className={styles.introCard}><span>🛡️</span><h2>Për sigurinë</h2><p>Kur duhet ndalur ushtrimi dhe kërkuar ndihmë.</p></article>
         </div>
-        <div className="grid" style={{ marginTop: 20 }}>
-          {faqs.map((item) => <article className="card" key={item.question}><span className="mini-badge">{item.category || "FAQ"}</span><h2>{item.question}</h2><p>{item.answer}</p></article>)}
+
+        <FaqExplorer items={faqs} />
+
+        <div className={styles.safety}>
+          <SafetyNotice
+            title="Platforma nuk jep diagnozë"
+            text="Fizioterapia Ime e mbështet planin e fizioterapisë, por nuk e zëvendëson vlerësimin profesional ose kujdesin urgjent."
+          />
         </div>
+      </section>
+
+      <section className={styles.cta}>
+        <div><h2>Nuk e gjete përgjigjen?</h2><p>Hap Qendrën e Ndihmës ose na shkruaj direkt.</p></div>
+        <a href="/support">Hap Qendrën e Ndihmës →</a>
       </section>
     </main>
   );
