@@ -56,6 +56,7 @@ create table if not exists plan_exercises (
   reps int,
   frequency text,
   day_number int,
+  schedule_days integer[] not null default array[1],
   instructions text
 );
 
