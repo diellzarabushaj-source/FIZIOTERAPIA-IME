@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { requireOwner } from "@/lib/admin-access";
+import { requireOwner, getSignedInEmail } from "@/lib/admin-access";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import { PHYSIO_MONTHLY_PRICE_EUR } from "@/lib/billing";
 
@@ -31,11 +31,7 @@ export async function createPhysioProfileAction(formData: FormData) {
     if (fullName) updates.full_name = fullName;
     if (clinicName) updates.clinic_name = clinicName;
 
-    const { error } = await supabase
-      .from("profiles")
-      .update(updates)
-      .eq("id", existing.id);
-
+    const { error } = await supabase.from("profiles").update(updates).eq("id", existing.id);
     if (error) throw new Error(error.message);
     revalidatePath("/admin-billing");
     return;
@@ -72,7 +68,7 @@ export async function activateSubscriptionAction(formData: FormData) {
   const { error } = await supabase.from("subscriptions").insert({
     physio_id: physioId,
     plan_name: "Fizioterapeut Monthly",
-    price: PHYSIO_MONTHLY_PRICE_EUR,
+    price: PHYSIO_MONTHLY_PRICE_EUR * months,
     currency: "EUR",
     status: "active",
     current_period_start: start.toISOString(),
@@ -80,12 +76,110 @@ export async function activateSubscriptionAction(formData: FormData) {
     paid_at: start.toISOString(),
     payment_method: "manual_bank",
     invoice_reference: invoiceReference || `FI-${start.getFullYear()}-${String(start.getMonth() + 1).padStart(2, "0")}`,
-    notes: "Manual monthly access activated by owner/admin.",
+    notes: "Manual access activated by owner/admin.",
   });
 
   if (error) throw new Error(error.message);
   revalidatePath("/admin-billing");
   revalidatePath("/physiotherapist-portal");
+}
+
+export async function approvePaymentRequestAction(formData: FormData) {
+  await requireOwner();
+  const supabase = getSupabaseAdmin();
+  if (!supabase) throw new Error("Missing Supabase service key.");
+
+  const requestId = String(formData.get("requestId") || "").trim();
+  if (!requestId) throw new Error("Missing payment request ID.");
+
+  const { data: request, error: requestError } = await supabase
+    .from("payment_requests")
+    .select("id,physio_id,reference_code,amount,currency,duration_months,status")
+    .eq("id", requestId)
+    .maybeSingle<{
+      id: string;
+      physio_id: string;
+      reference_code: string;
+      amount: number | string;
+      currency: string;
+      duration_months: number;
+      status: string;
+    }>();
+
+  if (requestError || !request) throw new Error("Payment request not found.");
+  if (request.status !== "proof_uploaded") throw new Error("Only submitted proofs can be approved.");
+
+  const now = new Date();
+  const end = new Date(now);
+  end.setMonth(end.getMonth() + request.duration_months);
+
+  const { error: subscriptionError } = await supabase.from("subscriptions").insert({
+    physio_id: request.physio_id,
+    plan_name: "Fizioterapeut Monthly",
+    price: Number(request.amount),
+    currency: request.currency,
+    status: "active",
+    current_period_start: now.toISOString(),
+    current_period_end: end.toISOString(),
+    paid_at: now.toISOString(),
+    payment_method: "manual_bank",
+    invoice_reference: request.reference_code,
+    notes: `Approved from payment request ${request.id}.`,
+  });
+  if (subscriptionError) throw new Error(subscriptionError.message);
+
+  const reviewerEmail = await getSignedInEmail();
+  const { data: reviewer } = reviewerEmail
+    ? await supabase.from("profiles").select("id").eq("email", reviewerEmail).maybeSingle<{ id: string }>()
+    : { data: null };
+
+  const { error: updateError } = await supabase
+    .from("payment_requests")
+    .update({
+      status: "approved",
+      reviewed_at: now.toISOString(),
+      reviewed_by: reviewer?.id || null,
+      rejection_reason: null,
+      updated_at: now.toISOString(),
+    })
+    .eq("id", request.id)
+    .eq("status", "proof_uploaded");
+  if (updateError) throw new Error(updateError.message);
+
+  revalidatePath("/admin-billing");
+  revalidatePath("/physiotherapist-portal");
+  revalidatePath("/physiotherapist-portal/payment");
+}
+
+export async function rejectPaymentRequestAction(formData: FormData) {
+  await requireOwner();
+  const supabase = getSupabaseAdmin();
+  if (!supabase) throw new Error("Missing Supabase service key.");
+
+  const requestId = String(formData.get("requestId") || "").trim();
+  const reason = String(formData.get("reason") || "Dëshmia nuk mund të verifikohej.").trim().slice(0, 500);
+  if (!requestId) throw new Error("Missing payment request ID.");
+
+  const reviewerEmail = await getSignedInEmail();
+  const { data: reviewer } = reviewerEmail
+    ? await supabase.from("profiles").select("id").eq("email", reviewerEmail).maybeSingle<{ id: string }>()
+    : { data: null };
+
+  const { error } = await supabase
+    .from("payment_requests")
+    .update({
+      status: "rejected",
+      reviewed_at: new Date().toISOString(),
+      reviewed_by: reviewer?.id || null,
+      rejection_reason: reason,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", requestId)
+    .in("status", ["proof_uploaded", "pending"]);
+
+  if (error) throw new Error(error.message);
+  revalidatePath("/admin-billing");
+  revalidatePath("/physiotherapist-portal/payment");
 }
 
 export async function suspendSubscriptionAction(formData: FormData) {
