@@ -94,7 +94,7 @@ export default async function PatientDashboardPage() {
 
           <section className="patient-pro-plan-card duo-lesson-hero">
             <div><span className="patient-pro-pill">Sot · Dita {currentDay}</span><h1>Përshëndetje, {patientName}</h1><p><b>{todayTitle}.</b> {todayText}</p></div>
-            <a className="duo-main-cta" href={nextExercise ? `#exercise-${nextExercise.id}` : "#path"}>Fillo ushtrimin</a>
+            <a className="duo-main-cta" href="/patient-session">Fillo seancën e sotme</a>
             <div className="patient-pro-progress-copy"><span>{completedToday} nga {todayExercises.length || 0} të kryera sot</span><b>{progress}%</b></div>
             <div className="patient-pro-progress-line"><i style={{ width: `${progress}%` }} /></div>
           </section>
@@ -108,7 +108,7 @@ export default async function PatientDashboardPage() {
 
           {highPain && <div className="patient-pro-warning duo-warning"><b>Kujdes</b><span>Dhimbja e fundit është {latestPain}/10. Mos vazhdo pa kontaktuar fizioterapeutin.</span></div>}
 
-          <section className="patient-pro-today-head duo-path-head" id="path"><div><h2>Çka ke sot</h2><p>Hape secilin ushtrim, lexo hapat dhe në fund shëno dhimbjen.</p></div><span>Dita {currentDay}</span></section>
+          <section className="patient-pro-today-head duo-path-head" id="path"><div><h2>Çka ke sot</h2><p>Hape seancën premium për video, timer, pushim dhe feedback.</p></div><span>Dita {currentDay}</span></section>
 
           <section className="duo-rehab-path">
             {todayExercises.length === 0 && <p className="patient-pro-empty">Ende nuk ka ushtrime në plan.</p>}
@@ -156,7 +156,7 @@ export default async function PatientDashboardPage() {
           <div className="patient-pro-welcome"><span>Plani personal</span><h2>Sot, ushtrim, dhimbje, progres.</h2><p>Pacienti sheh vetëm planin e vet. Fizioterapeuti e krijon planin dhe vendos për çdo ndryshim.</p></div>
           <div className="patient-pro-code-card duo-code-card"><span>Kodi personal</span><strong>{patient.patient_code}</strong><small>Mos e ndaj kodin me persona të tjerë.</small></div>
           <div className="patient-pro-insight-grid duo-insights"><article><span>Fizioterapeut</span><b>{physio?.full_name || "—"}</b></article><article><span>Mesatarja e dhimbjes</span><b>{averagePain !== null ? `${averagePain}/10` : "—"}</b></article><article><span>Mesatarja AI</span><b>{averageAi !== null ? `${averageAi}%` : "—"}</b></article><article><span>Mesazhe</span><b>{messages.length}</b></article></div>
-          <section className="patient-pro-next-card duo-next-card"><span>Ushtrimi i radhës</span><h3>{nextExercise?.exercise_library?.name || "—"}</h3><p>{nextExercise?.instructions || nextExercise?.exercise_library?.instructions_sq || "Kryeje me kontroll dhe ndalo nëse dhimbja rritet."}</p>{nextExercise?.exercise_library?.ai_enabled && <a href={`/ai-check?planExerciseId=${nextExercise.id}`}>Kontrollo lëvizjen me AI</a>}</section>
+          <section className="patient-pro-next-card duo-next-card"><span>Ushtrimi i radhës</span><h3>{nextExercise?.exercise_library?.name || "—"}</h3><p>{nextExercise?.instructions || nextExercise?.exercise_library?.instructions_sq || "Kryeje me kontroll dhe ndalo nëse dhimbja rritet."}</p><a href="/patient-session">Hape seancën premium</a></section>
           <section id="messages" className="patient-pro-messages"><h3>Mesazhe nga fizioterapeuti</h3>{messages.length === 0 && <p>Ende nuk ka mesazhe nga fizioterapeuti.</p>}{messages.slice(0, 3).map((message) => <div key={message.id}>{message.message}<small>{message.created_at ? ` · ${formatShortDate(message.created_at)}` : ""}</small></div>)}</section>
         </aside>
       </section>
