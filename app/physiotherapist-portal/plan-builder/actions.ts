@@ -20,7 +20,7 @@ async function requirePhysio() {
 
   const user = await currentUser();
   const email = user?.primaryEmailAddress?.emailAddress?.toLowerCase();
-  if (!email) throw new Error("Duhet të kyçesh si fizioterapeut.");
+  if (!email) redirect("/sign-in?redirect_url=/physiotherapist-portal/plan-builder");
 
   const { data: profile } = await supabase
     .from("profiles")
@@ -28,8 +28,10 @@ async function requirePhysio() {
     .eq("email", email)
     .maybeSingle<Profile>();
 
-  if (!profile) throw new Error("Profili i fizioterapeutit nuk ekziston.");
-  if (["inactive", "suspended", "blocked"].includes(profile.status || "")) throw new Error("Profili është i bllokuar.");
+  if (!profile) redirect("/physiotherapist-portal?access=profile-required");
+  if (["inactive", "suspended", "blocked"].includes(profile.status || "")) {
+    redirect("/physiotherapist-portal?access=blocked#billing");
+  }
 
   if (!isAdmin(profile.role) && email !== (process.env.ADMIN_EMAIL || ADMIN_EMAIL).toLowerCase()) {
     const { data: subscription } = await supabase
@@ -39,7 +41,10 @@ async function requirePhysio() {
       .order("created_at", { ascending: false })
       .limit(1)
       .maybeSingle();
-    if (!hasActivePhysioAccess(profile.role, subscription)) throw new Error("Kërkohet subscription aktiv.");
+
+    if (!hasActivePhysioAccess(profile.role, subscription)) {
+      redirect("/physiotherapist-portal?access=subscription-required#billing");
+    }
   }
 
   return { supabase, profile };
