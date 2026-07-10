@@ -27,6 +27,14 @@ function isAdminRole(role?: string | null) {
   return role === "owner" || role === "admin";
 }
 
+function cleanOptionalText(value: FormDataEntryValue | null) {
+  return String(value || "").trim();
+}
+
+function isAllowedMediaUrl(value: string) {
+  return !value || value.startsWith("/") || value.startsWith("https://") || value.startsWith("http://");
+}
+
 async function requireProfile() {
   const supabase = getSupabaseAdmin();
   if (!supabase) {
@@ -94,7 +102,7 @@ async function requirePaidAccess(profile: Profile) {
     .maybeSingle();
 
   if (!hasActivePhysioAccess(profile.role, subscription)) {
-    throw new Error("Qasja është e bllokuar. Fizioterapeuti duhet të paguajë 29.90 EUR / muaj për të përdorur dashboard-in.");
+    throw new Error("Qasja eshte e bllokuar. Fizioterapeuti duhet te paguaje 29.90 EUR / muaj per te perdorur dashboard-in.");
   }
 }
 
@@ -163,14 +171,14 @@ export async function createPatientAction(formData: FormData) {
   const profile = await requireProfile();
   await requirePaidAccess(profile);
 
-  const firstName = String(formData.get("firstName") || "").trim();
-  const lastName = String(formData.get("lastName") || "").trim();
-  const diagnosis = String(formData.get("diagnosis") || "").trim();
-  const phone = String(formData.get("phone") || "").trim();
-  const ageValue = String(formData.get("age") || "").trim();
-  const programKey = String(formData.get("programKey") || "").trim();
+  const firstName = cleanOptionalText(formData.get("firstName"));
+  const lastName = cleanOptionalText(formData.get("lastName"));
+  const diagnosis = cleanOptionalText(formData.get("diagnosis"));
+  const phone = cleanOptionalText(formData.get("phone"));
+  const ageValue = cleanOptionalText(formData.get("age"));
+  const programKey = cleanOptionalText(formData.get("programKey"));
   const program = getClinicalProgramTemplate(programKey);
-  const planTitle = String(formData.get("planTitle") || program.title).trim();
+  const planTitle = cleanOptionalText(formData.get("planTitle")) || program.title;
 
   if (!firstName) throw new Error("Patient first name is required.");
 
@@ -204,7 +212,7 @@ export async function createPatientAction(formData: FormData) {
     .insert({
       patient_id: patient.id,
       physio_id: profile.id,
-      title: planTitle || program.title,
+      title: planTitle,
       start_date: today.toISOString().slice(0, 10),
       end_date: end.toISOString().slice(0, 10),
       status: "active",
@@ -252,9 +260,9 @@ export async function createPatientAction(formData: FormData) {
           exercise_id: exercise.id,
           sets: index === 2 ? 3 : 2,
           reps: index === 2 ? null : 10,
-          frequency: index === 2 ? "3 × 30 sek" : "Çdo ditë",
+          frequency: index === 2 ? "3 x 30 sek" : "Cdo dite",
           day_number: 1,
-          instructions: `Kryeje ushtrimin ngadalë dhe ndalo nëse dhimbja rritet.\n\nSafety: ${program.safetyNote}`,
+          instructions: `Kryeje ushtrimin ngadale dhe ndalo nese dhimbja rritet.\n\nSafety: ${program.safetyNote}`,
         })),
       );
     }
@@ -270,22 +278,27 @@ export async function createPrivateExerciseAction(formData: FormData) {
   const profile = await requireProfile();
   await requirePaidAccess(profile);
 
-  const name = String(formData.get("name") || "").trim();
-  const category = String(formData.get("category") || "").trim();
-  const diagnosis = String(formData.get("diagnosis") || "").trim();
-  const instructions = String(formData.get("instructions") || "").trim();
+  const name = cleanOptionalText(formData.get("name"));
+  const category = cleanOptionalText(formData.get("category"));
+  const diagnosis = cleanOptionalText(formData.get("diagnosis"));
+  const instructions = cleanOptionalText(formData.get("instructions"));
+  const mediaUrl = cleanOptionalText(formData.get("mediaUrl"));
   const aiEnabled = String(formData.get("aiEnabled") || "") === "on";
 
   if (!name) throw new Error("Exercise name is required.");
+  if (!isAllowedMediaUrl(mediaUrl)) {
+    throw new Error("Media URL duhet te filloje me https://, http:// ose /.");
+  }
 
   const { error } = await supabase.from("exercise_library").insert({
     name,
     category: category || null,
     diagnosis: diagnosis || null,
+    video_url: mediaUrl || null,
     instructions_sq: instructions || null,
     ai_enabled: aiEnabled,
     scoring_rules: {},
-    is_default: profile.role === "owner" ? true : false,
+    is_default: profile.role === "owner",
     owner_physio_id: profile.role === "owner" ? null : profile.id,
     status: "published",
   });
@@ -306,7 +319,8 @@ export async function addExerciseToPlanAction(formData: FormData) {
   const sets = Number(formData.get("sets") || 2);
   const reps = Number(formData.get("reps") || 10);
   const dayNumber = Number(formData.get("dayNumber") || 1);
-  const instructions = String(formData.get("instructions") || "").trim();
+  const frequency = cleanOptionalText(formData.get("frequency"));
+  const instructions = cleanOptionalText(formData.get("instructions"));
 
   if (!patientId || !exerciseId) throw new Error("Patient and exercise are required.");
 
@@ -338,7 +352,7 @@ export async function addExerciseToPlanAction(formData: FormData) {
       .insert({
         patient_id: patientId,
         physio_id: patient.physio_id || profile.id,
-        title: "Program rehabilitimi 14 ditë",
+        title: "Program rehabilitimi 14 dite",
         start_date: today.toISOString().slice(0, 10),
         end_date: end.toISOString().slice(0, 10),
         status: "active",
@@ -355,9 +369,9 @@ export async function addExerciseToPlanAction(formData: FormData) {
     exercise_id: exerciseId,
     sets,
     reps,
-    frequency: "Çdo ditë",
+    frequency: frequency || "Cdo dite",
     day_number: dayNumber,
-    instructions: instructions || "Kryeje me kontroll dhe pa dhimbje të fortë.",
+    instructions: instructions || "Kryeje me kontroll dhe pa dhimbje te forte.",
   });
 
   if (error) throw new Error(error.message);
