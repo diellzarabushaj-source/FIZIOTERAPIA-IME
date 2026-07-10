@@ -9,7 +9,8 @@ export function PublicSiteChrome() {
     pathname === "/" ||
     pathname.startsWith("/blog") ||
     pathname === "/si-perdoret-ne-klinike" ||
-    pathname === "/clinic-use";
+    pathname === "/clinic-use" ||
+    pathname === "/per-fizioterapeutin";
 
   if (!isPublic) return null;
   return <div className="public-site-chrome"><SiteHeader /></div>;
