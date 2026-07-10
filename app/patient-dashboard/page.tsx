@@ -1,11 +1,15 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { BrandMark } from "@/components/BrandMark";
-import { getSupabaseAdmin } from "@/lib/supabase-admin";
+import { getDemoPatientDashboardData, isDemoPatientCode } from "@/lib/demo-clinic";
+import { getSupabaseAdmin, normalizePatientCode } from "@/lib/supabase-admin";
 import { completeExerciseAction, patientLogoutAction } from "./actions";
 
 const USERNAME_COOKIE = "fizioplan_patient_username";
 const CODE_COOKIE = "fizioplan_patient_code";
+const DEMO_PAIN_COOKIE = "fizioplan_demo_pain_score";
+const DEMO_DONE_COOKIE = "fizioplan_demo_completed_plan_exercise";
+const DEMO_AI_COOKIE = "fizioplan_demo_ai_score";
 
 type Patient = {
   id: string;
@@ -80,26 +84,46 @@ type DashboardData = {
   aiChecks: AiCheck[];
   messages: Message[];
   error: null;
+  demoMode?: boolean;
 };
 
-async function getPatientDashboardData() {
-  const supabase = getSupabaseAdmin();
-  if (!supabase) return { error: "SUPABASE_SERVICE_ROLE_KEY mungon në Vercel." };
+type DashboardResult = DashboardData | { error: string };
 
+async function getPatientDashboardData(): Promise<DashboardResult> {
+  const supabase = getSupabaseAdmin();
   const cookieStore = await cookies();
   const username = cookieStore.get(USERNAME_COOKIE)?.value?.toLowerCase();
-  const code = cookieStore.get(CODE_COOKIE)?.value?.toUpperCase();
+  const code = normalizePatientCode(cookieStore.get(CODE_COOKIE)?.value || "");
 
-  if (!username || !code) return { error: "not_logged_in" };
+  if (!code) return { error: "not_logged_in" };
 
-  const { data: patient } = await supabase
+  if (!supabase) {
+    if (isDemoPatientCode(code)) {
+      const painScoreValue = Number(cookieStore.get(DEMO_PAIN_COOKIE)?.value);
+      const aiScoreValue = Number(cookieStore.get(DEMO_AI_COOKIE)?.value);
+      const completedPlanExerciseId = cookieStore.get(DEMO_DONE_COOKIE)?.value || null;
+
+      return getDemoPatientDashboardData({
+        painScore: Number.isFinite(painScoreValue) ? painScoreValue : undefined,
+        aiScore: Number.isFinite(aiScoreValue) ? aiScoreValue : undefined,
+        completedPlanExerciseId,
+      }) as DashboardData;
+    }
+
+    return { error: "Supabase server key mungon. Per demo, hy me kodin ARB-4821." };
+  }
+
+  const patientQuery = supabase
     .from("patients")
     .select("id,physio_id,first_name,last_name,diagnosis,patient_username,patient_code")
-    .eq("patient_username", username)
     .eq("patient_code", code)
-    .eq("status", "active")
-    .maybeSingle<Patient>();
+    .eq("status", "active");
 
+  if (username) {
+    patientQuery.eq("patient_username", username);
+  }
+
+  const { data: patient } = await patientQuery.maybeSingle<Patient>();
   if (!patient) return { error: "not_logged_in" };
 
   const { data: physio } = patient.physio_id
@@ -175,7 +199,7 @@ function findLatestAi(aiChecks: AiCheck[], planExerciseId: string) {
 
 function formatDosage(exercise: PlanExercise) {
   const sets = exercise.sets ? `${exercise.sets} sete` : "";
-  const reps = exercise.reps ? `× ${exercise.reps}` : "";
+  const reps = exercise.reps ? `x ${exercise.reps}` : "";
   return `${sets} ${reps}`.trim() || exercise.frequency || "Sipas planit";
 }
 
@@ -196,6 +220,35 @@ function uniqueDays(exercises: PlanExercise[]) {
   return Array.from(new Set(exercises.map((exercise) => exercise.day_number || 1))).sort((a, b) => a - b);
 }
 
+function isAllowedMediaUrl(url?: string | null) {
+  return Boolean(url && (url.startsWith("/") || url.startsWith("https://") || url.startsWith("http://")));
+}
+
+function isImageUrl(url: string) {
+  return /\.(svg|png|jpe?g|webp|gif|avif)(\?.*)?$/i.test(url) || url.startsWith("data:image/");
+}
+
+function isVideoUrl(url: string) {
+  return /\.(mp4|webm|mov|m4v)(\?.*)?$/i.test(url);
+}
+
+function ExerciseMedia({ exercise }: { exercise?: PlanExercise["exercise_library"] }) {
+  const mediaUrl = exercise?.video_url;
+  if (!mediaUrl || !isAllowedMediaUrl(mediaUrl)) {
+    return <div className="video-placeholder">MEDIA</div>;
+  }
+
+  if (isImageUrl(mediaUrl)) {
+    return <img className="exercise-media-preview" src={mediaUrl} alt={exercise?.name || "Exercise media"} />;
+  }
+
+  if (isVideoUrl(mediaUrl)) {
+    return <video className="exercise-media-preview" src={mediaUrl} controls playsInline />;
+  }
+
+  return <a className="exercise-media-link" href={mediaUrl} target="_blank" rel="noreferrer">Hap media te ushtrimit</a>;
+}
+
 export default async function PatientDashboardPage() {
   const data = await getPatientDashboardData();
 
@@ -212,7 +265,7 @@ export default async function PatientDashboardPage() {
         </nav>
         <section className="hero">
           <span className="badge">Patient Dashboard</span>
-          <h1>Nuk mund të hapet dashboard-i.</h1>
+          <h1>Nuk mund te hapet dashboard-i.</h1>
           <div className="role-warning">{data.error}</div>
           <a className="button" href="/patient-portal">Kthehu te login</a>
         </section>
@@ -221,7 +274,7 @@ export default async function PatientDashboardPage() {
   }
 
   const dashboard = data as DashboardData;
-  const { patient, physio, activePlan, planExercises, logs, aiChecks, messages } = dashboard;
+  const { patient, physio, activePlan, planExercises, logs, aiChecks, messages, demoMode } = dashboard;
   const patientName = `${patient.first_name} ${patient.last_name || ""}`.trim();
   const currentDay = getCurrentPlanDay(activePlan);
   const days = uniqueDays(planExercises);
@@ -255,10 +308,11 @@ export default async function PatientDashboardPage() {
         <aside className="patient-sidebar">
           <div className="patient-avatar">{patient.first_name.slice(0, 1)}{patient.last_name?.slice(0, 1) || ""}</div>
           <h2>{patientName}</h2>
-          <p>Username: <b>{patient.patient_username}</b></p>
+          <p>Kodi: <b>{patient.patient_code}</b></p>
           <p>Plani: {activePlan?.title || "Nuk ka plan aktiv"}</p>
           <p>Dita aktuale: <b>{currentDay}</b></p>
-          <p>Fizioterapeut: <b>{physio?.full_name || "—"}</b></p>
+          <p>Fizioterapeut: <b>{physio?.full_name || "Pa emer"}</b></p>
+          {demoMode && <div className="generated-box">Demo pacient: provo dhimbje 3/10 dhe 7/10 per ta pare warning-un.</div>}
           <div className="side-menu">
             <a className="active" href="#overview">Overview</a>
             <a href="#today">Ushtrimet sot</a>
@@ -270,16 +324,16 @@ export default async function PatientDashboardPage() {
         <div className="patient-main">
           <section id="overview" className="dashboard-hero patient-progress-hero">
             <div>
-              <span className="badge">Patient Dashboard · Real progress</span>
-              <h1>Mirë se erdhe, {patient.first_name}.</h1>
-              <p>Ky është plani yt real. Kryej ushtrimet e ditës, raporto dhimbjen 0–10 dhe përdor AI vetëm kur ushtrimi e ka të aktivizuar.</p>
-              {highPain && <div className="role-warning">Dhimbja e fundit është {latestPain}/10. Ndalo ushtrimin dhe kontakto fizioterapeutin.</div>}
-              {lowAi && <div className="role-warning">AI score i fundit është {latestAi}%. Kontrollo teknikën dhe kontakto fizioterapeutin nëse nuk je i/e sigurt.</div>}
+              <span className="badge">Patient Dashboard - plan personal</span>
+              <h1>Mire se erdhe, {patient.first_name}.</h1>
+              <p>Ky eshte plani yt. Kryej ushtrimet e dites, raporto dhimbjen 0-10 dhe perdor AI vetem kur ushtrimi e ka te aktivizuar.</p>
+              {highPain && <div className="role-warning">Dhimbja e fundit eshte {latestPain}/10. Ndalo ushtrimin dhe kontakto fizioterapeutin.</div>}
+              {lowAi && <div className="role-warning">AI score i fundit eshte {latestAi}%. Kontrollo tekniken dhe kontakto fizioterapeutin nese nuk je i/e sigurt.</div>}
             </div>
             <div className="today-card progress-orb-card">
               <span>Progres total</span>
               <strong>{progress}%</strong>
-              <small>{completedCount}/{planExercises.length} ushtrime të kryera</small>
+              <small>{completedCount}/{planExercises.length} ushtrime te kryera</small>
               <div className="progress-line"><span style={{ width: `${progress}%` }} /></div>
             </div>
           </section>
@@ -288,16 +342,16 @@ export default async function PatientDashboardPage() {
             <div className="kpi-card">
               <span>Dita e planit</span>
               <strong>{currentDay}</strong>
-              <small>{activePlan?.start_date || "Pa datë fillimi"}</small>
+              <small>{activePlan?.start_date || "Pa date fillimi"}</small>
             </div>
             <div className="kpi-card">
               <span>Dhimbja e fundit</span>
-              <strong>{latestPain !== undefined ? `${latestPain}/10` : "—"}</strong>
+              <strong>{latestPain !== undefined ? `${latestPain}/10` : "-"}</strong>
               <small>{highPain ? "Stop + kontakto fizioterapeutin" : "Raporto pas ushtrimit"}</small>
             </div>
             <div className="kpi-card">
               <span>AI score</span>
-              <strong>{latestAi ? `${latestAi}%` : "—"}</strong>
+              <strong>{latestAi ? `${latestAi}%` : "-"}</strong>
               <small>{aiEnabledExercises.length} ushtrime me AI</small>
             </div>
             <div className="kpi-card">
@@ -310,14 +364,14 @@ export default async function PatientDashboardPage() {
           <section className="patient-day-strip" id="today">
             <div>
               <span className="mini-badge">Plan calendar</span>
-              <h2>Ditët e planit</h2>
+              <h2>Ditet e planit</h2>
             </div>
             <div className="day-chip-row">
               {days.length === 0 && <span className="day-chip active">Dita 1</span>}
               {days.map((day) => {
                 const dayExercises = planExercises.filter((exercise) => (exercise.day_number || 1) === day);
                 const dayDone = dayExercises.every((exercise) => findLatestLog(logs, exercise.id)?.completed);
-                return <span className={day <= currentDay ? "day-chip active" : "day-chip"} key={day}>Dita {day}{dayDone ? " ✓" : ""}</span>;
+                return <span className={day <= currentDay ? "day-chip active" : "day-chip"} key={day}>Dita {day}{dayDone ? " done" : ""}</span>;
               })}
             </div>
           </section>
@@ -327,12 +381,12 @@ export default async function PatientDashboardPage() {
               <div className="section-header-row">
                 <div>
                   <h2>Ushtrimet aktive</h2>
-                  <p>Ushtrimet shfaqen sipas ditës së planit. AI Check del vetëm kur ushtrimi është AI-enabled.</p>
+                  <p>Ushtrimet shfaqen sipas planit. AI Check del vetem kur ushtrimi eshte AI-enabled.</p>
                 </div>
                 <span className="badge">{activeExercises.length || planExercises.length} aktive</span>
               </div>
               <div className="exercise-card-list">
-                {planExercises.length === 0 && <p>Ende nuk ka ushtrime në plan.</p>}
+                {planExercises.length === 0 && <p>Ende nuk ka ushtrime ne plan.</p>}
                 {(activeExercises.length ? activeExercises : planExercises).map((planExercise) => {
                   const exercise = planExercise.exercise_library;
                   const latestLog = findLatestLog(logs, planExercise.id);
@@ -349,17 +403,18 @@ export default async function PatientDashboardPage() {
                           <p>{exercise?.category || exercise?.diagnosis || "Ushtrim i planit"}</p>
                         </div>
                         <div className="exercise-status-stack">
-                          <span className={isDone ? "status-pill done" : "status-pill"}>{isDone ? "E kryer" : "Në pritje"}</span>
+                          <span className={isDone ? "status-pill done" : "status-pill"}>{isDone ? "E kryer" : "Ne pritje"}</span>
                           {exercise?.ai_enabled && <span className="status-pill ai">AI</span>}
                         </div>
                       </div>
+                      {exercise?.video_url && <ExerciseMedia exercise={exercise} />}
                       <div className="exercise-meta-grid">
                         <div><b>{formatDosage(planExercise)}</b><span>Dozimi</span></div>
                         <div><b>{planExercise.frequency || "Sipas planit"}</b><span>Frekuenca</span></div>
-                        <div><b>{latestLog?.pain_score !== null && latestLog?.pain_score !== undefined ? `${latestLog.pain_score}/10` : "—"}</b><span>Dhimbja</span></div>
-                        <div><b>{latestAiCheck?.score ? `${latestAiCheck.score}%` : "—"}</b><span>AI score</span></div>
+                        <div><b>{latestLog?.pain_score !== null && latestLog?.pain_score !== undefined ? `${latestLog.pain_score}/10` : "-"}</b><span>Dhimbja</span></div>
+                        <div><b>{latestAiCheck?.score ? `${latestAiCheck.score}%` : "-"}</b><span>AI score</span></div>
                       </div>
-                      <p className="exercise-instruction">{planExercise.instructions || exercise?.instructions_sq || "Kryeje ushtrimin ngadalë dhe me kontroll."}</p>
+                      <p className="exercise-instruction">{planExercise.instructions || exercise?.instructions_sq || "Kryeje ushtrimin ngadale dhe me kontroll."}</p>
                       {isHighPain && <div className="role-warning">Dhimbje {latestLog?.pain_score}/10: mos vazhdo pa kontaktuar fizioterapeutin.</div>}
                       <div className="exercise-actions-row">
                         <form action={completeExerciseAction} className="exercise-complete-form">
@@ -368,7 +423,7 @@ export default async function PatientDashboardPage() {
                             {Array.from({ length: 11 }, (_, score) => <option key={score} value={score}>{score}/10</option>)}
                           </select>
                           <input className="input" name="comment" placeholder="Koment opsional" />
-                          <button className="button compact-button" type="submit">E përfundova</button>
+                          <button className="button compact-button" type="submit">E perfundova</button>
                         </form>
                         {exercise?.ai_enabled && <a className="button secondary compact-button" href={`/ai-check?planExerciseId=${planExercise.id}`}>AI Movement Check</a>}
                       </div>
@@ -379,14 +434,14 @@ export default async function PatientDashboardPage() {
             </div>
 
             <div className="dashboard-card active-exercise-card">
-              <span className="mini-badge">Ushtrimi i radhës</span>
+              <span className="mini-badge">Ushtrimi i radhes</span>
               {firstActiveExercise ? (
                 <>
-                  <div className="video-placeholder">▶</div>
+                  <ExerciseMedia exercise={firstActiveExercise.exercise_library} />
                   <h2>{firstActiveExercise.exercise_library?.name || "Ushtrim"}</h2>
-                  <p>{firstActiveExercise.instructions || firstActiveExercise.exercise_library?.instructions_sq || "Kryeje ushtrimin ngadalë dhe me kontroll."}</p>
+                  <p>{firstActiveExercise.instructions || firstActiveExercise.exercise_library?.instructions_sq || "Kryeje ushtrimin ngadale dhe me kontroll."}</p>
                   <div className="generated-box">
-                    <b>Safety:</b> nëse dhimbja arrin 7/10 ose më shumë, ndalo dhe kontakto fizioterapeutin.
+                    <b>Safety:</b> nese dhimbja arrin 7/10 ose me shume, ndalo dhe kontakto fizioterapeutin.
                   </div>
                   {firstActiveExercise.exercise_library?.ai_enabled && <a className="button" href={`/ai-check?planExerciseId=${firstActiveExercise.id}`}>Kontrollo me AI</a>}
                 </>
@@ -399,22 +454,22 @@ export default async function PatientDashboardPage() {
           <section id="trends" className="dashboard-grid">
             <div className="dashboard-card">
               <h2>Trend dhimbje</h2>
-              <p>Mesatarja e fundit: <b>{averagePain !== null ? `${averagePain}/10` : "—"}</b></p>
+              <p>Mesatarja e fundit: <b>{averagePain !== null ? `${averagePain}/10` : "-"}</b></p>
               <div className="trend-bars pain-trend">
                 {painValues.slice(0, 7).reverse().map((pain, index) => <span key={`${pain}-${index}`} style={{ height: `${Math.max(8, pain * 10)}%` }}><em>{pain}</em></span>)}
-                {painValues.length === 0 && <p>Ende nuk ka të dhëna për dhimbje.</p>}
+                {painValues.length === 0 && <p>Ende nuk ka te dhena per dhimbje.</p>}
               </div>
-              <div className="role-warning">Dhimbje 7/10 ose më shumë = stop + kontakt me fizioterapeutin.</div>
+              <div className="role-warning">Dhimbje 7/10 ose me shume = stop + kontakt me fizioterapeutin.</div>
             </div>
 
             <div className="dashboard-card">
               <h2>Trend AI</h2>
-              <p>Mesatarja e fundit: <b>{averageAi !== null ? `${averageAi}%` : "—"}</b></p>
+              <p>Mesatarja e fundit: <b>{averageAi !== null ? `${averageAi}%` : "-"}</b></p>
               <div className="trend-bars ai-trend">
                 {aiValues.slice(0, 7).reverse().map((score, index) => <span key={`${score}-${index}`} style={{ height: `${Math.max(8, score)}%` }}><em>{score}</em></span>)}
                 {aiValues.length === 0 && <p>Ende nuk ka AI checks.</p>}
               </div>
-              <p>AI është feedback për lëvizje, jo diagnozë.</p>
+              <p>AI eshte feedback per levizje, jo diagnoze.</p>
             </div>
           </section>
 
@@ -422,7 +477,7 @@ export default async function PatientDashboardPage() {
             <div className="section-header-row">
               <div>
                 <h2>Historia e fundit</h2>
-                <p>Dhimbja, përfundimi i ushtrimeve dhe AI Movement Checks.</p>
+                <p>Dhimbja, perfundimi i ushtrimeve dhe AI Movement Checks.</p>
               </div>
               <span className="badge">{logs.length + aiChecks.length} records</span>
             </div>
@@ -430,8 +485,8 @@ export default async function PatientDashboardPage() {
               <table className="table">
                 <thead><tr><th>Tipi</th><th>Rezultati</th><th>Koha</th></tr></thead>
                 <tbody>
-                  {logs.slice(0, 6).map((log) => <tr key={log.id}><td>Dhimbje</td><td>{log.pain_score ?? "—"}/10 · {log.completed ? "E kryer" : "—"}</td><td>{log.completed_at ? new Date(log.completed_at).toLocaleString("sq-AL") : "—"}</td></tr>)}
-                  {aiChecks.slice(0, 6).map((check) => <tr key={check.id}><td>AI check</td><td>{check.score}% · {check.alert_type}</td><td>{check.created_at ? new Date(check.created_at).toLocaleString("sq-AL") : "—"}</td></tr>)}
+                  {logs.slice(0, 6).map((log) => <tr key={log.id}><td>Dhimbje</td><td>{log.pain_score ?? "-"}/10 - {log.completed ? "E kryer" : "-"}</td><td>{log.completed_at ? new Date(log.completed_at).toLocaleString("sq-AL") : "-"}</td></tr>)}
+                  {aiChecks.slice(0, 6).map((check) => <tr key={check.id}><td>AI check</td><td>{check.score}% - {check.alert_type}</td><td>{check.created_at ? new Date(check.created_at).toLocaleString("sq-AL") : "-"}</td></tr>)}
                   {logs.length === 0 && aiChecks.length === 0 && <tr><td colSpan={3}>Ende nuk ka histori.</td></tr>}
                 </tbody>
               </table>
@@ -451,8 +506,8 @@ export default async function PatientDashboardPage() {
             </div>
             <div className="dashboard-card blue-soft-card">
               <h2>Rikontroll</h2>
-              <p>Pas përfundimit të planit, app-i të rikujton të kthehesh te fizioterapeuti për vlerësim dhe planin e radhës.</p>
-              <a className="button secondary" href="/patient-portal">Kontakto klinikën</a>
+              <p>Pas perfundimit te planit, app-i te rikujton te kthehesh te fizioterapeuti per vleresim dhe planin e radhes.</p>
+              <a className="button secondary" href="/patient-portal">Kontakto kliniken</a>
             </div>
           </section>
         </div>
