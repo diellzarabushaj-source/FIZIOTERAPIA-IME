@@ -3,19 +3,26 @@
 import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { isDemoPatientCode } from "@/lib/demo-clinic";
 import { getSupabaseAdmin, normalizePatientCode } from "@/lib/supabase-admin";
 import { notifyPhysioHighPain, notifyPhysioLowAiScore } from "@/lib/clinical-notifications";
 
 const USERNAME_COOKIE = "fizioplan_patient_username";
 const CODE_COOKIE = "fizioplan_patient_code";
+const DEMO_PAIN_COOKIE = "fizioplan_demo_pain_score";
+const DEMO_DONE_COOKIE = "fizioplan_demo_completed_plan_exercise";
+const DEMO_AI_COOKIE = "fizioplan_demo_ai_score";
+
+async function getCurrentPatientCode() {
+  const cookieStore = await cookies();
+  return normalizePatientCode(cookieStore.get(CODE_COOKIE)?.value || "");
+}
 
 async function getCurrentPatient() {
   const supabase = getSupabaseAdmin();
   if (!supabase) throw new Error("Supabase server key is missing.");
 
-  const cookieStore = await cookies();
-  const code = normalizePatientCode(cookieStore.get(CODE_COOKIE)?.value || "");
-
+  const code = await getCurrentPatientCode();
   if (!code) return null;
 
   const { data: patient } = await supabase
@@ -28,19 +35,30 @@ async function getCurrentPatient() {
   return patient;
 }
 
+async function setDemoCookie(name: string, value: string) {
+  const cookieStore = await cookies();
+  cookieStore.set(name, value, {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    maxAge: 60 * 60 * 24,
+    path: "/",
+  });
+}
+
 export async function patientLogoutAction() {
   const cookieStore = await cookies();
   cookieStore.delete(USERNAME_COOKIE);
   cookieStore.delete(CODE_COOKIE);
+  cookieStore.delete(DEMO_PAIN_COOKIE);
+  cookieStore.delete(DEMO_DONE_COOKIE);
+  cookieStore.delete(DEMO_AI_COOKIE);
   redirect("/patient-portal");
 }
 
 export async function completeExerciseAction(formData: FormData) {
   const supabase = getSupabaseAdmin();
-  if (!supabase) throw new Error("Supabase server key is missing.");
-
-  const patient = await getCurrentPatient();
-  if (!patient) redirect("/patient-portal");
+  const code = await getCurrentPatientCode();
 
   const planExerciseId = String(formData.get("planExerciseId") || "");
   const painScoreRaw = String(formData.get("painScore") || "");
@@ -48,7 +66,20 @@ export async function completeExerciseAction(formData: FormData) {
   const painScore = painScoreRaw === "" ? null : Number(painScoreRaw);
 
   if (!planExerciseId) throw new Error("Plan exercise is required.");
-  if (painScore !== null && (painScore < 0 || painScore > 10)) throw new Error("Pain score must be 0–10.");
+  if (painScore !== null && (painScore < 0 || painScore > 10)) throw new Error("Pain score must be 0-10.");
+
+  if (!supabase) {
+    if (isDemoPatientCode(code)) {
+      await setDemoCookie(DEMO_DONE_COOKIE, planExerciseId);
+      await setDemoCookie(DEMO_PAIN_COOKIE, String(painScore ?? 3));
+      redirect("/patient-dashboard#today");
+    }
+
+    throw new Error("Supabase server key is missing.");
+  }
+
+  const patient = await getCurrentPatient();
+  if (!patient) redirect("/patient-portal");
 
   const { data: planExercise } = await supabase
     .from("plan_exercises")
@@ -82,17 +113,26 @@ export async function completeExerciseAction(formData: FormData) {
 
 export async function saveAiCheckAction(formData: FormData) {
   const supabase = getSupabaseAdmin();
-  if (!supabase) throw new Error("Supabase server key is missing.");
-
-  const patient = await getCurrentPatient();
-  if (!patient) redirect("/patient-portal");
+  const code = await getCurrentPatientCode();
 
   const planExerciseId = String(formData.get("planExerciseId") || "");
   const score = Number(formData.get("score") || 82);
-  const feedback = String(formData.get("feedback") || "Lëvizje e kontrolluar. Mbaje ritmin më të ngadalshëm në fazën e kthimit.");
+  const feedback = String(formData.get("feedback") || "Levizje e kontrolluar. Mbaje ritmin me te ngadalshem ne fazen e kthimit.");
   const alertType = score < 60 ? "contact_physio" : score < 80 ? "needs_attention" : "good";
 
   if (!planExerciseId) throw new Error("Plan exercise is required.");
+
+  if (!supabase) {
+    if (isDemoPatientCode(code)) {
+      await setDemoCookie(DEMO_AI_COOKIE, String(score));
+      redirect("/patient-dashboard#trends");
+    }
+
+    throw new Error("Supabase server key is missing.");
+  }
+
+  const patient = await getCurrentPatient();
+  if (!patient) redirect("/patient-portal");
 
   const { data: planExercise } = await supabase
     .from("plan_exercises")
