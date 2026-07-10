@@ -1,4 +1,5 @@
-const appEnvironment = (process.env.APP_ENV || "").trim().toLowerCase() ||
+const requestedEnvironment = process.argv.find((arg) => arg.startsWith("--environment="))?.split("=")[1]?.trim().toLowerCase();
+const appEnvironment = requestedEnvironment || (process.env.APP_ENV || "").trim().toLowerCase() ||
   (process.env.VERCEL_ENV === "production" ? "production" : process.env.VERCEL_ENV === "preview" ? "staging" : process.env.NODE_ENV === "test" ? "test" : "development");
 
 const validEnvironments = new Set(["development", "staging", "production", "test"]);
@@ -29,19 +30,31 @@ function valueFor(name) {
   return String(process.env[name] || "").trim();
 }
 
-function isHttpsUrl(value) {
+function parseUrl(value) {
   try {
-    return new URL(value).protocol === "https:";
+    return new URL(value);
   } catch {
-    return false;
+    return null;
   }
+}
+
+function validUrlForEnvironment(name, value) {
+  const parsed = parseUrl(value);
+  if (!parsed) return false;
+  if (appEnvironment === "development" || appEnvironment === "test") {
+    if (parsed.protocol === "https:") return true;
+    return parsed.protocol === "http:" && ["localhost", "127.0.0.1"].includes(parsed.hostname);
+  }
+  return parsed.protocol === "https:";
 }
 
 function statusFor(name) {
   const value = valueFor(name);
   if (!value) return "missing";
   if (name === "PATIENT_SESSION_SECRET" && value.length < 43) return "too_short";
-  if ((name === "NEXT_PUBLIC_APP_URL" || name === "NEXT_PUBLIC_SUPABASE_URL") && !isHttpsUrl(value)) return "invalid_https_url";
+  if (["NEXT_PUBLIC_APP_URL", "NEXT_PUBLIC_SUPABASE_URL", "EXPO_PUBLIC_API_BASE_URL"].includes(name) && !validUrlForEnvironment(name, value)) {
+    return "invalid_url";
+  }
   return "present";
 }
 
@@ -63,15 +76,13 @@ const appUrl = valueFor("NEXT_PUBLIC_APP_URL");
 const supabaseUrl = valueFor("NEXT_PUBLIC_SUPABASE_URL");
 
 if (appEnvironment === "production") {
-  if (!clerkPublishable.startsWith("pk_live_")) issues.push("Production kërkon NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY me pk_live_.");
-  if (!clerkSecret.startsWith("sk_live_")) issues.push("Production kërkon CLERK_SECRET_KEY me sk_live_.");
-  if (appUrl.includes("localhost") || appUrl.includes("127.0.0.1")) issues.push("Production NEXT_PUBLIC_APP_URL nuk mund të jetë localhost.");
+  if (!clerkPublishable.startsWith("pk_live_")) issues.push("Production kërkon Clerk publishable key të ambientit production.");
+  if (!clerkSecret.startsWith("sk_live_")) issues.push("Production kërkon Clerk secret key të ambientit production.");
+  if (/localhost|127\.0\.0\.1/i.test(appUrl)) issues.push("Production NEXT_PUBLIC_APP_URL nuk mund të jetë localhost.");
 }
 
-if (appEnvironment === "staging") {
-  if (appUrl && !/vercel\.app|staging|preview/i.test(appUrl)) {
-    issues.push("Staging NEXT_PUBLIC_APP_URL duhet të jetë preview/staging URL, jo production domain.");
-  }
+if (appEnvironment === "staging" && appUrl && !/vercel\.app|staging|preview/i.test(appUrl)) {
+  issues.push("Staging NEXT_PUBLIC_APP_URL duhet të jetë preview/staging URL, jo production domain.");
 }
 
 if (appEnvironment !== "development" && supabaseUrl && appUrl && supabaseUrl === appUrl) {
