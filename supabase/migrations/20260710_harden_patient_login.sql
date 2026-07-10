@@ -21,9 +21,15 @@ returns text
 language sql
 immutable
 strict
-set search_path = public, pg_catalog
+set search_path = public, extensions, pg_catalog
 as $$
-  select encode(digest(upper(regexp_replace(trim(p_code), '\s+', '', 'g')), 'sha256'), 'hex');
+  select encode(
+    extensions.digest(
+      convert_to(upper(regexp_replace(trim(p_code), '\s+', '', 'g')), 'UTF8'),
+      'sha256'
+    ),
+    'hex'
+  );
 $$;
 
 create or replace function public.check_patient_login_attempt(
@@ -33,7 +39,7 @@ create or replace function public.check_patient_login_attempt(
 returns boolean
 language plpgsql
 security definer
-set search_path = public, pg_catalog
+set search_path = public, extensions, pg_catalog
 as $$
 declare
   v_fingerprint text := public.patient_login_fingerprint(p_code);
@@ -62,7 +68,7 @@ create or replace function public.record_patient_login_result(
 returns void
 language plpgsql
 security definer
-set search_path = public, pg_catalog
+set search_path = public, extensions, pg_catalog
 as $$
 declare
   v_fingerprint text := public.patient_login_fingerprint(p_code);
