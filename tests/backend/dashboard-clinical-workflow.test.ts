@@ -7,26 +7,8 @@ async function source(path: string): Promise<string> {
 }
 
 test("physiotherapist flow redirects into the dashboard", async () => {
-  const candidates = [
-    "app/physiotherapist-portal/page.tsx",
-    "app/sign-in/[[...sign-in]]/page.tsx",
-    "app/sign-in/page.tsx",
-  ];
-
-  const files = await Promise.all(
-    candidates.map(async (path) => {
-      try {
-        return await source(path);
-      } catch {
-        return "";
-      }
-    }),
-  );
-
-  assert.ok(
-    files.some((file) => file.includes("/physiotherapist-portal/overview")),
-    "The authenticated physiotherapist flow must route to /physiotherapist-portal/overview.",
-  );
+  const portalPage = await source("app/physiotherapist-portal/page.tsx");
+  assert.match(portalPage, /\/physiotherapist-portal\/overview/);
 });
 
 test("patient creation keeps smart duplicate protection", async () => {
@@ -54,7 +36,7 @@ test("patient session form always exposes loading, success and error states", as
 });
 
 test("patient profile updates stay on the existing record and are audited", async () => {
-  const updateService = await source("lib/backend/patient-updates.ts");
+  const updateService = await source("lib/backend/patient-profile.ts");
   const editForm = await source("app/physiotherapist-portal/patients/[patientId]/EditPatientForm.tsx");
 
   assert.match(updateService, /getPatientForActor/);
@@ -66,17 +48,17 @@ test("patient profile updates stay on the existing record and are audited", asyn
 
 test("clinical history remains a separate protected patient page", async () => {
   const historyPage = await source("app/physiotherapist-portal/patients/[patientId]/history/page.tsx");
-  const patientPage = await source("app/physiotherapist-portal/patients/[patientId]/page.tsx");
+  const recordNavigation = await source("app/physiotherapist-portal/patients/[patientId]/PatientRecordNav.tsx");
 
   assert.match(historyPage, /requirePhysioActor/);
   assert.match(historyPage, /getPatientForActor/);
   assert.match(historyPage, /timeline|Historiku klinik|Historia klinike/i);
-  assert.match(patientPage, /\/history/);
+  assert.match(recordNavigation, /\/history/);
 });
 
 test("patient ownership checks remain centralized", async () => {
   const patientService = await source("lib/backend/patients.ts");
-  const updateService = await source("lib/backend/patient-updates.ts");
+  const updateService = await source("lib/backend/patient-profile.ts");
 
   assert.match(patientService, /actorCanAccessPhysioResource/);
   assert.match(updateService, /getPatientForActor/);
