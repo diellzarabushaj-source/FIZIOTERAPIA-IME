@@ -13,11 +13,29 @@ export type PatientFormState = {
   fieldErrors?: Record<string, string>;
 };
 
-function parsePain(value: FormDataEntryValue | null): number | null {
-  if (value === null || String(value).trim() === "") return null;
+export type SessionFormState = {
+  status: "idle" | "success" | "error";
+  message: string;
+  sessionNumber?: number;
+  fieldErrors?: Record<string, string>;
+};
+
+function parsePain(value: FormDataEntryValue | null, field: "painBefore" | "painAfter") {
+  if (value === null || String(value).trim() === "") {
+    return { value: null as number | null, error: null as string | null };
+  }
+
   const number = Number(value);
-  if (!Number.isInteger(number) || number < 0 || number > 10) throw new Error("Dhimbja duhet të jetë nga 0 deri 10.");
-  return number;
+  if (!Number.isInteger(number) || number < 0 || number > 10) {
+    return {
+      value: null,
+      error: field === "painBefore"
+        ? "Dhimbja para duhet të jetë numër nga 0 deri 10."
+        : "Dhimbja pas duhet të jetë numër nga 0 deri 10.",
+    };
+  }
+
+  return { value: number, error: null };
 }
 
 export async function createSmartPatientAction(
@@ -59,29 +77,104 @@ export async function createSmartPatientAction(
   }
 }
 
-export async function createPatientSessionAction(patientId: string, formData: FormData) {
-  const actor = await requirePhysioActor();
-  const patientResult = await getPatientForActor(actor, patientId);
-  if (patientResult.ok === false) throw new Error(patientResult.error.message);
-  if (!patientResult.data.physio_id) throw new Error("Pacienti nuk ka fizioterapeut të caktuar.");
+export async function createPatientSessionAction(
+  patientId: string,
+  _previousState: SessionFormState,
+  formData: FormData,
+): Promise<SessionFormState> {
+  try {
+    const actor = await requirePhysioActor();
+    const patientResult = await getPatientForActor(actor, patientId);
+    if (patientResult.ok === false) {
+      return { status: "error", message: patientResult.error.message, fieldErrors: {} };
+    }
+    if (!patientResult.data.physio_id) {
+      return { status: "error", message: "Pacienti nuk ka fizioterapeut të caktuar.", fieldErrors: {} };
+    }
 
-  const supabase = getSupabaseAdmin();
-  if (!supabase) throw new Error("Supabase nuk është konfiguruar.");
+    const sessionDate = cleanText(formData.get("sessionDate"), 10);
+    const treatment = cleanText(formData.get("treatment"), 4000);
+    const painBefore = parsePain(formData.get("painBefore"), "painBefore");
+    const painAfter = parsePain(formData.get("painAfter"), "painAfter");
+    const fieldErrors: Record<string, string> = {};
 
-  const { error } = await supabase.rpc("create_patient_session_safely", {
-    p_patient_id: patientId,
-    p_physio_id: patientResult.data.physio_id,
-    p_session_date: cleanText(formData.get("sessionDate"), 10) || new Date().toISOString().slice(0, 10),
-    p_pain_before: parsePain(formData.get("painBefore")),
-    p_pain_after: parsePain(formData.get("painAfter")),
-    p_subjective: cleanText(formData.get("subjective"), 3000),
-    p_objective: cleanText(formData.get("objective"), 3000),
-    p_treatment: cleanText(formData.get("treatment"), 4000),
-    p_response: cleanText(formData.get("response"), 3000),
-    p_next_plan: cleanText(formData.get("nextPlan"), 3000),
-  });
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(sessionDate)) {
+      fieldErrors.sessionDate = "Zgjidh datën e seancës.";
+    }
+    if (!treatment) {
+      fieldErrors.treatment = "Shëno trajtimin e kryer në këtë seancë.";
+    }
+    if (painBefore.error) fieldErrors.painBefore = painBefore.error;
+    if (painAfter.error) fieldErrors.painAfter = painAfter.error;
 
-  if (error) throw new Error("Seanca nuk u ruajt. Kontrollo të dhënat dhe provo përsëri.");
-  revalidatePath(`/physiotherapist-portal/patients/${patientId}`);
-  revalidatePath("/physiotherapist-portal/overview");
+    if (Object.keys(fieldErrors).length) {
+      return {
+        status: "error",
+        message: "Kontrollo fushat e shënuara dhe provo përsëri.",
+        fieldErrors,
+      };
+    }
+
+    const supabase = getSupabaseAdmin();
+    if (!supabase) {
+      return { status: "error", message: "Databaza nuk është konfiguruar.", fieldErrors: {} };
+    }
+
+    const { data, error } = await supabase.rpc("create_patient_session_safely", {
+      p_patient_id: patientId,
+      p_physio_id: patientResult.data.physio_id,
+      p_session_date: sessionDate,
+      p_pain_before: painBefore.value,
+      p_pain_after: painAfter.value,
+      p_subjective: cleanText(formData.get("subjective"), 3000),
+      p_objective: cleanText(formData.get("objective"), 3000),
+      p_treatment: treatment,
+      p_response: cleanText(formData.get("response"), 3000),
+      p_next_plan: cleanText(formData.get("nextPlan"), 3000),
+    });
+
+    if (error) {
+      return {
+        status: "error",
+        message: "Seanca nuk u ruajt. Të dhënat nuk u humbën; kontrollo lidhjen dhe provo përsëri.",
+        fieldErrors: {},
+      };
+    }
+
+    let sessionNumber: number | undefined;
+    const rpcRow = Array.isArray(data) ? data[0] : data;
+    if (rpcRow && typeof rpcRow === "object") {
+      const candidate = (rpcRow as { session_number?: unknown }).session_number;
+      if (typeof candidate === "number") sessionNumber = candidate;
+    }
+
+    if (!sessionNumber) {
+      const { data: latest } = await supabase
+        .from("patient_sessions")
+        .select("session_number")
+        .eq("patient_id", patientId)
+        .order("session_number", { ascending: false })
+        .limit(1)
+        .maybeSingle<{ session_number: number }>();
+      sessionNumber = latest?.session_number;
+    }
+
+    revalidatePath(`/physiotherapist-portal/patients/${patientId}`);
+    revalidatePath("/physiotherapist-portal/overview");
+
+    return {
+      status: "success",
+      message: sessionNumber
+        ? `Seanca ${sessionNumber} u ruajt me sukses.`
+        : "Seanca u ruajt me sukses.",
+      sessionNumber,
+      fieldErrors: {},
+    };
+  } catch (error) {
+    return {
+      status: "error",
+      message: error instanceof Error ? error.message : "Ndodhi një gabim i papritur gjatë ruajtjes së seancës.",
+      fieldErrors: {},
+    };
+  }
 }
