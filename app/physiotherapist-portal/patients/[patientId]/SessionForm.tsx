@@ -15,7 +15,7 @@ function SubmitButton() {
   const { pending } = useFormStatus();
 
   return (
-    <button className={styles.primary} type="submit" disabled={pending} aria-disabled={pending}>
+    <button className={styles.primary} type="submit" disabled={pending} aria-disabled={pending} aria-busy={pending}>
       {pending ? "Duke ruajtur seancën…" : "Ruaj seancën"}
     </button>
   );
@@ -35,7 +35,7 @@ export default function SessionForm({ patientId }: { patientId: string }) {
     if (state.status === "success") {
       formRef.current?.reset();
     }
-  }, [state.status, state.sessionNumber]);
+  }, [state.status, state.message]);
 
   return (
     <form ref={formRef} action={formAction} className={styles.form} noValidate>
@@ -93,15 +93,13 @@ export default function SessionForm({ patientId }: { patientId: string }) {
         </div>
 
         <div className={`${styles.field} ${styles.full}`}>
-          <label htmlFor="subjective">Subjektive</label>
-          <textarea id="subjective" name="subjective" placeholder="Çfarë raporton pacienti sot?" maxLength={3000} />
-          <small className={styles.helper}>Simptomat, ndryshimet nga seanca e kaluar dhe shqetësimet kryesore.</small>
+          <label htmlFor="subjective">Çfarë raporton pacienti?</label>
+          <textarea id="subjective" name="subjective" placeholder="Simptomat, ndryshimet dhe shqetësimet kryesore" maxLength={3000} />
         </div>
 
         <div className={`${styles.field} ${styles.full}`}>
-          <label htmlFor="objective">Objektive</label>
-          <textarea id="objective" name="objective" placeholder="ROM, forcë, ënjtje, testet, ecja…" maxLength={3000} />
-          <small className={styles.helper}>Gjetjet e matshme dhe vlerësimi klinik i sotëm.</small>
+          <label htmlFor="objective">Çfarë vure re gjatë vlerësimit?</label>
+          <textarea id="objective" name="objective" placeholder="Lëvizshmëria, forca, ënjtja, ecja ose testet" maxLength={3000} />
         </div>
 
         <div className={`${styles.field} ${styles.full}`}>
@@ -109,7 +107,7 @@ export default function SessionForm({ patientId }: { patientId: string }) {
           <textarea
             id="treatment"
             name="treatment"
-            placeholder="Manual therapy, ushtrime, elektroterapi…"
+            placeholder="Terapia manuale, ushtrimet dhe procedurat e kryera"
             maxLength={4000}
             className={state.fieldErrors?.treatment ? styles.inputError : undefined}
             required
@@ -118,18 +116,18 @@ export default function SessionForm({ patientId }: { patientId: string }) {
         </div>
 
         <div className={`${styles.field} ${styles.full}`}>
-          <label htmlFor="response">Reagimi pas seancës</label>
-          <textarea id="response" name="response" placeholder="Si reagoi pacienti pas trajtimit?" maxLength={3000} />
+          <label htmlFor="response">Si reagoi pacienti pas seancës?</label>
+          <textarea id="response" name="response" placeholder="Ndryshimi i simptomave dhe toleranca ndaj trajtimit" maxLength={3000} />
         </div>
 
         <div className={`${styles.field} ${styles.full}`}>
-          <label htmlFor="nextPlan">Plani për seancën tjetër</label>
-          <textarea id="nextPlan" name="nextPlan" placeholder="Çfarë do të vazhdohet ose ndryshohet?" maxLength={3000} />
+          <label htmlFor="nextPlan">Hapi i ardhshëm</label>
+          <textarea id="nextPlan" name="nextPlan" placeholder="Çfarë do të vazhdohet ose ndryshohet në seancën tjetër?" maxLength={3000} />
         </div>
       </div>
 
       <div className={styles.formFooter}>
-        <span>Seanca numërohet automatikisht dhe ruhet në historinë e pacientit.</span>
+        <span>Seanca ruhet në historikun klinik të këtij pacienti.</span>
         <SubmitButton />
       </div>
     </form>
