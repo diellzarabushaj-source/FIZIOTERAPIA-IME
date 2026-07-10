@@ -18,12 +18,7 @@ const footerSections = [
       ["Clinic Use Guide", "/clinic-use"],
       ["Launch Checklist", "/launch-checklist"],
       ["QA Checklist", "/qa-checklist"],
-      ["Pilot Launch", "/pilot-launch"],
-      ["Pilot Readiness", "/pilot-readiness"],
-      ["Pilot Runbook", "/pilot-runbook"],
-      ["Pilot Communications", "/pilot-communications"],
       ["Mobile Submission", "/mobile-submission"],
-      ["Final Handoff", "/final-handoff"],
     ],
   },
   {
@@ -53,10 +48,10 @@ export function SiteFooter() {
         <div className="footer-brand-card">
           <BrandMark />
           <p>
-            Platformë digjitale për fizioterapi: plan ushtrimesh, monitorim progresi, AI Movement Check dhe raporte për rikontroll.
+            Platforme digjitale per fizioterapi: plan ushtrimesh, monitorim progresi, AI Movement Check dhe raporte per rikontroll.
           </p>
           <div className="footer-status-row">
-            <span>29.90 EUR / muaj për fizioterapeutë</span>
+            <span>29.90 EUR / muaj per fizioterapeute</span>
             <span>AI feedback only</span>
           </div>
         </div>
@@ -74,8 +69,8 @@ export function SiteFooter() {
       </div>
 
       <div className="footer-bottom">
-        <p>© {new Date().getFullYear()} Fizioterapia ime. Lëviz më mirë, jeto më mirë.</p>
-        <p>AI nuk diagnostikon dhe nuk zëvendëson fizioterapeutin. Në urgjencë kontakto shërbimet emergjente.</p>
+        <p>&copy; {new Date().getFullYear()} Fizioterapia ime. Leviz me mire, jeto me mire.</p>
+        <p>AI nuk diagnostikon dhe nuk zevendeson fizioterapeutin. Ne urgjence kontakto sherbimet emergjente.</p>
       </div>
     </footer>
   );
