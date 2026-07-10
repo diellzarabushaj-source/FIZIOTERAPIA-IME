@@ -11,7 +11,8 @@ export function PublicSiteChrome() {
     pathname === "/si-perdoret-ne-klinike" ||
     pathname === "/clinic-use" ||
     pathname === "/per-fizioterapeutin" ||
-    pathname === "/per-pacientin";
+    pathname === "/per-pacientin" ||
+    pathname === "/cmimi";
 
   if (!isPublic) return null;
   return <div className="public-site-chrome"><SiteHeader /></div>;
