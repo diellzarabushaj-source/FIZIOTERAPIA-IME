@@ -25,7 +25,7 @@ function itemIsActive(pathname: string, href: string): boolean {
   if (href.endsWith("/overview")) return pathname === href;
   if (href.endsWith("/patients/new")) return pathname === href;
   if (href.endsWith("/patients")) {
-    return pathname.startsWith(href + "/") && !pathname.endsWith("/new");
+    return (pathname === href || pathname.startsWith(href + "/")) && !pathname.endsWith("/new");
   }
   if (href.endsWith("/programs")) {
     return pathname.startsWith(href) || pathname.startsWith("/physiotherapist-portal/plan-builder");
