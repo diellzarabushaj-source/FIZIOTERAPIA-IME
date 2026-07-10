@@ -31,6 +31,7 @@ import "./patient-simple.css";
 import "./public-design-system.css";
 import "./support-center.css";
 import "./faq-explorer.css";
+import "./legal-pages.css";
 
 const siteUrl = process.env.NEXT_PUBLIC_APP_URL || "https://fizioterapia-ime.vercel.app";
 
