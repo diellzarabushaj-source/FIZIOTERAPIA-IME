@@ -29,6 +29,7 @@ async function requirePhysioProfile() {
 
   if (error || !profile) throw new Error("Profili i fizioterapeutit nuk u gjet.");
   if (!["physio", "owner", "admin"].includes(profile.role)) throw new Error("Nuk ke qasje në pagesa.");
+  if (["blocked", "suspended", "inactive"].includes(profile.status || "")) throw new Error("Profili nuk është aktiv.");
   return { supabase, profile };
 }
 
@@ -62,7 +63,10 @@ export async function createPaymentRequestAction(formData: FormData) {
     .select("id")
     .single<{ id: string }>();
 
-  if (error || !data) throw new Error(error?.message || "Kërkesa e pagesës nuk u krijua.");
+  if (error || !data) {
+    if (error?.code === "23505") redirect("/physiotherapist-portal/payment");
+    throw new Error(error?.message || "Kërkesa e pagesës nuk u krijua.");
+  }
   revalidatePath("/physiotherapist-portal/payment");
   redirect(`/physiotherapist-portal/payment?request=${data.id}&created=1`);
 }
@@ -89,23 +93,19 @@ export async function uploadPaymentProofAction(formData: FormData) {
     throw new Error("Kjo kërkesë nuk mund të ndryshohet më.");
   }
 
-  if (request.proof_path) {
-    await supabase.storage.from(PAYMENT_PROOF_BUCKET).remove([request.proof_path]);
-  }
-
   const extension = safeProofExtension(file);
-  const path = `${profile.id}/${requestId}/${Date.now()}.${extension}`;
+  const newPath = `${profile.id}/${requestId}/${Date.now()}.${extension}`;
   const bytes = Buffer.from(await file.arrayBuffer());
   const { error: uploadError } = await supabase.storage
     .from(PAYMENT_PROOF_BUCKET)
-    .upload(path, bytes, { contentType: file.type, upsert: false });
+    .upload(newPath, bytes, { contentType: file.type, upsert: false });
 
   if (uploadError) throw new Error(uploadError.message);
 
   const { error: updateError } = await supabase
     .from("payment_requests")
     .update({
-      proof_path: path,
+      proof_path: newPath,
       proof_filename: file.name.slice(0, 180),
       status: "proof_uploaded",
       submitted_at: new Date().toISOString(),
@@ -113,9 +113,18 @@ export async function uploadPaymentProofAction(formData: FormData) {
       updated_at: new Date().toISOString(),
     })
     .eq("id", requestId)
-    .eq("physio_id", profile.id);
+    .eq("physio_id", profile.id)
+    .in("status", ["pending", "proof_uploaded", "rejected"]);
 
-  if (updateError) throw new Error(updateError.message);
+  if (updateError) {
+    await supabase.storage.from(PAYMENT_PROOF_BUCKET).remove([newPath]);
+    throw new Error(updateError.message);
+  }
+
+  if (request.proof_path && request.proof_path !== newPath) {
+    await supabase.storage.from(PAYMENT_PROOF_BUCKET).remove([request.proof_path]);
+  }
+
   revalidatePath("/physiotherapist-portal/payment");
   revalidatePath("/admin-billing");
   redirect(`/physiotherapist-portal/payment?request=${requestId}&uploaded=1`);
@@ -126,12 +135,33 @@ export async function cancelPaymentRequestAction(formData: FormData) {
   const requestId = String(formData.get("requestId") || "").trim();
   if (!requestId) return;
 
-  await supabase
+  const { data: request } = await supabase
     .from("payment_requests")
-    .update({ status: "cancelled", updated_at: new Date().toISOString() })
+    .select("proof_path,status")
+    .eq("id", requestId)
+    .eq("physio_id", profile.id)
+    .maybeSingle<{ proof_path: string | null; status: string }>();
+
+  if (!request || !["pending", "rejected"].includes(request.status)) {
+    redirect("/physiotherapist-portal/payment");
+  }
+
+  const { error } = await supabase
+    .from("payment_requests")
+    .update({
+      status: "cancelled",
+      proof_path: null,
+      proof_filename: null,
+      updated_at: new Date().toISOString(),
+    })
     .eq("id", requestId)
     .eq("physio_id", profile.id)
     .in("status", ["pending", "rejected"]);
+
+  if (error) throw new Error(error.message);
+  if (request.proof_path) {
+    await supabase.storage.from(PAYMENT_PROOF_BUCKET).remove([request.proof_path]);
+  }
 
   revalidatePath("/physiotherapist-portal/payment");
   redirect("/physiotherapist-portal/payment");
