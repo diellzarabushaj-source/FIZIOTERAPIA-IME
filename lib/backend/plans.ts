@@ -58,6 +58,13 @@ function toDateOnly(value: Date): string {
   return value.toISOString().slice(0, 10);
 }
 
+function forwardFailure<T>(result: BackendResult<unknown>): BackendResult<T> {
+  if (result.ok === true) {
+    return fail<T>("INTERNAL_ERROR", "Rezultati i backend-it ishte i papritur.");
+  }
+  return fail<T>(result.error.code, result.error.message, result.error);
+}
+
 export async function getPlanForActor(actor: ActorContext, planId: string): Promise<BackendResult<PlanRecord>> {
   const supabase = getSupabaseAdmin();
   if (!supabase) return fail("DATABASE_ERROR", "Databaza nuk është konfiguruar.");
@@ -84,7 +91,7 @@ export async function createDraftPlanForActor(
   if (!patientId) return fail("VALIDATION_ERROR", "Zgjidh pacientin.");
 
   const patientResult = await getPatientForActor(actor, patientId);
-  if (!patientResult.ok) return patientResult;
+  if (patientResult.ok === false) return forwardFailure<PlanRecord>(patientResult);
   if (patientResult.data.status !== "active") {
     return fail("CONFLICT", "Nuk mund të krijohet plan për pacient joaktiv.");
   }
@@ -93,7 +100,7 @@ export async function createDraftPlanForActor(
   }
 
   const durationResult = validatePositiveInteger(input.durationDays ?? 14, "durationDays", { min: 1, max: 90 });
-  if (!durationResult.ok) return durationResult;
+  if (durationResult.ok === false) return forwardFailure<PlanRecord>(durationResult);
 
   const title = cleanText(input.title || "Plan rehabilitimi", 180) || "Plan rehabilitimi";
   const start = new Date();
@@ -138,20 +145,20 @@ export async function addExerciseToPlanForActor(
   if (!planId || !exerciseId) return fail("VALIDATION_ERROR", "Plani dhe ushtrimi kërkohen.");
 
   const planResult = await getPlanForActor(actor, planId);
-  if (!planResult.ok) return planResult;
+  if (planResult.ok === false) return forwardFailure<PlanExerciseRecord>(planResult);
   if (!editablePlanStatus(planResult.data.status)) {
     return fail("INVALID_STATUS_TRANSITION", "Vetëm plani draft mund të editohet.");
   }
 
   const setsResult = validatePositiveInteger(input.sets ?? 2, "sets", { min: 1, max: 20 });
-  if (!setsResult.ok) return setsResult;
+  if (setsResult.ok === false) return forwardFailure<PlanExerciseRecord>(setsResult);
   const dayResult = validatePositiveInteger(input.dayNumber ?? 1, "dayNumber", { min: 1, max: 90 });
-  if (!dayResult.ok) return dayResult;
+  if (dayResult.ok === false) return forwardFailure<PlanExerciseRecord>(dayResult);
 
   let reps: number | null = null;
   if (input.reps !== undefined && String(input.reps).trim()) {
     const repsResult = validatePositiveInteger(input.reps, "reps", { min: 1, max: 200 });
-    if (!repsResult.ok) return repsResult;
+    if (repsResult.ok === false) return forwardFailure<PlanExerciseRecord>(repsResult);
     reps = repsResult.data;
   }
 
@@ -208,20 +215,20 @@ export async function updatePlanExerciseForActor(
   if (!existing) return fail("NOT_FOUND", "Ushtrimi në plan nuk u gjet.");
 
   const planResult = await getPlanForActor(actor, existing.plan_id);
-  if (!planResult.ok) return planResult;
+  if (planResult.ok === false) return forwardFailure<PlanExerciseRecord>(planResult);
   if (!editablePlanStatus(planResult.data.status)) {
     return fail("INVALID_STATUS_TRANSITION", "Vetëm plani draft mund të editohet.");
   }
 
   const setsResult = validatePositiveInteger(input.sets ?? existing.sets ?? 2, "sets", { min: 1, max: 20 });
-  if (!setsResult.ok) return setsResult;
+  if (setsResult.ok === false) return forwardFailure<PlanExerciseRecord>(setsResult);
   const dayResult = validatePositiveInteger(input.dayNumber ?? existing.day_number ?? 1, "dayNumber", { min: 1, max: 90 });
-  if (!dayResult.ok) return dayResult;
+  if (dayResult.ok === false) return forwardFailure<PlanExerciseRecord>(dayResult);
 
   let reps: number | null = null;
   if (input.reps !== undefined && String(input.reps).trim()) {
     const repsResult = validatePositiveInteger(input.reps, "reps", { min: 1, max: 200 });
-    if (!repsResult.ok) return repsResult;
+    if (repsResult.ok === false) return forwardFailure<PlanExerciseRecord>(repsResult);
     reps = repsResult.data;
   }
 
@@ -261,7 +268,7 @@ export async function removePlanExerciseForActor(
   if (!existing) return fail("NOT_FOUND", "Ushtrimi në plan nuk u gjet.");
 
   const planResult = await getPlanForActor(actor, existing.plan_id);
-  if (!planResult.ok) return planResult;
+  if (planResult.ok === false) return forwardFailure<{ id: string; planId: string }>(planResult);
   if (!editablePlanStatus(planResult.data.status)) {
     return fail("INVALID_STATUS_TRANSITION", "Vetëm plani draft mund të editohet.");
   }
@@ -279,7 +286,7 @@ export async function transitionPlanForActor(
   targetStatus: PlanStatus,
 ): Promise<BackendResult<PlanRecord>> {
   const planResult = await getPlanForActor(actor, planId);
-  if (!planResult.ok) return planResult;
+  if (planResult.ok === false) return forwardFailure<PlanRecord>(planResult);
   const plan = planResult.data;
 
   if (!canTransitionPlan(plan.status, targetStatus)) {
