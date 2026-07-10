@@ -14,7 +14,8 @@ export function PublicSiteChrome() {
     pathname === "/per-pacientin" ||
     pathname === "/cmimi" ||
     pathname === "/support" ||
-    pathname === "/contact";
+    pathname === "/contact" ||
+    pathname === "/faq";
 
   if (!isPublic) return null;
   return <div className="public-site-chrome"><SiteHeader /></div>;
