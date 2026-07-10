@@ -34,6 +34,7 @@
     "@mediapipe/tasks-vision": "latest",
     "@portabletext/react": "latest",
     "@supabase/supabase-js": "latest",
+    "lucide-react": "latest",
     "next": "latest",
     "next-sanity": "latest",
     "qrcode": "latest",
