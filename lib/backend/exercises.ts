@@ -41,6 +41,22 @@ export type UpdatePrivateExerciseInput = CreatePrivateExerciseInput & {
 
 const selectFields = "id,name,category,diagnosis,instructions_sq,video_url,ai_enabled,is_default,owner_physio_id,status,created_at,updated_at";
 
+function validateMediaUrl(value: unknown): BackendResult<string | null> {
+  const mediaUrl = optionalText(value, 500);
+  if (!mediaUrl || mediaUrl.startsWith("/")) return ok(mediaUrl);
+
+  try {
+    const parsed = new URL(mediaUrl);
+    if (parsed.protocol === "https:") return ok(mediaUrl);
+  } catch {
+    // The validation result below keeps the same field-level contract as other inputs.
+  }
+
+  return fail("VALIDATION_ERROR", "Linku i fotos ose videos nuk është valid.", {
+    fieldErrors: { mediaUrl: "Përdor një link HTTPS ose ngarko skedarin nga pajisja." },
+  });
+}
+
 function isVisibleToActor(actor: ActorContext, exercise: Pick<ExerciseRecord, "is_default" | "owner_physio_id">): boolean {
   return Boolean(exercise.is_default) || actorCanAccessPhysioResource(actor, exercise.owner_physio_id);
 }
@@ -99,6 +115,9 @@ export async function createPrivateExerciseForActor(
     });
   }
 
+  const mediaResult = validateMediaUrl(input.videoUrl);
+  if (mediaResult.ok === false) return mediaResult;
+
   const supabase = getSupabaseAdmin();
   if (!supabase) return fail("DATABASE_ERROR", "Databaza nuk është konfiguruar.");
 
@@ -107,7 +126,7 @@ export async function createPrivateExerciseForActor(
     category: optionalText(input.category, 120) || "Custom",
     diagnosis: optionalText(input.diagnosis, 180),
     instructions_sq: optionalText(input.instructions, 1200),
-    video_url: optionalText(input.videoUrl, 500),
+    video_url: mediaResult.data,
     ai_enabled: false,
     scoring_rules: {},
     is_default: false,
@@ -155,12 +174,15 @@ export async function updatePrivateExerciseForActor(
   const name = cleanText(input.name, 160);
   if (name.length < 2) return fail("VALIDATION_ERROR", "Emri i ushtrimit është i detyrueshëm.");
 
+  const mediaResult = validateMediaUrl(input.videoUrl);
+  if (mediaResult.ok === false) return mediaResult;
+
   const updates = {
     name,
     category: optionalText(input.category, 120) || "Custom",
     diagnosis: optionalText(input.diagnosis, 180),
     instructions_sq: optionalText(input.instructions, 1200),
-    video_url: optionalText(input.videoUrl, 500),
+    video_url: mediaResult.data,
   };
 
   const supabase = getSupabaseAdmin();
