@@ -5,6 +5,7 @@ import { normalizePatientCode } from "./supabase-admin";
 export const PATIENT_CODE_COOKIE = "fizioplan_patient_code";
 export const PATIENT_USERNAME_COOKIE = "fizioplan_patient_username";
 export const PATIENT_SESSION_COOKIE = "fizioplan_patient_session";
+export const PATIENT_SESSION_MAX_AGE_SECONDS = 60 * 60 * 24 * 7;
 
 export const MAX_PATIENT_COMMENT_LENGTH = 500;
 export const MAX_AI_FEEDBACK_LENGTH = 600;
@@ -26,21 +27,37 @@ export function isAdminRole(role?: string | null) {
 }
 
 export function getPatientSessionSecret() {
-  return process.env.PATIENT_SESSION_SECRET || process.env.CLERK_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || "dev-only-patient-session-secret";
+  const secret = process.env.PATIENT_SESSION_SECRET;
+  if (secret) return secret;
+  if (process.env.NODE_ENV === "production") {
+    throw new Error("PATIENT_SESSION_SECRET is required in production.");
+  }
+  return "dev-only-patient-session-secret-change-me";
 }
 
-export function signPatientCode(code: string) {
+function sessionMac(code: string, expiresAt: number) {
   const normalizedCode = normalizePatientCode(code);
-  return createHmac("sha256", getPatientSessionSecret()).update(normalizedCode).digest("hex");
+  return createHmac("sha256", getPatientSessionSecret())
+    .update(`${normalizedCode}.${expiresAt}`)
+    .digest("hex");
+}
+
+export function signPatientCode(
+  code: string,
+  expiresAt = Math.floor(Date.now() / 1000) + PATIENT_SESSION_MAX_AGE_SECONDS,
+) {
+  return `${expiresAt}.${sessionMac(code, expiresAt)}`;
 }
 
 export function verifyPatientCodeSignature(code: string, signature?: string | null) {
   if (!code || !signature) return false;
+  const [expiresRaw, mac] = signature.split(".");
+  const expiresAt = Number(expiresRaw);
+  if (!Number.isInteger(expiresAt) || expiresAt <= Math.floor(Date.now() / 1000) || !mac) return false;
 
-  const expected = signPatientCode(code);
+  const expected = sessionMac(code, expiresAt);
   const expectedBuffer = Buffer.from(expected, "hex");
-  const actualBuffer = Buffer.from(signature, "hex");
-
+  const actualBuffer = Buffer.from(mac, "hex");
   if (expectedBuffer.length !== actualBuffer.length) return false;
   return timingSafeEqual(expectedBuffer, actualBuffer);
 }
@@ -117,9 +134,10 @@ export async function requireAssignedPlanExercise({
 }) {
   let query = supabase
     .from("plan_exercises")
-    .select("id,plans!inner(patient_id),exercise_library(ai_enabled)")
+    .select("id,plans!inner(patient_id,status),exercise_library(ai_enabled)")
     .eq("id", planExerciseId)
-    .eq("plans.patient_id", patientId);
+    .eq("plans.patient_id", patientId)
+    .eq("plans.status", "active");
 
   if (aiOnly) {
     query = query.eq("exercise_library.ai_enabled", true);
@@ -128,7 +146,7 @@ export async function requireAssignedPlanExercise({
   const { data: planExercise } = await query.maybeSingle();
 
   if (!planExercise) {
-    throw new Error(aiOnly ? "Ky ushtrim nuk ka AI check aktiv për këtë pacient." : "Ky ushtrim nuk është caktuar për këtë pacient.");
+    throw new Error(aiOnly ? "Ky ushtrim nuk ka AI check aktiv për këtë pacient." : "Ky ushtrim nuk është caktuar në planin aktiv të pacientit.");
   }
 
   return planExercise;
