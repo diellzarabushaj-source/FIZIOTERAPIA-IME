@@ -19,7 +19,8 @@ export function PublicSiteChrome() {
     pathname === "/privacy" ||
     pathname === "/terms" ||
     pathname === "/medical-disclaimer" ||
-    pathname === "/data-deletion";
+    pathname === "/data-deletion" ||
+    pathname === "/camera-consent";
 
   if (!isPublic) return null;
   return <div className="public-site-chrome"><SiteHeader /></div>;
