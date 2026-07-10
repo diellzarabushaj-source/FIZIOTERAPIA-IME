@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { ClipboardPlus, History, QrCode } from "lucide-react";
 import { requirePhysioActor } from "@/lib/backend/access";
 import { getPatientForActor } from "@/lib/backend/patients";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
@@ -46,13 +47,14 @@ export default async function PatientRecordPage({
   const supabase = getSupabaseAdmin();
   if (!supabase) throw new Error("Supabase nuk është konfiguruar.");
 
-  const { data: sessions, error } = await supabase
+  let sessionQuery = supabase
     .from("patient_sessions")
     .select("id,session_date,status,pain_before,pain_after,treatment_summary,clinical_notes,next_steps")
     .eq("patient_id", patientId)
-    .eq("physio_id", actor.profileId)
-    .order("session_date", { ascending: false })
-    .returns<SessionRow[]>();
+    .order("session_date", { ascending: false });
+  if (actor.role === "physio") sessionQuery = sessionQuery.eq("physio_id", actor.profileId);
+
+  const { data: sessions, error } = await sessionQuery.returns<SessionRow[]>();
 
   if (error) {
     console.error("patient_sessions_load_failed", {
@@ -67,19 +69,31 @@ export default async function PatientRecordPage({
   const sessionCount = sessions?.length || 0;
   const nextSessionNumber = sessionCount + 1;
   const latestSession = sessions?.[0] || null;
+  const patientName = (patient.first_name + " " + (patient.last_name || "")).trim();
 
   return (
     <>
       <header className={styles.patientHeader}>
         <div>
           <span className={styles.eyebrow}>Kartela e pacientit</span>
-          <h1>{patient.first_name} {patient.last_name || ""}</h1>
+          <h1>{patientName}</h1>
           <div className={styles.meta}>
             <span>Datëlindja: {patient.date_of_birth || "—"}</span>
             <span>Mosha: {patient.age ?? "—"}</span>
-            <span>Kodi: {patient.patient_code}</span>
             <span>Seanca: {sessionCount}</span>
+            <span className={styles.code}>Kodi {patient.patient_code}</span>
           </div>
+        </div>
+
+        <div className={styles.patientActions}>
+          <Link className={styles.secondary} href={"/patient-access/" + encodeURIComponent(patient.patient_code)} target="_blank">
+            <QrCode size={17} />
+            Printo QR
+          </Link>
+          <Link className={styles.primary} href={"/physiotherapist-portal/patients/" + patientId + "/program"}>
+            <ClipboardPlus size={17} />
+            Menaxho planin
+          </Link>
         </div>
       </header>
 
@@ -99,8 +113,8 @@ export default async function PatientRecordPage({
               {notices.session === "created"
                 ? "Të dhënat klinike janë shtuar në historikun e pacientit."
                 : notices.created
-                  ? "Pacienti është gati për seancën e parë."
-                  : "Nuk është krijuar pacient i dyfishtë; mund të vazhdosh me seancën e radhës."}
+                  ? "Pacienti është gati për planin dhe seancën e parë."
+                  : "Nuk është krijuar pacient i dyfishtë; vazhdo në kartelën ekzistuese."}
             </span>
           </div>
         </section>
@@ -115,15 +129,15 @@ export default async function PatientRecordPage({
           <span>Seanca e fundit</span>
           <strong>{latestSession ? formatSessionDate(latestSession.session_date) : "Ende pa seanca"}</strong>
           {latestSession && (
-            <small>
-              Dhimbja: {latestSession.pain_before ?? "—"} → {latestSession.pain_after ?? "—"}
-            </small>
+            <small>Dhimbja: {latestSession.pain_before ?? "—"} → {latestSession.pain_after ?? "—"}</small>
           )}
         </article>
         <article className={styles.summaryPanel}>
           <span>Historiku klinik</span>
           <strong>{sessionCount} seanca të dokumentuara</strong>
-          <Link href={`/physiotherapist-portal/patients/${patientId}/history`}>Hap timeline-in e plotë</Link>
+          <Link href={"/physiotherapist-portal/patients/" + patientId + "/history"}>
+            <History size={14} /> Hap timeline-in e plotë
+          </Link>
         </article>
       </section>
 
