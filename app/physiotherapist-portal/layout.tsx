@@ -1,6 +1,6 @@
-import { requirePhysioWorkspaceUser } from "@/lib/physio-auth";
+import { requirePhysioActor } from "@/lib/backend/access";
 
 export default async function PhysiotherapistPortalLayout({ children }: { children: React.ReactNode }) {
-  await requirePhysioWorkspaceUser();
+  await requirePhysioActor();
   return <>{children}</>;
 }
