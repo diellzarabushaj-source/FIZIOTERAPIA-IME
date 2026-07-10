@@ -22,7 +22,7 @@
   margin: 20px 0;
   font-size: clamp(46px, 6vw, 84px);
   line-height: 0.94;
-  letter-spacing: -0.07em;
+  letter-spacing: 0;
 }
 
 .patient-login-copy p {
@@ -212,6 +212,8 @@
     radial-gradient(circle at 50% 45%, rgba(255, 255, 255, 0.35), transparent 24%),
     linear-gradient(135deg, var(--fi-teal), var(--fi-green));
   color: #fff;
+  font-size: 18px;
+  letter-spacing: 0.08em;
 }
 
 .patient-dashboard-page .pain-scale span {
@@ -238,7 +240,7 @@
 }
 
 .patient-kpis .kpi-card strong {
-  letter-spacing: -0.05em;
+  letter-spacing: 0;
 }
 
 .patient-day-strip {
@@ -317,7 +319,7 @@
 .exercise-card-header h3 {
   margin: 10px 0 4px;
   font-size: 26px;
-  letter-spacing: -0.04em;
+  letter-spacing: 0;
 }
 
 .exercise-card-header p,
