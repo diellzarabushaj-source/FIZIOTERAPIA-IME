@@ -7,7 +7,7 @@ import { BrandMark } from "@/components/BrandMark";
 const links = [
   { href: "/clinic-use", label: "Si përdoret", key: "clinic" },
   { href: "/#patient", label: "Për pacientin", key: "patient" },
-  { href: "/#physio", label: "Për fizioterapeutin", key: "physio" },
+  { href: "/per-fizioterapeutin", label: "Për fizioterapeutin", key: "physio" },
   { href: "/#pricing", label: "Çmimi", key: "pricing" },
   { href: "/blog", label: "Blog", key: "blog" },
 ];
@@ -23,6 +23,7 @@ export function SiteHeader() {
           {links.map((link) => {
             const active =
               (link.key === "blog" && pathname.startsWith("/blog")) ||
+              (link.key === "physio" && pathname === "/per-fizioterapeutin") ||
               (link.key === "clinic" && (pathname === "/clinic-use" || pathname === "/si-perdoret-ne-klinike"));
             return (
               <a key={link.key} className={active ? "active" : undefined} href={link.href}>
