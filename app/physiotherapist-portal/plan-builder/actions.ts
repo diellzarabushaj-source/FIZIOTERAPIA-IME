@@ -38,7 +38,7 @@ async function requireWorkspaceWithAccess() {
 }
 
 function requireOk<T>(result: { ok: true; data: T } | { ok: false; error: { message: string } }): T {
-  if (!result.ok) throw new Error(result.error.message);
+  if (result.ok === false) throw new Error(result.error.message);
   return result.data;
 }
 
@@ -92,7 +92,7 @@ export async function addCustomExerciseAction(formData: FormData) {
     instructions: formData.get("instructions"),
   });
 
-  if (!added.ok) {
+  if (added.ok === false) {
     await supabase.from("exercise_library").delete().eq("id", exercise.id).eq("owner_physio_id", actor.profileId);
     throw new Error(added.error.message);
   }
