@@ -3,12 +3,19 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { requirePhysioActor } from "@/lib/backend/access";
+import { updatePatientForActor } from "@/lib/backend/patient-profile";
 import { createPatientForActor, getPatientForActor } from "@/lib/backend/patients";
 import { cleanText } from "@/lib/backend/validation";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 
 export type PatientFormState = {
   status: "idle" | "error";
+  message: string;
+  fieldErrors?: Record<string, string>;
+};
+
+export type PatientEditFormState = {
+  status: "idle" | "success" | "error";
   message: string;
   fieldErrors?: Record<string, string>;
 };
@@ -72,6 +79,47 @@ export async function createSmartPatientAction(
     return {
       status: "error",
       message: error instanceof Error ? error.message : "Ndodhi një gabim i papritur. Provo përsëri.",
+      fieldErrors: {},
+    };
+  }
+}
+
+export async function updatePatientProfileAction(
+  patientId: string,
+  _previousState: PatientEditFormState,
+  formData: FormData,
+): Promise<PatientEditFormState> {
+  try {
+    const actor = await requirePhysioActor();
+    const result = await updatePatientForActor(actor, patientId, {
+      firstName: formData.get("firstName"),
+      lastName: formData.get("lastName"),
+      dateOfBirth: formData.get("dateOfBirth"),
+      phone: formData.get("phone"),
+      diagnosis: formData.get("diagnosis"),
+    });
+
+    if (result.ok === false) {
+      return {
+        status: "error",
+        message: result.error.message,
+        fieldErrors: result.error.fieldErrors || {},
+      };
+    }
+
+    revalidatePath(`/physiotherapist-portal/patients/${patientId}`);
+    revalidatePath("/physiotherapist-portal/patients");
+    revalidatePath("/physiotherapist-portal/overview");
+
+    return {
+      status: "success",
+      message: "Ndryshimet në kartelën e pacientit u ruajtën me sukses.",
+      fieldErrors: {},
+    };
+  } catch (error) {
+    return {
+      status: "error",
+      message: error instanceof Error ? error.message : "Ndodhi një gabim i papritur gjatë ruajtjes së kartelës.",
       fieldErrors: {},
     };
   }
