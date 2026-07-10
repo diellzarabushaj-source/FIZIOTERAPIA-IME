@@ -42,7 +42,7 @@ export async function createUniquePatientCode(supabase: SupabaseClient, firstNam
     if (!existing) return code;
   }
 
-  throw new Error("Nuk u gjenerua kod unik për pacientin. Provo përsëri.");
+  throw new Error("Nuk u gjenerua kod unik per pacientin. Provo perseri.");
 }
 
 export function createPatientUsername(firstName: string, lastName: string, code: string) {
