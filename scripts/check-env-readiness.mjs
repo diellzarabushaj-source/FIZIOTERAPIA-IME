@@ -1,3 +1,7 @@
+const appEnvironment = (process.env.APP_ENV || "").trim().toLowerCase() ||
+  (process.env.VERCEL_ENV === "production" ? "production" : process.env.VERCEL_ENV === "preview" ? "staging" : process.env.NODE_ENV === "test" ? "test" : "development");
+
+const validEnvironments = new Set(["development", "staging", "production", "test"]);
 const requiredWebEnv = [
   "NEXT_PUBLIC_SUPABASE_URL",
   "SUPABASE_SERVICE_ROLE_KEY",
@@ -19,11 +23,25 @@ const recommendedWebEnv = [
 ];
 
 const requiredMobileEnv = ["EXPO_PUBLIC_API_BASE_URL"];
+const issues = [];
+
+function valueFor(name) {
+  return String(process.env[name] || "").trim();
+}
+
+function isHttpsUrl(value) {
+  try {
+    return new URL(value).protocol === "https:";
+  } catch {
+    return false;
+  }
+}
 
 function statusFor(name) {
-  const value = process.env[name];
+  const value = valueFor(name);
   if (!value) return "missing";
-  if (name === "PATIENT_SESSION_SECRET" && value.length < 32) return "too_short";
+  if (name === "PATIENT_SESSION_SECRET" && value.length < 43) return "too_short";
+  if ((name === "NEXT_PUBLIC_APP_URL" || name === "NEXT_PUBLIC_SUPABASE_URL") && !isHttpsUrl(value)) return "invalid_https_url";
   return "present";
 }
 
@@ -34,19 +52,43 @@ function rowsFor(group, names, required) {
 const rows = [
   ...rowsFor("web", requiredWebEnv, true),
   ...rowsFor("web", recommendedWebEnv, false),
-  ...rowsFor("mobile", requiredMobileEnv, true),
+  ...rowsFor("mobile", requiredMobileEnv, appEnvironment === "production"),
 ];
 
-console.table(rows);
-const invalidRequired = rows.filter((row) => row.required && row.status !== "present");
+if (!validEnvironments.has(appEnvironment)) issues.push(`APP_ENV është i pavlefshëm: ${appEnvironment}`);
 
-if (invalidRequired.length) {
-  console.error("\nMissing or invalid required environment variables:");
-  for (const row of invalidRequired) console.error(`- ${row.name} (${row.group}): ${row.status}`);
-  console.error("\nSet these in Vercel for web/backend and in EAS/Expo for mobile.");
-  process.exitCode = 1;
-} else {
-  console.log("\nRequired environment variables are present.");
+const clerkPublishable = valueFor("NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY");
+const clerkSecret = valueFor("CLERK_SECRET_KEY");
+const appUrl = valueFor("NEXT_PUBLIC_APP_URL");
+const supabaseUrl = valueFor("NEXT_PUBLIC_SUPABASE_URL");
+
+if (appEnvironment === "production") {
+  if (!clerkPublishable.startsWith("pk_live_")) issues.push("Production kërkon NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY me pk_live_.");
+  if (!clerkSecret.startsWith("sk_live_")) issues.push("Production kërkon CLERK_SECRET_KEY me sk_live_.");
+  if (appUrl.includes("localhost") || appUrl.includes("127.0.0.1")) issues.push("Production NEXT_PUBLIC_APP_URL nuk mund të jetë localhost.");
 }
 
-console.log("\nSecurity reminder: never print or commit secret values. This script only reports readiness state.");
+if (appEnvironment === "staging") {
+  if (appUrl && !/vercel\.app|staging|preview/i.test(appUrl)) {
+    issues.push("Staging NEXT_PUBLIC_APP_URL duhet të jetë preview/staging URL, jo production domain.");
+  }
+}
+
+if (appEnvironment !== "development" && supabaseUrl && appUrl && supabaseUrl === appUrl) {
+  issues.push("Supabase URL dhe App URL nuk duhet të jenë të njëjta.");
+}
+
+console.log(`Application environment: ${appEnvironment}`);
+console.table(rows);
+
+const invalidRequired = rows.filter((row) => row.required && row.status !== "present");
+for (const row of invalidRequired) issues.push(`${row.name} (${row.group}): ${row.status}`);
+
+if (issues.length) {
+  console.error("\nEnvironment readiness failed:");
+  for (const issue of [...new Set(issues)]) console.error(`- ${issue}`);
+  console.error("\nSecrets are never printed by this script.");
+  process.exitCode = 1;
+} else {
+  console.log("\nEnvironment readiness passed.");
+}
