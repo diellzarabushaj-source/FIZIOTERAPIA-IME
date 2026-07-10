@@ -59,14 +59,14 @@ export async function recordPatientExerciseCompletion(
   input: CompletePatientExerciseInput,
 ): Promise<BackendResult<PatientExerciseCompletion>> {
   const exerciseIdResult = validateUuid(input.planExerciseId, "planExerciseId");
-  if (!exerciseIdResult.ok) {
+  if (exerciseIdResult.ok === false) {
     return fail("VALIDATION_ERROR", exerciseIdResult.error.message, {
       fieldErrors: exerciseIdResult.error.fieldErrors,
     });
   }
 
   const painResult = validatePainScore(input.painScore);
-  if (!painResult.ok) {
+  if (painResult.ok === false) {
     return fail("VALIDATION_ERROR", painResult.error.message, {
       fieldErrors: painResult.error.fieldErrors,
     });
@@ -109,7 +109,7 @@ export async function recordPatientExerciseCompletion(
       completedOn: row.completed_on,
     });
     clinicalAlertCreated = alertResult.ok;
-    if (!alertResult.ok) {
+    if (alertResult.ok === false) {
       console.error("clinical_alert_create_failed", {
         patientId: patient.id,
         exerciseLogId: row.log_id,
