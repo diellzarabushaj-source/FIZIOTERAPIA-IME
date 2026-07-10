@@ -92,7 +92,9 @@ export async function createPatientForActor(
   let age: number | null = null;
   if (input.age !== undefined && String(input.age).trim()) {
     const ageResult = validatePositiveInteger(input.age, "age", { min: 1, max: 120 });
-    if (!ageResult.ok) return fail(ageResult.error.code, ageResult.error.message, ageResult.error);
+    if (ageResult.ok === false) {
+      return fail(ageResult.error.code, ageResult.error.message, ageResult.error);
+    }
     age = ageResult.data;
   }
 
@@ -141,7 +143,9 @@ export async function archivePatientForActor(
   patientId: string,
 ): Promise<BackendResult<{ id: string }>> {
   const patientResult = await getPatientForActor(actor, patientId);
-  if (!patientResult.ok) return fail(patientResult.error.code, patientResult.error.message, patientResult.error);
+  if (patientResult.ok === false) {
+    return fail(patientResult.error.code, patientResult.error.message, patientResult.error);
+  }
 
   const supabase = getSupabaseAdmin();
   if (!supabase) return fail("DATABASE_ERROR", "Databaza nuk është konfiguruar.");
