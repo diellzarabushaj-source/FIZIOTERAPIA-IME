@@ -38,7 +38,7 @@ export function EditPatientForm({ patient }: { patient: PatientValues }) {
     <form action={formAction} className={styles.form} noValidate>
       {state.status !== "idle" && (
         <div
-          className={state.status === "success" ? styles.formAlertSuccess : styles.formAlertError}
+          className={state.status === "success" ? styles.successMessage : styles.formAlertError}
           role={state.status === "success" ? "status" : "alert"}
           aria-live="polite"
         >
