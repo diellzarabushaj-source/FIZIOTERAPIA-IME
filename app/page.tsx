@@ -1,207 +1,91 @@
 import { AuthControls } from "@/components/AuthControls";
 import { BrandMark } from "@/components/BrandMark";
 
-const workflow = [
-  ["01", "Krijo planin", "Zgjidh pacientin, ushtrimet, setet, përsëritjet dhe udhëzimet."],
-  ["02", "Dërgo kodin ose QR", "Pacienti hyn në telefon pa krijuar llogari dhe sheh vetëm planin e vet."],
-  ["03", "Përcill progresin", "Shiko ushtrimet e kryera, dhimbjen, komentet dhe sinjalet e sigurisë."],
+const heroStats: Array<[string, string]> = [
+  ["1 kod", "qasje e thjeshtë për pacientin"],
+  ["7/10", "dhimbje = ndalo ushtrimin"],
+  ["AI", "feedback lëvizjeje, jo diagnozë"],
 ];
+
+const careMoments = [
+  {
+    label: "Vlerësim i drejtuar",
+    title: "Ushtrimi nis me teknikë të sigurt",
+    text: "Fizioterapeuti e vlerëson pacientin, e korrigjon formën dhe e kthen planin në hapa të qartë ditorë.",
+    image: "https://images.pexels.com/photos/20860622/pexels-photo-20860622.jpeg?auto=compress&cs=tinysrgb&w=1200",
+    alt: "Fizioterapiste duke udhëzuar pacientin gjatë rehabilitimit",
+  },
+  {
+    label: "Plan personal",
+    title: "Pacienti sheh vetëm çka duhet sot",
+    text: "Kodi personal hap planin, ushtrimet dhe raportimin e dhimbjes pa llogari të komplikuara.",
+    image: "https://images.pexels.com/photos/5793713/pexels-photo-5793713.jpeg?auto=compress&cs=tinysrgb&w=1200",
+    alt: "Fizioterapiste duke ndihmuar një paciente me ushtrim të krahut",
+  },
+  {
+    label: "Rikontroll klinik",
+    title: "Fizioterapeuti e përcjell progresin",
+    text: "Dhimbja, aderenca dhe sinjalet e sigurisë bashkohen në një pamje për vendime më të shpejta.",
+    image: "https://images.pexels.com/photos/20860588/pexels-photo-20860588.jpeg?auto=compress&cs=tinysrgb&w=1000",
+    alt: "Fizioterapeut duke kontrolluar lëvizjen e këmbës",
+  },
+];
+
+const flow: Array<[string, string, string]> = [
+  ["01", "Fizioterapeuti krijon planin", "Zgjedh ushtrimet, setet, përsëritjet dhe udhëzimet klinike."],
+  ["02", "Pacienti hyn me kod ose QR", "Pa llogari të komplikuara; sheh vetëm planin e vet."],
+  ["03", "Pacienti ndjek programin", "Shënon ushtrimet e kryera, dhimbjen dhe komentet."],
+  ["04", "Fizioterapeuti monitoron", "Sheh progresin, alarmet dhe vendos për rikontrollin."],
+];
+
+const features: Array<[string, string, string, "patient" | "physio" | "clinic"]> = [
+  ["Për pacientë", "Plan i qartë, çdo ditë", "Ushtrimet e caktuara nga fizioterapeuti, video, dozimi dhe progresi në një ekran të thjeshtë.", "patient"],
+  ["Për fizioterapeutë", "Dashboard që kursen kohë", "Krijo pacientë dhe plane, përcill dhimbjen dhe shiko sinjalet që kërkojnë vëmendje.", "physio"],
+  ["Për klinika", "Menaxhim më i pastër", "Abonimet, biblioteka e ushtrimeve dhe raportet e klinikës në një vend.", "clinic"],
+];
+
+function FeatureIcon({ kind }: { kind: "patient" | "physio" | "clinic" }) {
+  if (kind === "patient") return <svg viewBox="0 0 40 40" fill="none" aria-hidden="true"><rect x="9" y="6" width="22" height="28" rx="6" stroke="currentColor" strokeWidth="2"/><path d="M14.5 15.5h11M14.5 21h11M14.5 26.5h6" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/><path d="M24 28l2 2 4-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>;
+  if (kind === "physio") return <svg viewBox="0 0 40 40" fill="none" aria-hidden="true"><rect x="6" y="9" width="28" height="22" rx="6" stroke="currentColor" strokeWidth="2"/><path d="M11 23l4.5-7.5 3.5 5 3-3.5 5.5 2.5 3-3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>;
+  return <svg viewBox="0 0 40 40" fill="none" aria-hidden="true"><path d="M20 6l12 5v8.5c0 8-5.1 13.2-12 15.5C13.1 32.7 8 27.5 8 19.5V11l12-5z" stroke="currentColor" strokeWidth="2"/><path d="M14.5 20l4 4 7.5-8.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>;
+}
 
 export default function HomePage() {
   return (
-    <main className="page landing-page">
-      <nav className="top-nav landing-nav">
+    <main className="page fih">
+      <nav className="top-nav fih-nav">
         <BrandMark />
         <div className="nav-actions">
-          <a href="#how">Si funksionon</a>
-          <a href="#patient">Për pacientin</a>
-          <a href="#physio">Për fizioterapeutin</a>
-          <a href="#pricing">Çmimi</a>
-          <a href="/blog">Blog</a>
-          <AuthControls />
+          <a href="#care">Kujdesi</a><a href="#how">Si funksionon</a><a href="#ai">AI</a><a href="#pricing">Çmimi</a><a href="/faq">FAQ</a><a href="/blog">Blog</a><AuthControls />
         </div>
       </nav>
 
-      <section className="landing-hero">
-        <div className="landing-hero-copy">
-          <span className="badge">Platformë për fizioterapeutë dhe pacientë</span>
-          <h1>Pacientët i harrojnë ushtrimet?<span>Jepua planin direkt në telefon.</span></h1>
-          <p>
-            Pacienti e sheh qartë çka duhet të bëjë sot. Ti përcjell ushtrimet e kryera,
-            dhimbjen, progresin dhe sigurinë — pa letra dhe pa konfuzion.
-          </p>
-          <div className="portal-actions">
-            <a className="button" href="/physiotherapist-portal">Fillo si fizioterapeut</a>
-            <a className="button secondary" href="#how">Shiko si funksionon</a>
-          </div>
-          <a className="landing-sub-action" href="/patient-portal">Je pacient? Hyr me kod →</a>
-          <div className="landing-proof">
-            <div><strong>1 kod</strong><span>për çdo pacient</span></div>
-            <div><strong>3 hapa</strong><span>krijo, dërgo, përcill</span></div>
-            <div><strong>9.90€</strong><span>çmim për përdoruesit e parë</span></div>
-          </div>
+      <section className="fih-hero">
+        <svg className="fih-hero-curve" viewBox="0 0 1160 760" fill="none" preserveAspectRatio="none" aria-hidden="true"><path d="M-60 555C110 460 170 300 350 315C530 330 545 505 715 505C860 505 895 375 1080 300" stroke="url(#curve)" strokeWidth="2.5"/><defs><linearGradient id="curve"><stop stopColor="#16A6B4"/><stop offset="1" stopColor="#34C759"/></linearGradient></defs></svg>
+        <div className="fih-hero-copy">
+          <span className="fih-eyebrow">Fizioterapi digjitale, e drejtuar nga fizioterapeuti</span>
+          <h1 className="fih-h1">Fizioterapia nuk mbaron kur mbyllet dera e klinikës.</h1>
+          <p className="fih-lede">Fizioterapeuti cakton planin. Pacienti e ndjek me një kod të thjeshtë dhe çdo ushtrim i kryer kthehet në informacion të qartë për seancën e ardhshme.</p>
+          <div className="fih-hero-actions"><a className="fih-btn fih-btn-primary" href="/physiotherapist-portal">Fillo si fizioterapeut</a><a className="fih-btn fih-btn-ghost" href="/patient-portal">Kam kod pacienti</a></div>
+          <dl className="fih-stat-row">{heroStats.map(([value,label])=><div key={value}><dt>{value}</dt><dd>{label}</dd></div>)}</dl>
         </div>
-
-        <div className="landing-showcase" aria-label="Pamje e Fizioterapia Ime">
-          <div className="showcase-glow" />
-          <div className="floating-proof one">Ushtrimi u krye ✓<small>Progresi u përditësua</small></div>
-          <div className="floating-proof two">Dhimbja 3/10<small>Brenda kufirit të sigurisë</small></div>
-          <div className="showcase-phone">
-            <div className="phone-notch" />
-            <div className="phone-app-logo"><BrandMark compact /></div>
-            <span className="mini-badge">Sot</span>
-            <h2>Ke 3 ushtrime</h2>
-            <p style={{ margin: "0 0 12px", color: "#64748b", fontWeight: 800 }}>Fillo: Glute bridge</p>
-            <div className="progress-line"><span style={{ width: "66%" }} /></div>
-            {[
-              ["Glute bridge", "3 sete × 12", "Fillo"],
-              ["Cat cow", "2 sete × 10", "E kryer"],
-              ["Dhimbja", "Shëno 0–10", "Pas ushtrimit"],
-            ].map(([name, dose, status]) => (
-              <div className="phone-exercise" key={name}>
-                <div><b>{name}</b><small>{dose}</small></div><em>{status}</em>
-              </div>
-            ))}
-            <button className="phone-cta">Fillo ushtrimin</button>
-          </div>
-
-          <div className="dashboard-preview-card">
-            <div className="preview-header"><span /><span /><span /></div>
-            <h3>Dashboard për fizioterapeutin</h3>
-            <div className="preview-kpis">
-              <div><b>18</b><small>Pacientë</small></div>
-              <div><b>4/10</b><small>Dhimbje</small></div>
-              <div><b>3</b><small>Njoftime</small></div>
-            </div>
-            <div className="preview-row"><span>Arta Gashi</span><b>2/3 sot</b></div>
-            <div className="preview-row"><span>ARB-4821</span><b>QR gati</b></div>
-            <div className="preview-row"><span>Raport PDF</span><b>Printo</b></div>
-          </div>
+        <div className="fih-hero-visual">
+          <figure className="fih-hero-photo"><img src={careMoments[0].image} alt={careMoments[0].alt}/></figure>
+          <div className="fih-session-card"><div className="fih-session-top"><span className="fih-session-pill">Plan aktiv</span><span className="fih-session-ai">Progres 68%</span></div><h3>Dita 3 · Program lumbar</h3><div className="fih-progress"><span style={{width:"68%"}}/></div><ul><li><span>Glute bridge</span><b>3 × 12</b></li><li><span>Cat–cow</span><b>Kryer</b></li><li className="fih-warn"><span>Dhimbje sot</span><b>4/10</b></li></ul></div>
         </div>
       </section>
 
-      <section className="trust-strip" aria-label="Pikat kryesore">
-        <div>Pacienti hyn pa fjalëkalim</div>
-        <div>Fizioterapeuti vendos planin</div>
-        <div>Të dhënat e pacientëve janë të ndara</div>
-      </section>
+      <section className="fih-section" id="care"><div className="fih-section-head"><span className="fih-eyebrow">Cikli i plotë i kujdesit</span><h2 className="fih-h2">Pacienti e kupton planin. Fizioterapeuti e sheh progresin.</h2><p className="fih-lede">Nga vlerësimi në klinikë, te ushtrimet në shtëpi dhe rikontrolli.</p></div><div className="fih-care-grid">{careMoments.map(moment=><article className="fih-care-card" key={moment.title}><img src={moment.image} alt={moment.alt} loading="lazy"/><div className="fih-care-card-body"><span className="fih-session-pill">{moment.label}</span><h3>{moment.title}</h3><p>{moment.text}</p></div></article>)}</div></section>
 
-      <section className="home-section" id="how">
-        <div className="home-section-head">
-          <span className="badge">Si funksionon</span>
-          <h2>Një workflow i thjeshtë nga plani te progresi.</h2>
-          <p>Gjithçka është ndërtuar që fizioterapeuti të punojë shpejt dhe pacienti ta kuptojë planin brenda pak sekondash.</p>
-        </div>
-        <div className="workflow-grid">
-          {workflow.map(([step, title, text]) => (
-            <article className="workflow-card" key={step}>
-              <span>{step}</span>
-              <h3>{title}</h3>
-              <p>{text}</p>
-            </article>
-          ))}
-        </div>
-      </section>
+      <section className="fih-section"><div className="fih-audience-grid">{features.map(([eyebrow,title,text,kind])=><article className="fih-audience-card" key={title}><div className="fih-icon-badge"><FeatureIcon kind={kind}/></div><span className="fih-eyebrow">{eyebrow}</span><h3>{title}</h3><p>{text}</p></article>)}</div></section>
 
-      <section className="home-section" id="patient">
-        <div className="feature-split">
-          <div className="feature-copy">
-            <span className="badge">Për pacientin</span>
-            <h2>Çdo ditë është e qartë: çka, sa dhe kur.</h2>
-            <p>Pacienti nuk ka nevojë të mësojë software. Ai hap planin, sheh ushtrimin e radhës dhe shënon dhimbjen pas përfundimit.</p>
-            <div className="feature-list">
-              <div><i>✓</i><span>Ushtrimet e sotme në një ekran</span></div>
-              <div><i>✓</i><span>Udhëzime, video dhe dozim i qartë</span></div>
-              <div><i>✓</i><span>Dhimbja 0–10 dhe rregulli 7/10</span></div>
-              <div><i>✓</i><span>Mesazhe nga fizioterapeuti</span></div>
-            </div>
-          </div>
-          <div className="product-window">
-            <div className="window-top"><i /><i /><i /></div>
-            <div className="product-row"><span>Sot</span><b>3 ushtrime</b></div>
-            <div className="product-row"><span>Glute bridge</span><b>3 × 12</b></div>
-            <div className="product-row"><span>Progresi</span><b>66%</b></div>
-            <div className="product-row"><span>Dhimbja</span><b>3/10</b></div>
-            <div className="product-row"><span>Mesazh</span><b>Bëje ngadalë</b></div>
-          </div>
-        </div>
-      </section>
+      <section className="fih-section" id="how"><div className="fih-flow"><div className="fih-section-head"><span className="fih-eyebrow">Workflow klinik</span><h2 className="fih-h2">Një proces i thjeshtë, gjithmonë i kontrolluar nga profesionisti.</h2><p className="fih-lede">Pacienti nuk krijon plan vetë. Vendimmarrja klinike mbetet te fizioterapeuti.</p></div><ol className="fih-flow-list">{flow.map(([step,title,text])=><li className="fih-flow-item" key={step}><span className="fih-flow-num">{step}</span><div><h3>{title}</h3><p>{text}</p></div></li>)}</ol></div></section>
 
-      <section className="home-section" id="physio">
-        <div className="feature-split reverse">
-          <div className="product-window">
-            <div className="window-top"><i /><i /><i /></div>
-            <div className="product-row"><span>Pacientë aktivë</span><b>18</b></div>
-            <div className="product-row"><span>Plane aktive</span><b>16</b></div>
-            <div className="product-row"><span>Dhimbje e lartë</span><b>2 pacientë</b></div>
-            <div className="product-row"><span>Raporte</span><b>PDF gati</b></div>
-            <div className="product-row"><span>Kod / QR</span><b>Dërgo</b></div>
-          </div>
-          <div className="feature-copy">
-            <span className="badge">Për fizioterapeutin</span>
-            <h2>Ti e krijon terapinë. Platforma ta lehtëson përcjelljen.</h2>
-            <p>Planifikimi, komunikimi dhe progresi janë në një vend, ndërsa vendimmarrja klinike mbetet gjithmonë te fizioterapeuti.</p>
-            <div className="feature-list">
-              <div><i>✓</i><span>Shto pacientin dhe krijo planin</span></div>
-              <div><i>✓</i><span>Përcill aderencën dhe dhimbjen</span></div>
-              <div><i>✓</i><span>Gjenero kod, QR dhe raport PDF</span></div>
-              <div><i>✓</i><span>Merr njoftime kur duhet ndërhyrë</span></div>
-            </div>
-          </div>
-        </div>
-      </section>
+      <section className="fih-section" id="ai"><div className="fih-ai"><div><span className="fih-eyebrow">AI Movement Check</span><h2 className="fih-h2">AI e sheh lëvizjen. Fizioterapeuti merr vendimin.</h2><p className="fih-lede">Kamera mund të japë feedback bazik për ritmin dhe kontrollin e lëvizjes. Nuk diagnostikon dhe nuk cakton terapi.</p><div className="fih-safety">Dhimbje 7/10 ose më shumë → ndalo ushtrimin dhe kontakto fizioterapeutin.</div></div><div className="fih-ai-visual"><img src={careMoments[2].image} alt={careMoments[2].alt} loading="lazy"/><div className="fih-ai-score"><span>Shembull feedback-u</span><strong>82%</strong><p>Lëvizje e kontrolluar. Mbaje ritmin më të ngadalshëm gjatë kthimit.</p></div></div></div></section>
 
-      <section className="home-section">
-        <div className="safety-home">
-          <div>
-            <span className="badge">Siguria klinike</span>
-            <h2>AI jep feedback. Fizioterapeuti vendos.</h2>
-            <p>Kontrolli me kamerë është opsional dhe nuk përdoret për diagnozë. Nëse dhimbja është 7/10 ose më shumë, pacienti udhëzohet të ndalojë dhe të kontaktojë fizioterapeutin.</p>
-          </div>
-          <div className="safety-badge">7/10</div>
-        </div>
-      </section>
+      <section className="fih-section" id="pricing"><div className="fih-pricing"><div className="fih-section-head"><span className="fih-eyebrow">Çmimi</span><h2 className="fih-h2">Fillo me çmimin special për përdoruesit e parë.</h2><p className="fih-lede">Qasje për menaxhim pacientësh, plane ushtrimesh, kod/QR, progres dhe raporte. Çmimi standard pas fazës hyrëse është 29.90 € në muaj.</p></div><div className="fih-price-card"><span>ÇMIM PËR PËRDORUESIT E PARË</span><strong>9.90€</strong><small>në muaj · më pas 29.90€</small><a className="fih-btn fih-btn-primary" href="/physiotherapist-portal">Fillo tani</a></div></div></section>
 
-      <section className="home-section pricing-home" id="pricing">
-        <div className="home-section-head">
-          <span className="badge">Çmimi</span>
-          <h2>Fillo me çmimin special për përdoruesit e parë.</h2>
-          <p>Një plan i thjeshtë për fizioterapeutët që duan ta testojnë platformën me pacientët e tyre.</p>
-        </div>
-        <div className="pricing-card-premium">
-          <span>Çmim për përdoruesit e parë</span>
-          <strong>9.90€</strong>
-          <small>në muaj · më pas 29.90€</small>
-          <ul>
-            <li>✓ Menaxhim pacientësh</li>
-            <li>✓ Plane ushtrimesh</li>
-            <li>✓ Kod dhe QR për pacientin</li>
-            <li>✓ Progres, dhimbje dhe raporte</li>
-          </ul>
-          <a className="button" href="/physiotherapist-portal">Fillo tani</a>
-        </div>
-      </section>
-
-      <section className="home-section">
-        <div className="home-section-head">
-          <span className="badge">Pyetje të shpeshta</span>
-          <h2>Gjërat kryesore para se të fillosh.</h2>
-        </div>
-        <div className="home-faq">
-          <article><h3>A duhet pacienti të krijojë llogari?</h3><p>Jo. Pacienti hyn me kodin personal ose QR që ia jep fizioterapeuti.</p></article>
-          <article><h3>A e zëvendëson AI fizioterapeutin?</h3><p>Jo. AI është vetëm feedback opsional për lëvizjen dhe nuk vendos terapi apo diagnozë.</p></article>
-          <article><h3>A mund ta ndryshoj planin?</h3><p>Po. Fizioterapeuti mund ta përditësojë planin dhe ushtrimet sipas progresit klinik.</p></article>
-        </div>
-      </section>
-
-      <section className="final-cta-premium">
-        <BrandMark compact />
-        <h2>Pacienti e kupton planin. Ti e përcjell progresin.</h2>
-        <div className="portal-actions">
-          <a className="button" href="/physiotherapist-portal">Fillo si fizioterapeut</a>
-          <a className="button secondary" href="/patient-portal">Hyr si pacient</a>
-        </div>
-      </section>
+      <section className="fih-final"><BrandMark compact/><span className="fih-eyebrow">Lëviz më mirë, jeto më mirë</span><h2 className="fih-h2">Një aplikacion më i qartë për pacientin. Një dashboard më i fortë për fizioterapeutin.</h2><div className="fih-final-actions"><a className="fih-btn fih-btn-primary" href="/physiotherapist-portal">Fillo si fizioterapeut</a><a className="fih-btn fih-btn-ghost" href="/patient-portal">Kam kod pacienti</a><a className="fih-btn fih-btn-ghost" href="/faq">Lexo FAQ</a></div></section>
     </main>
   );
 }
