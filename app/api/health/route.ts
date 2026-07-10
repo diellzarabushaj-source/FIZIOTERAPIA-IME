@@ -6,16 +6,6 @@ export const revalidate = 0;
 
 const startedAt = Date.now();
 
-function hasRequiredEnvironment() {
-  return Boolean(
-    process.env.NEXT_PUBLIC_SUPABASE_URL &&
-      process.env.SUPABASE_SERVICE_ROLE_KEY &&
-      process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY &&
-      process.env.CLERK_SECRET_KEY &&
-      process.env.PATIENT_SESSION_SECRET,
-  );
-}
-
 export async function GET(request: Request) {
   const requestStartedAt = Date.now();
   const monitorSecret = request.headers.get("x-monitor-secret");
@@ -25,36 +15,39 @@ export async function GET(request: Request) {
       monitorSecret === process.env.HEALTH_MONITOR_SECRET,
   );
 
-  const environmentReady = hasRequiredEnvironment();
-  const supabase = getSupabaseAdmin();
-  let databaseReady = false;
+  const checks = {
+    supabaseEnvironment: Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY),
+    database: false,
+    clerk: Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY && process.env.CLERK_SECRET_KEY),
+    patientSession: Boolean(process.env.PATIENT_SESSION_SECRET),
+    email: Boolean(process.env.RESEND_API_KEY),
+  };
 
+  const supabase = getSupabaseAdmin();
   if (supabase) {
     const { error } = await supabase.from("profiles").select("id", { head: true, count: "exact" }).limit(1);
-    databaseReady = !error;
+    checks.database = !error;
   }
 
-  const healthy = environmentReady && databaseReady;
+  const requiredChecks = ["supabaseEnvironment", "database", "clerk", "patientSession"] as const;
+  const failedChecks = requiredChecks.filter((name) => !checks[name]);
+  const healthy = failedChecks.length === 0;
+  const common = {
+    status: healthy ? "ok" : "degraded",
+    timestamp: new Date().toISOString(),
+    failedChecks,
+  };
+
   const body = canSeeDetails
     ? {
-        status: healthy ? "ok" : "degraded",
-        timestamp: new Date().toISOString(),
+        ...common,
         environment: process.env.APP_ENV || process.env.VERCEL_ENV || "unknown",
         version: process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 12) || "unknown",
         uptimeSeconds: Math.floor((Date.now() - startedAt) / 1000),
         responseTimeMs: Date.now() - requestStartedAt,
-        checks: {
-          environment: environmentReady,
-          database: databaseReady,
-          clerk: Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY && process.env.CLERK_SECRET_KEY),
-          patientSession: Boolean(process.env.PATIENT_SESSION_SECRET),
-          email: Boolean(process.env.RESEND_API_KEY),
-        },
+        checks,
       }
-    : {
-        status: healthy ? "ok" : "degraded",
-        timestamp: new Date().toISOString(),
-      };
+    : common;
 
   return NextResponse.json(body, {
     status: healthy ? 200 : 503,
