@@ -5,7 +5,7 @@ import { AuthControls } from "@/components/AuthControls";
 import { BrandMark } from "@/components/BrandMark";
 
 const links = [
-  { href: "/#how", label: "Si funksionon", key: "how" },
+  { href: "/si-perdoret-ne-klinike", label: "Si përdoret", key: "clinic" },
   { href: "/#patient", label: "Për pacientin", key: "patient" },
   { href: "/#physio", label: "Për fizioterapeutin", key: "physio" },
   { href: "/#pricing", label: "Çmimi", key: "pricing" },
@@ -14,7 +14,6 @@ const links = [
 
 export function SiteHeader() {
   const pathname = usePathname();
-  const isBlog = pathname.startsWith("/blog");
 
   return (
     <header className="public-site-header-wrap">
@@ -22,7 +21,9 @@ export function SiteHeader() {
         <BrandMark />
         <div className="nav-actions public-site-nav-actions">
           {links.map((link) => {
-            const active = link.key === "blog" && isBlog;
+            const active =
+              (link.key === "blog" && pathname.startsWith("/blog")) ||
+              (link.key === "clinic" && pathname === "/si-perdoret-ne-klinike");
             return (
               <a key={link.key} className={active ? "active" : undefined} href={link.href}>
                 {link.label}
