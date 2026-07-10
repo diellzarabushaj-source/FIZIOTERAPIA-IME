@@ -63,7 +63,7 @@ export function ExerciseMediaUploadField({
         size: file.size,
       });
 
-      if (!ticket.ok) throw new Error(ticket.message);
+      if (ticket.ok === false) throw new Error(ticket.message);
 
       setStatus("Po ngarkohet media…");
       const response = await fetch(ticket.signedUrl, {
