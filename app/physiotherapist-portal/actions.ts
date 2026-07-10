@@ -12,7 +12,7 @@ import { getClinicalProgramTemplate } from "@/lib/clinical-programs";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 
 function unwrap<T>(result: BackendResult<T>): T {
-  if (!result.ok) throw new Error(result.error.message);
+  if (result.ok === false) throw new Error(result.error.message);
   return result.data;
 }
 
