@@ -29,7 +29,8 @@ test("patient session form always exposes loading, success and error states", as
 
   assert.match(action, /status: "success"/);
   assert.match(action, /Seanca .*u ruajt me sukses|Seanca u ruajt me sukses/);
-  assert.match(action, /create_patient_session_safely/);
+  assert.match(action, /\.from\("patient_sessions"\)/);
+  assert.doesNotMatch(action, /create_patient_session_safely/);
   assert.match(form, /Duke ruajtur seancën/);
   assert.match(form, /aria-live/);
   assert.match(form, /fieldErrors/);
