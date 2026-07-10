@@ -1,29 +1,39 @@
-import Link from "next/link";
+import { currentUser } from "@clerk/nextjs/server";
 import { AuthControls } from "@/components/AuthControls";
-import styles from "./dashboard.module.css";
+import { PhysioDashboardNav } from "@/components/PhysioDashboardNav";
+import { requirePhysioActor } from "@/lib/backend/access";
 
-export function DashboardShell({ children }: { children: React.ReactNode }) {
+export async function DashboardShell({ children }: { children: React.ReactNode }) {
+  const actor = await requirePhysioActor();
+  const user = await currentUser();
+  const displayName = user?.fullName || user?.firstName || user?.primaryEmailAddress?.emailAddress || "Fizioterapeut";
+
   return (
-    <div className={styles.shell}>
-      <aside className={styles.sidebar}>
-        <div className={styles.brand}>
+    <div className="pd-shell">
+      <aside className="pd-sidebar">
+        <div className="pd-brand">
           <strong>Fizioterapia ime</strong>
-          <span>Dashboard klinik</span>
+          <small>Menaxhimi klinik</small>
         </div>
-        <nav className={styles.nav} aria-label="Navigimi klinik">
-          <Link href="/physiotherapist-portal/overview">Përmbledhje</Link>
-          <Link href="/physiotherapist-portal/patients">Pacientët</Link>
-          <Link href="/physiotherapist-portal/patients/new">Shto pacient</Link>
-          <Link href="/physiotherapist-portal/programs">Programet</Link>
-          <Link href="/physiotherapist-portal/exercises">Ushtrimet</Link>
-          <Link href="/physiotherapist-portal/payment">Pagesat</Link>
-        </nav>
-        <div className={styles.footer}>
-          Kartelat, planet dhe seancat ruhen në një histori të vetme për secilin pacient.
+
+        <PhysioDashboardNav />
+
+        <div className="pd-sidebar-foot">
+          <p>{displayName}</p>
+          <small>{actor.role === "owner" ? "Administrator" : "Fizioterapeut"}</small>
         </div>
-        <AuthControls />
       </aside>
-      <main className={styles.main}>{children}</main>
+
+      <div className="pd-workspace">
+        <header className="pd-topbar">
+          <div className="pd-topbar-title">
+            <strong>Dashboard klinik</strong>
+            <small>Pacientë, seanca dhe programe në një vend</small>
+          </div>
+          <AuthControls />
+        </header>
+        <main className="pd-content">{children}</main>
+      </div>
     </div>
   );
 }
