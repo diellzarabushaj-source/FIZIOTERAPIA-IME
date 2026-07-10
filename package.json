@@ -11,6 +11,8 @@
     "test:backend": "node --experimental-strip-types --test tests/backend/*.test.ts",
     "preflight:routes": "node scripts/verify-route-files.mjs",
     "check:env": "node scripts/check-env-readiness.mjs",
+    "check:env:staging": "node scripts/check-env-readiness.mjs --environment=staging",
+    "check:env:production": "node scripts/check-env-readiness.mjs --environment=production",
     "check:security": "node scripts/security-regression-check.mjs",
     "check:all": "npm run preflight:routes && npm run check:security && npm run test:backend && npm run lint && npm run typecheck",
     "smoke:production": "node scripts/smoke-test-production.mjs",
