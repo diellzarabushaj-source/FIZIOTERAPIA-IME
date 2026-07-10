@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
 import { PhysioPlanBuilderLauncher } from "@/components/PhysioPlanBuilderLauncher";
+import { PublicSiteChrome } from "@/components/PublicSiteChrome";
 import { SiteFooter } from "@/components/SiteFooter";
 import "./globals.css";
 import "./design-system.css";
@@ -52,6 +53,6 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   const clerkConfigured = Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY);
-  const content = <>{children}<PhysioPlanBuilderLauncher /><SiteFooter /></>;
+  const content = <><PublicSiteChrome />{children}<PhysioPlanBuilderLauncher /><SiteFooter /></>;
   return <html lang="sq"><body>{clerkConfigured ? <ClerkProvider>{content}</ClerkProvider> : content}</body></html>;
 }
