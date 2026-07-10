@@ -1,6 +1,6 @@
-import { requireAdminUser } from "@/lib/admin-auth";
+import { requireOwnerActor } from "@/lib/backend/access";
 
 export default async function AdminBillingLayout({ children }: { children: React.ReactNode }) {
-  await requireAdminUser();
+  await requireOwnerActor();
   return <>{children}</>;
 }
