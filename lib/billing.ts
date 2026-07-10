@@ -1,5 +1,5 @@
-export const PHYSIO_MONTHLY_PRICE_EUR = 29.9;
-export const PHYSIO_MONTHLY_PRICE_LABEL = "29.90 EUR / muaj";
+export const PHYSIO_MONTHLY_PRICE_EUR = 9.9;
+export const PHYSIO_MONTHLY_PRICE_LABEL = "9.90 EUR / muaj";
 
 export type SubscriptionLike = {
   status?: string | null;
