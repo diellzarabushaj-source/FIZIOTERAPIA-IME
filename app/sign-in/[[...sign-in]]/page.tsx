@@ -6,15 +6,21 @@ export default function SignInPage() {
   return (
     <main className="auth-page">
       <div className="auth-card-large">
-        <span className="badge">FizioPlan</span>
+        <span className="badge">Fizioterapia ime</span>
         <h1>Hyr në llogari</h1>
-        <p>Qasje për fizioterapeutë dhe administrim të platformës.</p>
+        <p>Qasje e sigurt për fizioterapeutë dhe administrim të praktikës.</p>
         {clerkConfigured ? (
-          <SignIn routing="path" path="/sign-in" signUpUrl="/sign-up" />
+          <SignIn
+            routing="path"
+            path="/sign-in"
+            signUpUrl="/sign-up"
+            fallbackRedirectUrl="/physiotherapist-portal/overview"
+            signUpFallbackRedirectUrl="/physiotherapist-portal/overview"
+          />
         ) : (
           <div className="role-warning">
-            Clerk eshte shtuar ne kod, por mungojne Vercel Environment Variables.
-            Shto NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY dhe CLERK_SECRET_KEY per ta aktivizuar login-in.
+            Clerk është shtuar në kod, por mungojnë Vercel Environment Variables.
+            Shto NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY dhe CLERK_SECRET_KEY për ta aktivizuar login-in.
           </div>
         )}
       </div>
