@@ -24,9 +24,9 @@ export function hasActivePhysioAccess(role?: string | null, subscription?: Subsc
 }
 
 export function getBillingStatusLabel(subscription?: SubscriptionLike | null) {
-  if (!subscription) return "Pa pagesë aktive";
+  if (!subscription) return "Pa pagese aktive";
   if (subscription.status === "active") return "Aktive";
-  if (subscription.status === "pending") return "Në pritje";
+  if (subscription.status === "pending") return "Ne pritje";
   if (subscription.status === "suspended") return "E bllokuar";
   return "E papaguar";
 }
