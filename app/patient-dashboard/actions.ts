@@ -22,6 +22,9 @@ export async function patientLogoutAction() {
 export async function completeExerciseAction(formData: FormData) {
   const patient = await requireCurrentPatientSession();
   const planExerciseId = String(formData.get("planExerciseId") || "");
+  const nextExerciseId = String(formData.get("nextExerciseId") || "");
+  const painScore = Number(formData.get("painScore"));
+
   const result = await recordPatientExerciseCompletion(patient, {
     planExerciseId,
     painScore: formData.get("painScore"),
@@ -33,5 +36,12 @@ export async function completeExerciseAction(formData: FormData) {
   }
 
   revalidatePath("/patient-dashboard");
-  redirect(`/patient-dashboard?done=${encodeURIComponent(planExerciseId)}#exercise-${encodeURIComponent(planExerciseId)}`);
+
+  const target = painScore >= 7
+    ? "physio-contact"
+    : nextExerciseId
+      ? `exercise-${encodeURIComponent(nextExerciseId)}`
+      : "today-complete";
+
+  redirect(`/patient-dashboard?done=${encodeURIComponent(planExerciseId)}#${target}`);
 }
