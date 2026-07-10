@@ -5,6 +5,10 @@ import { getSupabaseAdmin } from "@/lib/supabase-admin";
 
 export const dynamic = "force-dynamic";
 
+const privateNoStoreHeaders = {
+  "Cache-Control": "private, no-store, max-age=0",
+};
+
 type PatientCandidate = {
   id: string;
   first_name: string;
@@ -63,25 +67,31 @@ export async function POST(request: Request) {
     const phone = normalizePhone(body.phone);
 
     if (firstName.length < 2 || lastName.length < 2) {
-      return NextResponse.json({ exact: null, similar: [] });
+      return NextResponse.json({ exact: null, similar: [] }, { headers: privateNoStoreHeaders });
     }
 
     const supabase = getSupabaseAdmin();
     if (!supabase) {
-      return NextResponse.json({ error: "Kontrolli nuk është i disponueshëm për momentin." }, { status: 503 });
+      return NextResponse.json(
+        { error: "Kontrolli nuk është i disponueshëm për momentin." },
+        { status: 503, headers: privateNoStoreHeaders },
+      );
     }
 
-    let query = supabase
+    const { data, error } = await supabase
       .from("patients")
       .select("id,first_name,last_name,date_of_birth,phone,status")
+      .eq("physio_id", actor.profileId)
+      .is("archived_at", null)
       .order("updated_at", { ascending: false })
-      .limit(500);
+      .limit(500)
+      .returns<PatientCandidate[]>();
 
-    if (actor.role === "physio") query = query.eq("physio_id", actor.profileId);
-
-    const { data, error } = await query.returns<PatientCandidate[]>();
     if (error) {
-      return NextResponse.json({ error: "Pacientët nuk mund të kontrollohen." }, { status: 500 });
+      return NextResponse.json(
+        { error: "Pacientët nuk mund të kontrollohen." },
+        { status: 500, headers: privateNoStoreHeaders },
+      );
     }
 
     const matches = (data || []).map((patient) => {
@@ -114,20 +124,26 @@ export async function POST(request: Request) {
         status: patient.status,
       }));
 
-    return NextResponse.json({
-      exact: exactMatch
-        ? {
-            id: exactMatch.id,
-            firstName: exactMatch.first_name,
-            lastName: exactMatch.last_name || "",
-            dateOfBirth: exactMatch.date_of_birth,
-            phone: exactMatch.phone,
-            status: exactMatch.status,
-          }
-        : null,
-      similar,
-    });
+    return NextResponse.json(
+      {
+        exact: exactMatch
+          ? {
+              id: exactMatch.id,
+              firstName: exactMatch.first_name,
+              lastName: exactMatch.last_name || "",
+              dateOfBirth: exactMatch.date_of_birth,
+              phone: exactMatch.phone,
+              status: exactMatch.status,
+            }
+          : null,
+        similar,
+      },
+      { headers: privateNoStoreHeaders },
+    );
   } catch {
-    return NextResponse.json({ error: "Nuk ke qasje për këtë kontroll." }, { status: 401 });
+    return NextResponse.json(
+      { error: "Nuk ke qasje për këtë kontroll." },
+      { status: 401, headers: privateNoStoreHeaders },
+    );
   }
 }
