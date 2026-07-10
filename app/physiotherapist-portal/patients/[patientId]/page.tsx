@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { requirePhysioActor } from "@/lib/backend/access";
 import { getPatientForActor } from "@/lib/backend/patients";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
+import { EditPatientForm } from "./EditPatientForm";
 import SessionForm from "./SessionForm";
 import styles from "../../dashboard.module.css";
 
@@ -69,11 +70,23 @@ export default async function PatientRecordPage({
       )}
 
       <section className={styles.section}>
-        <h2>Të dhënat klinike</h2>
-        <div className={styles.card}>
-          <span>Diagnoza / arsyeja e trajtimit</span>
-          <p>{patient.diagnosis || "Nuk është shënuar ende."}</p>
+        <div className={styles.sectionHeading}>
+          <div>
+            <span className={styles.eyebrow}>Të dhënat bazë</span>
+            <h2>Përditëso kartelën</h2>
+          </div>
+          <span className={styles.statusPill}>Ndryshimet auditohen</span>
         </div>
+        <EditPatientForm
+          patient={{
+            id: patient.id,
+            firstName: patient.first_name,
+            lastName: patient.last_name || "",
+            dateOfBirth: patient.date_of_birth || "",
+            phone: patient.phone || "",
+            diagnosis: patient.diagnosis || "",
+          }}
+        />
       </section>
 
       <section className={styles.section}>
