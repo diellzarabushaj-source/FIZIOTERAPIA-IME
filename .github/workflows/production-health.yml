@@ -1,0 +1,47 @@
+name: Production Health
+
+on:
+  workflow_dispatch:
+    inputs:
+      base_url:
+        description: Optional deployment URL to monitor
+        required: false
+        default: https://fizioterapia-ime.vercel.app
+  schedule:
+    - cron: "17 * * * *"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: production-health
+  cancel-in-progress: true
+
+jobs:
+  monitor:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      MONITOR_BASE_URL: ${{ inputs.base_url || 'https://fizioterapia-ime.vercel.app' }}
+      HEALTH_MONITOR_SECRET: ${{ secrets.HEALTH_MONITOR_SECRET }}
+      MONITOR_REPORT_PATH: reports/production-health.json
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Monitor production health
+        run: node scripts/monitor-production-health.mjs
+
+      - name: Upload health report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: production-health-${{ github.run_id }}
+          path: reports/production-health.json
+          retention-days: 30
+          if-no-files-found: error
