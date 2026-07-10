@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requirePhysioActor } from "@/lib/backend/access";
+import { createPrivateExerciseForActor } from "@/lib/backend/exercises";
 import {
   addExerciseToPlanForActor,
   createDraftPlanForActor,
@@ -11,9 +12,8 @@ import {
   transitionPlanForActor,
   updatePlanExerciseForActor,
 } from "@/lib/backend/plans";
-import { hasActivePhysioAccess } from "@/lib/billing";
 import { cleanText } from "@/lib/backend/validation";
-import { writeAuditEvent } from "@/lib/backend/audit";
+import { hasActivePhysioAccess } from "@/lib/billing";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 
 async function requireWorkspaceWithAccess() {
@@ -70,29 +70,17 @@ export async function addLibraryExerciseAction(formData: FormData) {
 export async function addCustomExerciseAction(formData: FormData) {
   const { actor, supabase } = await requireWorkspaceWithAccess();
   const planId = cleanText(formData.get("planId"), 80);
-  const name = cleanText(formData.get("name"), 160);
-  if (!planId || !name) throw new Error("Plani dhe emri i ushtrimit kërkohen.");
+  if (!planId) throw new Error("Plani kërkohet.");
 
   requireOk(await getPlanForActor(actor, planId));
 
-  const { data: exercise, error } = await supabase
-    .from("exercise_library")
-    .insert({
-      name,
-      category: cleanText(formData.get("category") || "Custom", 120) || "Custom",
-      diagnosis: cleanText(formData.get("diagnosis"), 180) || null,
-      instructions_sq: cleanText(formData.get("instructions"), 1200) || null,
-      video_url: cleanText(formData.get("videoUrl"), 500) || null,
-      ai_enabled: false,
-      scoring_rules: {},
-      is_default: false,
-      owner_physio_id: actor.profileId,
-      status: "published",
-    })
-    .select("id,name,category,status")
-    .single<{ id: string; name: string; category: string | null; status: string }>();
-
-  if (error || !exercise) throw new Error("Ushtrimi personal nuk u krijua.");
+  const exercise = requireOk(await createPrivateExerciseForActor(actor, {
+    name: formData.get("name"),
+    category: formData.get("category"),
+    diagnosis: formData.get("diagnosis"),
+    instructions: formData.get("instructions"),
+    videoUrl: formData.get("videoUrl"),
+  }));
 
   const added = await addExerciseToPlanForActor(actor, {
     planId,
@@ -109,13 +97,6 @@ export async function addCustomExerciseAction(formData: FormData) {
     throw new Error(added.error.message);
   }
 
-  await writeAuditEvent({
-    actor,
-    action: "exercise.private_created",
-    entityType: "exercise",
-    entityId: exercise.id,
-    after: exercise,
-  });
   revalidatePath("/physiotherapist-portal/plan-builder");
 }
 
