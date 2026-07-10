@@ -37,6 +37,9 @@ jobs:
       - name: Security regression checks
         run: npm run check:security
 
+      - name: Environment separation contract
+        run: npm run check:env:contract
+
       - name: Backend unit and contract tests
         run: npm run test:backend
 
