@@ -130,6 +130,135 @@ on conflict (id) do update set
   end_date = excluded.end_date,
   status = excluded.status;
 
+insert into exercise_library (
+  id,
+  name,
+  category,
+  diagnosis,
+  video_url,
+  instructions_sq,
+  ai_enabled,
+  scoring_rules,
+  is_default,
+  owner_physio_id,
+  status
+)
+values
+  (
+    '44444444-4444-4444-8444-444444444441'::uuid,
+    'Pelvic tilt',
+    'Lumbar mobility',
+    'Dhimbje lumbale',
+    null,
+    'Shtrihu me gjunjët e përkulur. Aktivizo lehtë barkun dhe rrafsho mesin pa e mbajtur frymën.',
+    false,
+    '{}'::jsonb,
+    true,
+    null,
+    'published'
+  ),
+  (
+    '44444444-4444-4444-8444-444444444442'::uuid,
+    'Glute bridge',
+    'Strengthening',
+    'Dhimbje lumbale',
+    null,
+    'Ngrije legenin ngadalë duke aktivizuar gluteus. Mos e harko tepër mesin.',
+    true,
+    '{}'::jsonb,
+    true,
+    null,
+    'published'
+  ),
+  (
+    '44444444-4444-4444-8444-444444444443'::uuid,
+    'Bird dog',
+    'Core stability',
+    'Dhimbje lumbale',
+    null,
+    'Nga pozita në katër pika, zgjat krahun dhe këmbën e kundërt duke mbajtur legenin stabil.',
+    true,
+    '{}'::jsonb,
+    true,
+    null,
+    'published'
+  ),
+  (
+    '44444444-4444-4444-8444-444444444444'::uuid,
+    'Cat cow',
+    'Spinal mobility',
+    'Dhimbje lumbale',
+    null,
+    'Lëviz shtyllën ngadalë ndërmjet fleksionit dhe ekstenzionit, pa e shtyrë në dhimbje.',
+    false,
+    '{}'::jsonb,
+    true,
+    null,
+    'published'
+  )
+on conflict (id) do update set
+  name = excluded.name,
+  category = excluded.category,
+  diagnosis = excluded.diagnosis,
+  instructions_sq = excluded.instructions_sq,
+  ai_enabled = excluded.ai_enabled,
+  status = excluded.status;
+
+delete from plan_exercises
+where plan_id = '33333333-3333-4333-8333-333333333333'::uuid;
+
+insert into plan_exercises (
+  id,
+  plan_id,
+  exercise_id,
+  sets,
+  reps,
+  frequency,
+  day_number,
+  instructions
+)
+values
+  (
+    '55555555-5555-4555-8555-555555555551'::uuid,
+    '33333333-3333-4333-8333-333333333333'::uuid,
+    '44444444-4444-4444-8444-444444444441'::uuid,
+    2,
+    12,
+    'Çdo ditë',
+    1,
+    'Kryeje ngadalë. Ndalo nëse dhimbja rritet.'
+  ),
+  (
+    '55555555-5555-4555-8555-555555555552'::uuid,
+    '33333333-3333-4333-8333-333333333333'::uuid,
+    '44444444-4444-4444-8444-444444444442'::uuid,
+    3,
+    10,
+    '5 herë në javë',
+    1,
+    'Mbaje legenin stabil dhe mos e harko tepër mesin.'
+  ),
+  (
+    '55555555-5555-4555-8555-555555555553'::uuid,
+    '33333333-3333-4333-8333-333333333333'::uuid,
+    '44444444-4444-4444-8444-444444444443'::uuid,
+    2,
+    8,
+    '4 herë në javë',
+    2,
+    'Mbaje trungun stabil dhe lëviz me kontroll.'
+  ),
+  (
+    '55555555-5555-4555-8555-555555555554'::uuid,
+    '33333333-3333-4333-8333-333333333333'::uuid,
+    '44444444-4444-4444-8444-444444444444'::uuid,
+    2,
+    10,
+    'Çdo ditë',
+    1,
+    'Lëviz ngadalë dhe brenda tolerancës.'
+  );
+
 commit;
 
 select
@@ -139,11 +268,14 @@ select
   s.current_period_end,
   p.patient_username,
   p.patient_code,
-  pl.title as active_plan
+  pl.title as active_plan,
+  count(pe.id) as exercise_count
 from profiles pr
 join subscriptions s on s.physio_id = pr.id
 join patients p on p.physio_id = pr.id
 left join plans pl on pl.patient_id = p.id and pl.status = 'active'
+left join plan_exercises pe on pe.plan_id = pl.id
 where pr.email = 'xhavitrabushaj63@gmail.com'
-order by s.created_at desc
+group by pr.email, pr.full_name, s.status, s.current_period_end, p.patient_username, p.patient_code, pl.title
+order by s.current_period_end desc
 limit 1;
