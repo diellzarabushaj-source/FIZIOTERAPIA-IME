@@ -8,17 +8,17 @@ const defaultAdminEmail = "diellzarabushaj@gmail.com";
 
 export async function requirePhysioWorkspaceUser() {
   const clerkConfigured = Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY && process.env.CLERK_SECRET_KEY);
-  if (!clerkConfigured) redirect("/");
+  if (!clerkConfigured) redirect("/admin-hidden?reason=auth-not-configured");
 
   const user = await currentUser();
   const userEmail = user?.primaryEmailAddress?.emailAddress?.toLowerCase();
-  if (!userEmail) redirect("/");
+  if (!userEmail) redirect("/sign-in?redirect_url=/physiotherapist-portal");
 
   const adminEmail = (process.env.ADMIN_EMAIL || defaultAdminEmail).toLowerCase();
   if (userEmail === adminEmail) return { userEmail, role: "owner" };
 
   const supabase = getSupabaseAdmin();
-  if (!supabase) redirect("/");
+  if (!supabase) redirect("/physiotherapist-portal?error=service-unavailable");
 
   const { data: profile } = await supabase
     .from("profiles")
@@ -26,8 +26,8 @@ export async function requirePhysioWorkspaceUser() {
     .eq("email", userEmail)
     .maybeSingle<{ role: string | null; status: string | null }>();
 
-  if (!profile?.role || !allowedWorkspaceRoles.has(profile.role)) redirect("/");
-  if (profile.status && blockedProfileStatuses.has(profile.status)) redirect("/");
+  if (!profile?.role || !allowedWorkspaceRoles.has(profile.role)) redirect("/?error=physio-access-required");
+  if (profile.status && blockedProfileStatuses.has(profile.status)) redirect("/?error=physio-account-blocked");
 
   return { userEmail, role: profile.role };
 }
