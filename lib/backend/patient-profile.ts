@@ -45,21 +45,19 @@ export async function updatePatientForActor(
   const supabase = getSupabaseAdmin();
   if (!supabase) return fail("DATABASE_ERROR", "Databaza nuk është konfiguruar.");
 
-  const updatedAt = new Date().toISOString();
   const payload = {
     first_name: firstName,
     last_name: lastName,
     date_of_birth: dateOfBirth,
     phone: optionalText(input.phone, 40),
     diagnosis: optionalText(input.diagnosis, 1500),
-    updated_at: updatedAt,
+    updated_at: new Date().toISOString(),
   };
 
   let query = supabase
     .from("patients")
     .update(payload)
-    .eq("id", patientId)
-    .eq("updated_at", currentResult.data.updated_at || currentResult.data.created_at || updatedAt);
+    .eq("id", patientId);
 
   if (actor.role === "physio") query = query.eq("physio_id", actor.profileId);
 
@@ -75,7 +73,7 @@ export async function updatePatientForActor(
     );
   }
   if (error) return fail("DATABASE_ERROR", "Ndryshimet nuk u ruajtën.");
-  if (!data) return fail("CONFLICT", "Kartela është ndryshuar nga një pajisje tjetër. Rifresko faqen dhe provo përsëri.");
+  if (!data) return fail("OWNERSHIP_MISMATCH", "Kartela nuk u gjet ose nuk ke të drejtë ta ndryshosh.");
 
   await writeAuditEvent({
     actor,
