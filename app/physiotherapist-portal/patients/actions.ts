@@ -7,6 +7,12 @@ import { createPatientForActor, getPatientForActor } from "@/lib/backend/patient
 import { cleanText } from "@/lib/backend/validation";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 
+export type PatientFormState = {
+  status: "idle" | "error";
+  message: string;
+  fieldErrors?: Record<string, string>;
+};
+
 function parsePain(value: FormDataEntryValue | null): number | null {
   if (value === null || String(value).trim() === "") return null;
   const number = Number(value);
@@ -14,20 +20,43 @@ function parsePain(value: FormDataEntryValue | null): number | null {
   return number;
 }
 
-export async function createSmartPatientAction(formData: FormData) {
-  const actor = await requirePhysioActor();
-  const result = await createPatientForActor(actor, {
-    firstName: formData.get("firstName"),
-    lastName: formData.get("lastName"),
-    dateOfBirth: formData.get("dateOfBirth"),
-    phone: formData.get("phone"),
-    diagnosis: formData.get("diagnosis"),
-  });
+export async function createSmartPatientAction(
+  _previousState: PatientFormState,
+  formData: FormData,
+): Promise<PatientFormState> {
+  try {
+    const actor = await requirePhysioActor();
+    const result = await createPatientForActor(actor, {
+      firstName: formData.get("firstName"),
+      lastName: formData.get("lastName"),
+      dateOfBirth: formData.get("dateOfBirth"),
+      phone: formData.get("phone"),
+      diagnosis: formData.get("diagnosis"),
+    });
 
-  if (result.ok === false) throw new Error(result.error.message);
-  const patient = result.data.patient;
-  revalidatePath("/physiotherapist-portal/patients");
-  redirect(`/physiotherapist-portal/patients/${patient.id}?${result.data.created ? "created=1" : "existing=1"}`);
+    if (result.ok === false) {
+      return {
+        status: "error",
+        message: result.error.message,
+        fieldErrors: result.error.fieldErrors || {},
+      };
+    }
+
+    const patient = result.data.patient;
+    revalidatePath("/physiotherapist-portal/patients");
+    revalidatePath("/physiotherapist-portal/overview");
+    redirect(`/physiotherapist-portal/patients/${patient.id}?${result.data.created ? "created=1" : "existing=1"}`);
+  } catch (error) {
+    if (error && typeof error === "object" && "digest" in error && String((error as { digest?: unknown }).digest).startsWith("NEXT_REDIRECT")) {
+      throw error;
+    }
+
+    return {
+      status: "error",
+      message: error instanceof Error ? error.message : "Ndodhi një gabim i papritur. Provo përsëri.",
+      fieldErrors: {},
+    };
+  }
 }
 
 export async function createPatientSessionAction(patientId: string, formData: FormData) {
