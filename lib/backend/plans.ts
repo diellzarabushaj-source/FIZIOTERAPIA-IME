@@ -27,6 +27,7 @@ export type PlanExerciseRecord = {
   reps: number | null;
   frequency: string | null;
   day_number: number | null;
+  schedule_days: number[] | null;
   instructions: string | null;
 };
 
@@ -43,6 +44,7 @@ export type AddPlanExerciseInput = {
   reps?: unknown;
   frequency?: unknown;
   dayNumber?: unknown;
+  scheduleDays?: unknown;
   instructions?: unknown;
 };
 
@@ -59,13 +61,77 @@ function toDateOnly(value: Date): string {
 }
 
 function forwardFailure<T>(result: BackendResult<unknown>): BackendResult<T> {
-  if (result.ok === true) {
-    return fail<T>("INTERNAL_ERROR", "Rezultati i backend-it ishte i papritur.");
-  }
+  if (result.ok === true) return fail<T>("INTERNAL_ERROR", "Rezultati i backend-it ishte i papritur.");
   return fail<T>(result.error.code, result.error.message, result.error);
 }
 
-export async function getPlanForActor(actor: ActorContext, planId: string): Promise<BackendResult<PlanRecord>> {
+function planDurationDays(plan: Pick<PlanRecord, "start_date" | "end_date">): number {
+  if (!plan.start_date || !plan.end_date) return 90;
+  const start = new Date(plan.start_date + "T12:00:00Z");
+  const end = new Date(plan.end_date + "T12:00:00Z");
+  if (!Number.isFinite(start.getTime()) || !Number.isFinite(end.getTime())) return 90;
+  return Math.max(1, Math.round((end.getTime() - start.getTime()) / 86_400_000) + 1);
+}
+
+function parseScheduleDays(value: unknown, fallbackDay: number): BackendResult<number[]> {
+  const raw = Array.isArray(value)
+    ? value.map((item) => String(item)).join(",")
+    : cleanText(value, 600);
+  const text = raw || String(fallbackDay);
+  const days = new Set<number>();
+
+  for (const tokenValue of text.split(/[;,]/)) {
+    const token = tokenValue.trim();
+    if (!token) continue;
+
+    const single = token.match(/^\d{1,2}$/);
+    if (single) {
+      days.add(Number(single[0]));
+      continue;
+    }
+
+    const range = token.match(/^(\d{1,2})\s*-\s*(\d{1,2})$/);
+    if (!range) {
+      return fail("VALIDATION_ERROR", "Ditët nuk janë valide.", {
+        fieldErrors: { scheduleDays: "Përdor formatin 1-14 ose 1,3,5." },
+      });
+    }
+
+    const start = Number(range[1]);
+    const end = Number(range[2]);
+    if (start > end || end - start > 89) {
+      return fail("VALIDATION_ERROR", "Intervali i ditëve nuk është valid.", {
+        fieldErrors: { scheduleDays: "Dita e parë duhet të jetë para ditës së fundit." },
+      });
+    }
+
+    for (let day = start; day <= end; day += 1) days.add(day);
+  }
+
+  const schedule = [...days].sort((a, b) => a - b);
+  if (!schedule.length || schedule.length > 90 || schedule.some((day) => day < 1 || day > 90)) {
+    return fail("VALIDATION_ERROR", "Ditët duhet të jenë nga 1 deri në 90.", {
+      fieldErrors: { scheduleDays: "Lejohen maksimumi 90 ditë të planifikuara." },
+    });
+  }
+
+  return ok(schedule);
+}
+
+function validateScheduleForPlan(plan: PlanRecord, schedule: number[]): BackendResult<number[]> {
+  const duration = planDurationDays(plan);
+  if (schedule.some((day) => day > duration)) {
+    return fail("VALIDATION_ERROR", "Një ditë e ushtrimit është jashtë kohëzgjatjes së planit.", {
+      fieldErrors: { scheduleDays: "Përdor vetëm ditët 1-" + duration + "." },
+    });
+  }
+  return ok(schedule);
+}
+
+export async function getPlanForActor(
+  actor: ActorContext,
+  planId: string,
+): Promise<BackendResult<PlanRecord>> {
   const supabase = getSupabaseAdmin();
   if (!supabase) return fail("DATABASE_ERROR", "Databaza nuk është konfiguruar.");
 
@@ -155,8 +221,13 @@ export async function addExerciseToPlanForActor(
   const dayResult = validatePositiveInteger(input.dayNumber ?? 1, "dayNumber", { min: 1, max: 90 });
   if (dayResult.ok === false) return forwardFailure<PlanExerciseRecord>(dayResult);
 
+  const scheduleResult = parseScheduleDays(input.scheduleDays, dayResult.data);
+  if (scheduleResult.ok === false) return forwardFailure<PlanExerciseRecord>(scheduleResult);
+  const scheduleForPlan = validateScheduleForPlan(planResult.data, scheduleResult.data);
+  if (scheduleForPlan.ok === false) return forwardFailure<PlanExerciseRecord>(scheduleForPlan);
+
   let reps: number | null = null;
-  if (input.reps !== undefined && String(input.reps).trim()) {
+  if (input.reps !== undefined && input.reps !== null && String(input.reps).trim()) {
     const repsResult = validatePositiveInteger(input.reps, "reps", { min: 1, max: 200 });
     if (repsResult.ok === false) return forwardFailure<PlanExerciseRecord>(repsResult);
     reps = repsResult.data;
@@ -170,7 +241,10 @@ export async function addExerciseToPlanForActor(
     .select("id,is_default,owner_physio_id,status")
     .eq("id", exerciseId)
     .eq("status", "published");
-  if (actor.role === "physio") exerciseQuery = exerciseQuery.or(`is_default.eq.true,owner_physio_id.eq.${actor.profileId}`);
+  if (actor.role === "physio") {
+    exerciseQuery = exerciseQuery.or("is_default.eq.true,owner_physio_id.eq." + actor.profileId);
+  }
+
   const { data: exercise, error: exerciseError } = await exerciseQuery.maybeSingle();
   if (exerciseError) return fail("DATABASE_ERROR", "Ushtrimi nuk mund të verifikohet.");
   if (!exercise) return fail("FORBIDDEN", "Ushtrimi nuk është i disponueshëm.");
@@ -180,19 +254,29 @@ export async function addExerciseToPlanForActor(
     exercise_id: exerciseId,
     sets: setsResult.data,
     reps,
-    frequency: cleanText(input.frequency || "Çdo ditë", 120) || "Çdo ditë",
-    day_number: dayResult.data,
+    frequency: cleanText(input.frequency || "Sipas ditëve të caktuara", 120) || "Sipas ditëve të caktuara",
+    day_number: scheduleForPlan.data[0],
+    schedule_days: scheduleForPlan.data,
     instructions: cleanText(input.instructions || "Kryeje ngadalë dhe me kontroll.", 1200),
   };
 
   const { data, error } = await supabase
     .from("plan_exercises")
     .insert(payload)
-    .select("id,plan_id,exercise_id,sets,reps,frequency,day_number,instructions")
+    .select("id,plan_id,exercise_id,sets,reps,frequency,day_number,schedule_days,instructions")
     .single<PlanExerciseRecord>();
-  if (error || !data) return fail(error?.code === "23505" ? "CONFLICT" : "DATABASE_ERROR", "Ushtrimi nuk u shtua në plan.");
 
-  await writeAuditEvent({ actor, action: "plan.exercise_added", entityType: "plan_exercise", entityId: data.id, after: data });
+  if (error || !data) {
+    return fail(error?.code === "23505" ? "CONFLICT" : "DATABASE_ERROR", "Ushtrimi nuk u shtua në plan.");
+  }
+
+  await writeAuditEvent({
+    actor,
+    action: "plan.exercise_added",
+    entityType: "plan_exercise",
+    entityId: data.id,
+    after: data,
+  });
   return ok(data);
 }
 
@@ -208,9 +292,10 @@ export async function updatePlanExerciseForActor(
 
   const { data: existing, error: existingError } = await supabase
     .from("plan_exercises")
-    .select("id,plan_id,exercise_id,sets,reps,frequency,day_number,instructions")
+    .select("id,plan_id,exercise_id,sets,reps,frequency,day_number,schedule_days,instructions")
     .eq("id", planExerciseId)
     .maybeSingle<PlanExerciseRecord>();
+
   if (existingError) return fail("DATABASE_ERROR", "Ushtrimi nuk mund të ngarkohet.");
   if (!existing) return fail("NOT_FOUND", "Ushtrimi në plan nuk u gjet.");
 
@@ -222,21 +307,30 @@ export async function updatePlanExerciseForActor(
 
   const setsResult = validatePositiveInteger(input.sets ?? existing.sets ?? 2, "sets", { min: 1, max: 20 });
   if (setsResult.ok === false) return forwardFailure<PlanExerciseRecord>(setsResult);
-  const dayResult = validatePositiveInteger(input.dayNumber ?? existing.day_number ?? 1, "dayNumber", { min: 1, max: 90 });
-  if (dayResult.ok === false) return forwardFailure<PlanExerciseRecord>(dayResult);
 
-  let reps: number | null = null;
-  if (input.reps !== undefined && String(input.reps).trim()) {
-    const repsResult = validatePositiveInteger(input.reps, "reps", { min: 1, max: 200 });
-    if (repsResult.ok === false) return forwardFailure<PlanExerciseRecord>(repsResult);
-    reps = repsResult.data;
+  const fallbackDay = existing.schedule_days?.[0] || existing.day_number || 1;
+  const scheduleResult = parseScheduleDays(input.scheduleDays ?? existing.schedule_days, fallbackDay);
+  if (scheduleResult.ok === false) return forwardFailure<PlanExerciseRecord>(scheduleResult);
+  const scheduleForPlan = validateScheduleForPlan(planResult.data, scheduleResult.data);
+  if (scheduleForPlan.ok === false) return forwardFailure<PlanExerciseRecord>(scheduleForPlan);
+
+  let reps: number | null = existing.reps;
+  if (input.reps !== undefined && input.reps !== null) {
+    if (String(input.reps).trim()) {
+      const repsResult = validatePositiveInteger(input.reps, "reps", { min: 1, max: 200 });
+      if (repsResult.ok === false) return forwardFailure<PlanExerciseRecord>(repsResult);
+      reps = repsResult.data;
+    } else {
+      reps = null;
+    }
   }
 
   const updates = {
     sets: setsResult.data,
     reps,
-    frequency: cleanText(input.frequency ?? existing.frequency ?? "Çdo ditë", 120),
-    day_number: dayResult.data,
+    frequency: cleanText(input.frequency ?? existing.frequency ?? "Sipas ditëve të caktuara", 120),
+    day_number: scheduleForPlan.data[0],
+    schedule_days: scheduleForPlan.data,
     instructions: cleanText(input.instructions ?? existing.instructions ?? "", 1200),
   };
 
@@ -244,11 +338,19 @@ export async function updatePlanExerciseForActor(
     .from("plan_exercises")
     .update(updates)
     .eq("id", planExerciseId)
-    .select("id,plan_id,exercise_id,sets,reps,frequency,day_number,instructions")
+    .select("id,plan_id,exercise_id,sets,reps,frequency,day_number,schedule_days,instructions")
     .single<PlanExerciseRecord>();
+
   if (error || !data) return fail("DATABASE_ERROR", "Ushtrimi nuk u përditësua.");
 
-  await writeAuditEvent({ actor, action: "plan.exercise_updated", entityType: "plan_exercise", entityId: data.id, before: existing, after: data });
+  await writeAuditEvent({
+    actor,
+    action: "plan.exercise_updated",
+    entityType: "plan_exercise",
+    entityId: data.id,
+    before: existing,
+    after: data,
+  });
   return ok(data);
 }
 
@@ -261,9 +363,10 @@ export async function removePlanExerciseForActor(
 
   const { data: existing, error: existingError } = await supabase
     .from("plan_exercises")
-    .select("id,plan_id,exercise_id,sets,reps,frequency,day_number,instructions")
+    .select("id,plan_id,exercise_id,sets,reps,frequency,day_number,schedule_days,instructions")
     .eq("id", planExerciseId)
     .maybeSingle<PlanExerciseRecord>();
+
   if (existingError) return fail("DATABASE_ERROR", "Ushtrimi nuk mund të ngarkohet.");
   if (!existing) return fail("NOT_FOUND", "Ushtrimi në plan nuk u gjet.");
 
@@ -276,7 +379,13 @@ export async function removePlanExerciseForActor(
   const { error } = await supabase.from("plan_exercises").delete().eq("id", planExerciseId);
   if (error) return fail("DATABASE_ERROR", "Ushtrimi nuk u largua.");
 
-  await writeAuditEvent({ actor, action: "plan.exercise_removed", entityType: "plan_exercise", entityId: planExerciseId, before: existing });
+  await writeAuditEvent({
+    actor,
+    action: "plan.exercise_removed",
+    entityType: "plan_exercise",
+    entityId: planExerciseId,
+    before: existing,
+  });
   return ok({ id: planExerciseId, planId: existing.plan_id });
 }
 
@@ -290,7 +399,7 @@ export async function transitionPlanForActor(
   const plan = planResult.data;
 
   if (!canTransitionPlan(plan.status, targetStatus)) {
-    return fail("INVALID_STATUS_TRANSITION", `Statusi ${plan.status} nuk mund të kalojë në ${targetStatus}.`);
+    return fail("INVALID_STATUS_TRANSITION", "Statusi " + plan.status + " nuk mund të kalojë në " + targetStatus + ".");
   }
 
   const supabase = getSupabaseAdmin();
@@ -315,7 +424,14 @@ export async function transitionPlanForActor(
     if (error) return fail("DATABASE_ERROR", "Plani nuk u aktivizua.");
     if (!activated) return fail("CONFLICT", "Plani është ndryshuar nga një kërkesë tjetër. Rifresko faqen.");
 
-    await writeAuditEvent({ actor, action: "plan.status_active", entityType: "plan", entityId: planId, before: { status: plan.status }, after: { status: "active" } });
+    await writeAuditEvent({
+      actor,
+      action: "plan.status_active",
+      entityType: "plan",
+      entityId: planId,
+      before: { status: plan.status },
+      after: { status: "active" },
+    });
     return ok(activated as PlanRecord);
   }
 
@@ -330,6 +446,13 @@ export async function transitionPlanForActor(
   if (error) return fail("DATABASE_ERROR", "Statusi i planit nuk u ndryshua.");
   if (!data) return fail("CONFLICT", "Plani është ndryshuar nga një kërkesë tjetër. Rifresko faqen.");
 
-  await writeAuditEvent({ actor, action: `plan.status_${targetStatus}`, entityType: "plan", entityId: planId, before: { status: plan.status }, after: { status: targetStatus } });
+  await writeAuditEvent({
+    actor,
+    action: "plan.status_" + targetStatus,
+    entityType: "plan",
+    entityId: planId,
+    before: { status: plan.status },
+    after: { status: targetStatus },
+  });
   return ok(data);
 }
