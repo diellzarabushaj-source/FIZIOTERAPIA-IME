@@ -1,8 +1,14 @@
 import { currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { BrandMark } from "@/components/BrandMark";
-import { getRuleBasedSuggestions, goalLabels, phaseLabels, planGoals, planPhases, planStatusLabels } from "@/lib/plan-builder";
+import type { AiSuggestionRecord, SuggestedExercise } from "@/lib/backend/ai-suggestions";
+import { goalLabels, phaseLabels, planGoals, planPhases, planStatusLabels } from "@/lib/plan-builder";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
+import {
+  acceptAiSuggestedExerciseAction,
+  generateAiSuggestionsAction,
+  rejectAiSuggestionAction,
+} from "./ai-actions";
 import {
   addCustomExerciseAction,
   addLibraryExerciseAction,
@@ -35,10 +41,26 @@ function planDose(item: PlanExercise) {
   return `${sets} ${reps}`.trim() || item.frequency || "Sipas planit";
 }
 
+function suggestionDose(item: SuggestedExercise) {
+  return `${item.sets} sete × ${item.reps} reps · ${item.frequency}`;
+}
+
+function suggestionStatusLabel(status: AiSuggestionRecord["status"]) {
+  const labels: Record<AiSuggestionRecord["status"], string> = {
+    generated: "Në pritje të review-t",
+    accepted: "Pranuar",
+    partially_accepted: "Pjesërisht pranuar",
+    rejected: "Refuzuar",
+    expired: "Skaduar",
+  };
+  return labels[status];
+}
+
 export default async function PlanBuilderPage({ searchParams }: { searchParams: SearchParams }) {
   const params = await searchParams;
   const patientId = one(params.patientId);
   const planId = one(params.planId);
+  const suggestionId = one(params.suggestionId);
   const phase = one(params.phase) || "subacute";
   const goal = one(params.goal) || "mobility";
   const diagnosisQuery = one(params.diagnosis);
@@ -87,16 +109,27 @@ export default async function PlanBuilderPage({ searchParams }: { searchParams: 
   const { data: exercises } = await exerciseQuery.returns<Exercise[]>();
   const library = exercises || [];
 
-  const diagnosis = diagnosisQuery || patient?.diagnosis || "General mobility";
-  const suggestionSet = getRuleBasedSuggestions(diagnosis, phase, goal);
+  let aiSuggestion: AiSuggestionRecord | null = null;
+  if (suggestionId && plan) {
+    let suggestionQuery = supabase
+      .from("ai_suggestions")
+      .select("id,physio_id,patient_id,plan_id,diagnosis,phase,goal,input_snapshot,candidate_exercise_ids,suggestions,engine,model,status,reviewed_by,reviewed_at,created_at,updated_at")
+      .eq("id", suggestionId)
+      .eq("patient_id", patientId)
+      .eq("plan_id", plan.id);
+    if (!isAdmin) suggestionQuery = suggestionQuery.eq("physio_id", profile.id);
+    const { data } = await suggestionQuery.maybeSingle<AiSuggestionRecord>();
+    aiSuggestion = data || null;
+  }
+
+  const diagnosis = diagnosisQuery || aiSuggestion?.diagnosis || patient?.diagnosis || "General mobility";
   const selectedIds = new Set(planExercises.map((item) => item.exercise_id));
-  const suggestedNames = new Set(suggestionSet.exercises.map((item) => item.name.toLowerCase()));
-  const suggestedLibrary = library.filter((exercise) => suggestedNames.has(exercise.name.toLowerCase()));
   const filteredLibrary = library.filter((exercise) => {
     if (!search) return true;
     return `${exercise.name} ${exercise.category || ""} ${exercise.diagnosis || ""}`.toLowerCase().includes(search);
   });
-  const editable = !plan || !["active", "archived"].includes(plan.status || "");
+  const editable = Boolean(plan && plan.status === "draft");
+  const suggestionUsable = Boolean(aiSuggestion && !["rejected", "expired"].includes(aiSuggestion.status));
 
   return (
     <main className="page clinic-pro-page plan-builder-page">
@@ -135,29 +168,81 @@ export default async function PlanBuilderPage({ searchParams }: { searchParams: 
             <form method="get" className="plan-builder-form-grid">
               <input type="hidden" name="patientId" value={patient.id} /><input type="hidden" name="planId" value={plan.id} />
               <label>Diagnoza / problemi<input className="input" name="diagnosis" defaultValue={diagnosis} /></label>
-              <label>Faza<select className="input" name="phase" defaultValue={phase}>{planPhases.map((item) => <option key={item} value={item}>{phaseLabels[item]}</option>)}</select></label>
-              <label>Qëllimi<select className="input" name="goal" defaultValue={goal}>{planGoals.map((item) => <option key={item} value={item}>{goalLabels[item]}</option>)}</select></label>
-              <button className="button secondary" type="submit">Përditëso sugjerimet</button>
+              <label>Faza<select className="input" name="phase" defaultValue={aiSuggestion?.phase || phase}>{planPhases.map((item) => <option key={item} value={item}>{phaseLabels[item]}</option>)}</select></label>
+              <label>Qëllimi<select className="input" name="goal" defaultValue={aiSuggestion?.goal || goal}>{planGoals.map((item) => <option key={item} value={item}>{goalLabels[item]}</option>)}</select></label>
+              <button className="button secondary" type="submit">Përditëso kontekstin</button>
             </form>
           </section>
 
           <section className="plan-builder-two-column">
             <article className="dashboard-card" id="suggestions">
-              <div className="section-header-row"><div><span className="mini-badge">Hapi 2 · AI-assisted</span><h2>Ushtrime të sugjeruara</h2><p>Burimi: rregulla klinike + banka e ushtrimeve. Asnjë ushtrim nuk shtohet pa klikimin e fizioterapeutit.</p></div><span className="badge">{suggestedLibrary.length} matches</span></div>
-              <div className="clinical-safety-box"><b>Safety check</b><p>{suggestionSet.safetyNote}</p><small>Red flags: {suggestionSet.redFlags.join(" · ")}</small></div>
-              <div className="plan-builder-library-grid">
-                {suggestedLibrary.map((exercise) => {
-                  const template = suggestionSet.exercises.find((item) => item.name.toLowerCase() === exercise.name.toLowerCase());
-                  const alreadyAdded = selectedIds.has(exercise.id);
-                  return <article className="plan-builder-exercise-card" key={exercise.id}><div><span className="mini-badge">{template?.confidence || 82}% match</span><h3>{exercise.name}</h3><p>{exercise.category || "Pa kategori"} · {exercise.diagnosis || diagnosis}</p></div><small>{template?.instructions || exercise.instructions_sq || "Kryeje me kontroll."}</small>{alreadyAdded ? <b className="access-pill active">Në plan</b> : editable ? <form action={addLibraryExerciseAction}><input type="hidden" name="planId" value={plan.id} /><input type="hidden" name="exerciseId" value={exercise.id} /><input type="hidden" name="sets" value={template?.sets || 2} /><input type="hidden" name="reps" value={template?.reps || ""} /><input type="hidden" name="frequency" value={template?.frequency || "Çdo ditë"} /><input type="hidden" name="dayNumber" value={template?.dayNumber || 1} /><input type="hidden" name="instructions" value={template?.instructions || exercise.instructions_sq || "Kryeje me kontroll."} /><button className="button compact-button" type="submit">Prano në plan</button></form> : null}</article>;
-                })}
-                {!suggestedLibrary.length && <p>Nuk u gjetën emrat e sugjeruar në databazë. Përdor kërkimin manual ose shto ushtrim custom.</p>}
+              <div className="section-header-row">
+                <div><span className="mini-badge">Hapi 2 · AI-assisted</span><h2>Sugjerime klinike</h2><p>Vetëm ushtrime reale nga banka. Asgjë nuk shtohet pa review dhe klikimin tënd.</p></div>
+                <span className="badge">{aiSuggestion ? suggestionStatusLabel(aiSuggestion.status) : "Pa suggestion set"}</span>
               </div>
+
+              <div className="clinical-safety-box">
+                <b>Safety check</b>
+                <p>AI është vetëm mbështetje për vendimmarrje. Kontrollo kundërindikacionet, fazën post-operative, kufizimet dhe tolerancën individuale.</p>
+                <small>Dhimbje ≥7/10, përkeqësim neurologjik ose red flags = ndalo dhe rivlerëso klinikisht.</small>
+              </div>
+
+              {editable && (
+                <form action={generateAiSuggestionsAction} className="plan-builder-form-grid">
+                  <input type="hidden" name="patientId" value={patient.id} />
+                  <input type="hidden" name="planId" value={plan.id} />
+                  <input type="hidden" name="diagnosis" value={diagnosis} />
+                  <input type="hidden" name="phase" value={phase} />
+                  <input type="hidden" name="goal" value={goal} />
+                  <label>Numri i sugjerimeve<input className="input" name="limit" type="number" min={1} max={10} defaultValue={6} /></label>
+                  <button className="button" type="submit">{aiSuggestion ? "Gjenero set të ri" : "Gjenero sugjerime"}</button>
+                </form>
+              )}
+
+              {aiSuggestion && (
+                <div className="plan-builder-library-grid">
+                  {aiSuggestion.suggestions.map((suggestion) => {
+                    const alreadyAdded = selectedIds.has(suggestion.exerciseId);
+                    return (
+                      <article className="plan-builder-exercise-card" key={suggestion.exerciseId}>
+                        <div>
+                          <span className="mini-badge">{suggestion.confidence}% match</span>
+                          <h3>{suggestion.name}</h3>
+                          <p>{suggestion.reason}</p>
+                        </div>
+                        <small>{suggestionDose(suggestion)}</small>
+                        <small>{suggestion.instructions}</small>
+                        {suggestion.warnings.length > 0 && <small><b>Kujdes:</b> {suggestion.warnings.join(" · ")}</small>}
+                        {alreadyAdded ? (
+                          <b className="access-pill active">Në plan</b>
+                        ) : editable && suggestionUsable ? (
+                          <form action={acceptAiSuggestedExerciseAction}>
+                            <input type="hidden" name="suggestionId" value={aiSuggestion.id} />
+                            <input type="hidden" name="exerciseId" value={suggestion.exerciseId} />
+                            <input type="hidden" name="planId" value={plan.id} />
+                            <button className="button compact-button" type="submit">Prano në plan</button>
+                          </form>
+                        ) : null}
+                      </article>
+                    );
+                  })}
+                  {!aiSuggestion.suggestions.length && <p>Ky suggestion set nuk përmban ushtrime.</p>}
+                </div>
+              )}
+
+              {!aiSuggestion && <div className="ai-empty-state"><h3>Nuk është gjeneruar ende suggestion set.</h3><p>Plotëso diagnozën, fazën dhe qëllimin, pastaj kliko “Gjenero sugjerime”.</p></div>}
+
+              {aiSuggestion && editable && suggestionUsable && (
+                <form action={rejectAiSuggestionAction}>
+                  <input type="hidden" name="suggestionId" value={aiSuggestion.id} />
+                  <button className="button secondary compact-button" type="submit">Refuzo këtë suggestion set</button>
+                </form>
+              )}
             </article>
 
             <article className="dashboard-card">
               <div className="section-header-row"><div><span className="mini-badge">Database</span><h2>Kërko në bankën e ushtrimeve</h2><p>Kërko sipas emrit, kategorisë ose diagnozës.</p></div><span className="badge">{library.length} total</span></div>
-              <form method="get" className="library-search-row"><input type="hidden" name="patientId" value={patient.id} /><input type="hidden" name="planId" value={plan.id} /><input type="hidden" name="diagnosis" value={diagnosis} /><input type="hidden" name="phase" value={phase} /><input type="hidden" name="goal" value={goal} /><input className="input" name="search" defaultValue={search} placeholder="p.sh. bridge, knee, mobility..." /><button className="button secondary" type="submit">Kërko</button></form>
+              <form method="get" className="library-search-row"><input type="hidden" name="patientId" value={patient.id} /><input type="hidden" name="planId" value={plan.id} /><input type="hidden" name="diagnosis" value={diagnosis} /><input type="hidden" name="phase" value={phase} /><input type="hidden" name="goal" value={goal} />{suggestionId && <input type="hidden" name="suggestionId" value={suggestionId} />}<input className="input" name="search" defaultValue={search} placeholder="p.sh. bridge, knee, mobility..." /><button className="button secondary" type="submit">Kërko</button></form>
               <div className="clinic-library-list plan-builder-search-results">
                 {filteredLibrary.slice(0, 20).map((exercise) => <div key={exercise.id}><span><b>{exercise.name}</b><small>{exercise.category || "Pa kategori"}</small></span>{selectedIds.has(exercise.id) ? <em>Në plan</em> : editable ? <form action={addLibraryExerciseAction}><input type="hidden" name="planId" value={plan.id} /><input type="hidden" name="exerciseId" value={exercise.id} /><input type="hidden" name="sets" value="2" /><input type="hidden" name="reps" value="10" /><input type="hidden" name="frequency" value="Çdo ditë" /><input type="hidden" name="dayNumber" value="1" /><input type="hidden" name="instructions" value={exercise.instructions_sq || "Kryeje ngadalë dhe me kontroll."} /><button className="clinic-outline-button" type="submit">Shto</button></form> : null}</div>)}
               </div>
@@ -179,7 +264,7 @@ export default async function PlanBuilderPage({ searchParams }: { searchParams: 
             <div className="plan-approval-bar">
               <div><b>Kontrolli final nga fizioterapeuti</b><p>AI nuk e aprovon planin. Me klikimin final, ti konfirmon se e ke kontrolluar përmbajtjen klinike.</p></div>
               {editable && <div className="portal-actions"><form action={markPendingReviewAction}><input type="hidden" name="planId" value={plan.id} /><button className="button secondary" type="submit">Shëno “Pending review”</button></form><form action={approveAndSendPlanAction}><input type="hidden" name="planId" value={plan.id} /><button className="button" type="submit" disabled={!planExercises.length}>Approve & Send to Patient</button></form></div>}
-              {!editable && <a className="button" href={`/patient-access/${encodeURIComponent(patient.patient_code)}`}>Shiko qasjen e pacientit</a>}
+              {!editable && plan.status === "active" && <a className="button" href={`/patient-access/${encodeURIComponent(patient.patient_code)}`}>Shiko qasjen e pacientit</a>}
             </div>
           </section>
         </>
