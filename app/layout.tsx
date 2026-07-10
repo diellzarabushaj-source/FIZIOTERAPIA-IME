@@ -19,6 +19,7 @@ import "./duo-app.css";
 import "./patient-dashboard-mobile-panels.css";
 import "./workflow-illustrations.css";
 import "./homepage-workflow.css";
+import "./home-premium.css";
 import "./ui-friendly.css";
 import "./patient-login-refresh.css";
 import "./physio-dashboard-refresh.css";
