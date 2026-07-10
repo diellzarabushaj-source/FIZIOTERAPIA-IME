@@ -10,8 +10,22 @@ const APP_TIMEZONE = "Europe/Belgrade";
 
 type Patient = { id: string; physio_id: string | null; first_name: string; diagnosis: string | null };
 type Plan = { id: string; title: string; start_date: string | null; end_date: string | null };
-type PlanExercise = { id: string; sets: number | null; reps: number | null; frequency: string | null; day_number: number | null; instructions: string | null; exercise_library?: { name: string; video_url: string | null; instructions_sq: string | null } | null };
-type ExerciseLog = { plan_exercise_id: string | null; completed: boolean | null; pain_score: number | null; completed_at: string | null; completed_on: string | null };
+type PlanExercise = {
+  id: string;
+  sets: number | null;
+  reps: number | null;
+  frequency: string | null;
+  day_number: number | null;
+  instructions: string | null;
+  exercise_library?: { name: string; video_url: string | null; instructions_sq: string | null } | null;
+};
+type ExerciseLog = {
+  plan_exercise_id: string | null;
+  completed: boolean | null;
+  pain_score: number | null;
+  completed_at: string | null;
+  completed_on: string | null;
+};
 type Message = { id: string; message: string; created_at: string | null };
 type PageProps = { searchParams?: Promise<{ error?: string | string[]; done?: string | string[] }> };
 
@@ -77,7 +91,12 @@ async function getDashboardData() {
 }
 
 function dateKey(value: Date | string) {
-  return new Intl.DateTimeFormat("en-CA", { timeZone: APP_TIMEZONE, year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date(value));
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: APP_TIMEZONE,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date(value));
 }
 
 function latestLog(logs: ExerciseLog[], exerciseId: string) {
@@ -97,7 +116,11 @@ function dosage(exercise: PlanExercise) {
 
 function formatDate(value?: string | null) {
   if (!value) return "Pa datë";
-  return new Date(`${value}T00:00:00`).toLocaleDateString("sq-AL", { day: "2-digit", month: "short", year: "numeric" });
+  return new Date(`${value}T00:00:00`).toLocaleDateString("sq-AL", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
 }
 
 function actionErrorMessage(code?: string) {
@@ -116,15 +139,37 @@ function youtubeEmbed(url?: string | null) {
 function ExerciseVideo({ url, title }: { url?: string | null; title: string }) {
   if (!url) return <div className="patient-simple-no-video">Nuk ka video për këtë ushtrim.</div>;
   const embed = youtubeEmbed(url);
-  if (embed) return <iframe className="patient-simple-video" src={embed} title={`Video: ${title}`} allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen />;
-  if (/\.(mp4|webm|ogg)(\?|$)/i.test(url)) return <video className="patient-simple-video" controls playsInline preload="metadata" src={url}>Shfletuesi yt nuk e hap videon.</video>;
+  if (embed) {
+    return (
+      <iframe
+        className="patient-simple-video"
+        src={embed}
+        title={`Video: ${title}`}
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+        allowFullScreen
+      />
+    );
+  }
+  if (/\.(mp4|webm|ogg)(\?|$)/i.test(url)) {
+    return <video className="patient-simple-video" controls playsInline preload="metadata" src={url}>Shfletuesi yt nuk e hap videon.</video>;
+  }
   return <a className="patient-simple-video-link" href={url} target="_blank" rel="noreferrer">▶ Hape videon</a>;
 }
 
 export default async function PatientDashboardPage({ searchParams }: PageProps) {
   const data = await getDashboardData();
   if (data.error === "not_logged_in") redirect("/patient-portal");
-  if (data.error) return <main className="patient-simple-page"><section className="patient-simple-message danger"><h1>Nuk mund të hapet plani</h1><p>{data.error}</p><a href="/patient-portal">Provo përsëri</a></section></main>;
+  if (data.error) {
+    return (
+      <main className="patient-simple-page">
+        <section className="patient-simple-message danger patient-simple-state-card">
+          <h1>Nuk mund të hapet plani</h1>
+          <p>{data.error}</p>
+          <a href="/patient-portal">Provo përsëri</a>
+        </section>
+      </main>
+    );
+  }
 
   const params = searchParams ? await searchParams : undefined;
   const errorCode = typeof params?.error === "string" ? params.error : undefined;
@@ -132,20 +177,40 @@ export default async function PatientDashboardPage({ searchParams }: PageProps) 
   const actionError = actionErrorMessage(errorCode);
   const { patient, physio, activePlan, planExercises, logs, messages } = data;
   const todayKey = dateKey(new Date());
+  const hasNotStarted = Boolean(activePlan?.start_date && todayKey < activePlan.start_date);
   const ended = Boolean(activePlan?.end_date && todayKey > activePlan.end_date);
-  const rawDay = planDay(activePlan);
-  const finalPlanDay = Math.max(1, ...planExercises.map((item) => item.day_number || 1));
-  const day = Math.min(rawDay, finalPlanDay);
-  const exactDayExercises = planExercises.filter((item) => (item.day_number || 1) === day);
-  const exercises = exactDayExercises.length ? exactDayExercises : planExercises.filter((item) => (item.day_number || 1) <= day);
+  const day = planDay(activePlan);
+  const exercises = hasNotStarted || ended
+    ? []
+    : planExercises.filter((item) => (item.day_number || 1) === day);
   const todayLogs = logs.filter((log) => log.completed_on === todayKey);
   const done = exercises.filter((item) => latestLog(todayLogs, item.id)?.completed).length;
   const next = exercises.find((item) => !latestLog(todayLogs, item.id)?.completed);
   const allDone = exercises.length > 0 && done === exercises.length;
-  const lastPain = logs.find((item) => typeof item.pain_score === "number")?.pain_score;
+  const restDay = Boolean(activePlan && !hasNotStarted && !ended && exercises.length === 0);
+  const lastPain = todayLogs.find((item) => typeof item.pain_score === "number")?.pain_score;
   const mustStop = typeof lastPain === "number" && lastPain >= 7;
   const progress = exercises.length ? Math.round((done / exercises.length) * 100) : 0;
   const physioName = physio?.full_name || physio?.clinic_name || "fizioterapeutin tënd";
+
+  let heading = "Ushtrimet e tua për sot";
+  let description = "Shiko videon, bëje ushtrimin dhe shtyp “E kreva”.";
+  if (!activePlan) {
+    heading = "Plani yt po përgatitet";
+    description = "Fizioterapeuti do ta publikojë sapo të jetë gati.";
+  } else if (hasNotStarted) {
+    heading = "Programi nuk ka filluar ende";
+    description = `Dita e parë është ${formatDate(activePlan.start_date)}.`;
+  } else if (ended) {
+    heading = "Programi ka përfunduar";
+    description = `Kontakto ${physioName} para se të vazhdosh.`;
+  } else if (restDay) {
+    heading = "Sot nuk ke ushtrime";
+    description = "Sot është ditë pa ushtrime të planifikuara. Mos shto ushtrime vetë.";
+  } else if (allDone) {
+    heading = "Shumë mirë! Për sot mbarove.";
+    description = "Progresi yt është ruajtur. Kthehu nesër për ditën tjetër.";
+  }
 
   return (
     <main className="patient-simple-page">
@@ -157,48 +222,87 @@ export default async function PatientDashboardPage({ searchParams }: PageProps) 
 
       <section className="patient-simple-welcome">
         <span>Përshëndetje, {patient.first_name}</span>
-        <h1>{ended ? "Programi ka përfunduar" : allDone ? "Shumë mirë! Për sot mbarove." : "Ushtrimet e tua për sot"}</h1>
-        <p>{ended ? `Kontakto ${physioName} para se të vazhdosh me ushtrime të tjera.` : allDone ? "Ushtrimet e sotme u ruajtën. Kthehu nesër për ditën tjetër." : "Shiko videon, bëje ushtrimin dhe shtyp butonin “E kreva”."}</p>
+        <h1>{heading}</h1>
+        <p>{description}</p>
       </section>
 
-      {ended && (
-        <section className="patient-simple-finished">
-          <div className="patient-simple-finished-icon">✓</div>
-          <h2>I ke përfunduar ditët e planit</h2>
-          <p>Që të vazhdosh në mënyrë të sigurt, telefono ose shkruaji fizioterapeutit për kontrollin e radhës.</p>
-          <a href="#physio-contact">Kontakto fizioterapeutin</a>
-        </section>
+      {actionError && !ended && (
+        <section className="patient-simple-message danger"><b>Nuk u ruajt</b><p>{actionError}</p></section>
+      )}
+      {completedId && !ended && (
+        <section className="patient-simple-message success"><b>✓ U ruajt</b><p>Ushtrimi u shënua si i kryer.</p></section>
       )}
 
-      {!ended && actionError && <section className="patient-simple-message danger"><b>Nuk u ruajt</b><p>{actionError}</p></section>}
-      {!ended && completedId && <section className="patient-simple-message success"><b>✓ U ruajt</b><p>Ushtrimi u shënua si i kryer.</p></section>}
-
-      {!ended && mustStop && (
-        <section className="patient-simple-stop">
+      {mustStop && !ended && (
+        <section className="patient-simple-stop" role="alert">
           <strong>NDALO USHTRIMET</strong>
           <p>Ke raportuar dhimbje {lastPain}/10. Mos vazhdo pa folur me fizioterapeutin.</p>
           <a href="#physio-contact">Kontakto fizioterapeutin</a>
         </section>
       )}
 
-      {!ended && activePlan && (
-        <section className="patient-simple-progress-card">
-          <div><span>Dita {day}</span><strong>{activePlan.title}</strong><small>{formatDate(activePlan.start_date)} – {formatDate(activePlan.end_date)}</small></div>
-          <div className="patient-simple-progress-number"><b>{done}/{exercises.length}</b><span>të kryera</span></div>
-          <div className="patient-simple-progress-bar"><i style={{ width: `${progress}%` }} /></div>
+      {activePlan && (
+        <section className="patient-simple-plan-summary" aria-label="Përmbledhja e planit">
+          <div className="patient-simple-plan-main">
+            <span>{ended ? "PROGRAMI I PËRFUNDUAR" : hasNotStarted ? "PROGRAMI I ARDHSHËM" : `SOT · DITA ${day}`}</span>
+            <h2>{activePlan.title}</h2>
+            <p>{formatDate(activePlan.start_date)} – {formatDate(activePlan.end_date)}</p>
+          </div>
+          {!ended && !hasNotStarted && !restDay && (
+            <div className="patient-simple-progress-block">
+              <div><b>{done}/{exercises.length}</b><span>të kryera</span></div>
+              <div className="patient-simple-progress-bar" aria-label={`${progress}% e përfunduar`}><i style={{ width: `${progress}%` }} /></div>
+              <small>{progress}% e përfunduar</small>
+            </div>
+          )}
         </section>
       )}
 
-      {!ended && !activePlan && (
-        <section className="patient-simple-message"><h2>Plani po përgatitet</h2><p>Fizioterapeuti do ta publikojë planin sapo të jetë gati.</p></section>
+      {!activePlan && (
+        <section className="patient-simple-state-card">
+          <div className="patient-simple-state-icon">⌛</div>
+          <h2>Ende nuk ka plan aktiv</h2>
+          <p>Kur fizioterapeuti ta publikojë planin, ai do të shfaqet automatikisht këtu.</p>
+          <a href="#physio-contact">Kontakto fizioterapeutin</a>
+        </section>
       )}
 
-      {!ended && activePlan && !allDone && !mustStop && next && (
+      {hasNotStarted && activePlan && (
+        <section className="patient-simple-state-card">
+          <div className="patient-simple-state-icon">📅</div>
+          <h2>Fillon më {formatDate(activePlan.start_date)}</h2>
+          <p>Mos i fillo ushtrimet para datës së caktuar, përveç nëse të thotë fizioterapeuti.</p>
+        </section>
+      )}
+
+      {ended && activePlan && (
+        <section className="patient-simple-state-card finished">
+          <div className="patient-simple-state-icon">✓</div>
+          <h2>I ke përfunduar ditët e planit</h2>
+          <p>Mos vazhdo me të njëjtin program pa kontroll të ri.</p>
+          <a href="#physio-contact">Kontakto fizioterapeutin</a>
+        </section>
+      )}
+
+      {restDay && (
+        <section className="patient-simple-state-card rest">
+          <div className="patient-simple-state-icon">☀</div>
+          <h2>Sot pusho</h2>
+          <p>Nuk ke ushtrime të planifikuara për ditën {day}. Kthehu nesër ose ndiq udhëzimin e fizioterapeutit.</p>
+        </section>
+      )}
+
+      {!ended && !hasNotStarted && !restDay && !allDone && !mustStop && next && (
         <a className="patient-simple-next" href={`#exercise-${next.id}`}>Fillo ushtrimin e radhës ↓</a>
       )}
 
-      {!ended && (
+      {!ended && !hasNotStarted && !restDay && (
         <section className="patient-simple-exercises" aria-label="Ushtrimet e sotme">
+          <div className="patient-simple-section-heading">
+            <span>USHtrimet E SOTME</span>
+            <h2>Bëji me radhë</h2>
+            <p>Fillo nga ushtrimi 1 dhe vazhdo deri në fund.</p>
+          </div>
           {exercises.map((exercise, index) => {
             const log = latestLog(todayLogs, exercise.id);
             const isDone = Boolean(log?.completed);
@@ -207,7 +311,7 @@ export default async function PatientDashboardPage({ searchParams }: PageProps) 
               <article id={`exercise-${exercise.id}`} className={`patient-simple-exercise ${isDone ? "done" : ""}`} key={exercise.id}>
                 <div className="patient-simple-exercise-title">
                   <span>{isDone ? "✓" : index + 1}</span>
-                  <div><small>{isDone ? "E KRYER" : "USHTRIMI I RADHËS"}</small><h2>{name}</h2><p>{dosage(exercise)}</p></div>
+                  <div><small>{isDone ? "E KRYER" : `HAPI ${index + 1}`}</small><h2>{name}</h2><p>{dosage(exercise)}</p></div>
                 </div>
 
                 <ExerciseVideo url={exercise.exercise_library?.video_url} title={name} />
