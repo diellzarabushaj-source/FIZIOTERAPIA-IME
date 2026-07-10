@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server";
 import { getSupabaseAdmin, normalizePatientCode } from "@/lib/supabase-admin";
-import { requireAssignedPlanExercise } from "@/lib/backend-logic";
+import { requireAssignedPlanExercise, verifyPatientCodeSignature } from "@/lib/backend-logic";
 import { notifyPhysioHighPain, notifyPhysioLowAiScore } from "@/lib/clinical-notifications";
 
 type ProgressBody = {
   code?: string;
+  sessionToken?: string;
   patientId?: string;
   planExerciseId?: string;
   score?: number;
@@ -23,10 +24,14 @@ export async function POST(request: Request) {
 
   const body = (await request.json().catch(() => ({}))) as ProgressBody;
   const code = normalizePatientCode(String(body.code || ""));
+  const sessionToken = String(body.sessionToken || "");
   const patientId = String(body.patientId || "").trim();
   const planExerciseId = String(body.planExerciseId || "").trim();
-  if (!code || !patientId || !planExerciseId) {
-    return NextResponse.json({ error: "code, patientId and planExerciseId are required" }, { status: 400 });
+  if (!code || !sessionToken || !patientId || !planExerciseId) {
+    return NextResponse.json({ error: "signed patient session and planExerciseId are required" }, { status: 400 });
+  }
+  if (!verifyPatientCodeSignature(code, sessionToken)) {
+    return NextResponse.json({ error: "invalid_or_expired_patient_session" }, { status: 401 });
   }
 
   const { data: patient } = await supabase
