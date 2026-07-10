@@ -32,6 +32,12 @@ jobs:
       - name: Route file preflight
         run: npm run preflight:routes
 
+      - name: Security regression gate
+        run: npm run check:security
+
+      - name: Lint
+        run: npm run lint
+
       - name: Build web app
         run: npm run build
         env:
@@ -40,6 +46,7 @@ jobs:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          PATIENT_SESSION_SECRET: ${{ secrets.PATIENT_SESSION_SECRET }}
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
           RESEND_FROM_EMAIL: ${{ secrets.RESEND_FROM_EMAIL }}
           RESEND_REPLY_TO_EMAIL: ${{ secrets.RESEND_REPLY_TO_EMAIL }}
