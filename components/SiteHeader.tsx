@@ -14,17 +14,24 @@ const links = [
 
 export function SiteHeader() {
   const pathname = usePathname();
+  const isBlog = pathname.startsWith("/blog");
 
   return (
-    <nav className="top-nav landing-nav public-site-header" aria-label="Navigimi kryesor">
-      <BrandMark />
-      <div className="nav-actions public-site-nav-actions">
-        {links.map((link) => {
-          const active = link.key === "blog" && pathname.startsWith("/blog");
-          return <a key={link.key} className={active ? "active" : undefined} href={link.href}>{link.label}</a>;
-        })}
-        <AuthControls />
-      </div>
-    </nav>
+    <header className="public-site-header-wrap">
+      <nav className="top-nav landing-nav public-site-header" aria-label="Navigimi kryesor">
+        <BrandMark />
+        <div className="nav-actions public-site-nav-actions">
+          {links.map((link) => {
+            const active = link.key === "blog" && isBlog;
+            return (
+              <a key={link.key} className={active ? "active" : undefined} href={link.href}>
+                {link.label}
+              </a>
+            );
+          })}
+          <AuthControls />
+        </div>
+      </nav>
+    </header>
   );
 }
