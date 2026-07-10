@@ -1,8 +1,10 @@
 import { redirect } from "next/navigation";
 import { BrandMark } from "@/components/BrandMark";
+import { PatientCompleteButton } from "@/components/PatientCompleteButton";
 import { getCurrentPatientSession } from "@/lib/patient-session";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import { completeExerciseAction, patientLogoutAction } from "./actions";
+import "./patient-dashboard.css";
 
 const APP_TIMEZONE = "Europe/Belgrade";
 
@@ -11,7 +13,7 @@ type Plan = { id: string; title: string; start_date: string | null; end_date: st
 type PlanExercise = { id: string; sets: number | null; reps: number | null; frequency: string | null; day_number: number | null; instructions: string | null; exercise_library?: { name: string; video_url: string | null; instructions_sq: string | null } | null };
 type ExerciseLog = { plan_exercise_id: string | null; completed: boolean | null; pain_score: number | null; completed_at: string | null; completed_on: string | null };
 type Message = { id: string; message: string; created_at: string | null };
-type PageProps = { searchParams?: Promise<{ error?: string | string[] }> };
+type PageProps = { searchParams?: Promise<{ error?: string | string[]; done?: string | string[] }> };
 
 async function getDashboardData() {
   const supabase = getSupabaseAdmin();
@@ -74,51 +76,181 @@ async function getDashboardData() {
   return { patient, physio, activePlan, planExercises: planExercises || [], logs: logs || [], messages: messages || [], error: null };
 }
 
-function dateKey(value: Date | string) { return new Intl.DateTimeFormat("en-CA", { timeZone: APP_TIMEZONE, year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date(value)); }
-function latestLog(logs: ExerciseLog[], exerciseId: string) { return logs.find((log) => log.plan_exercise_id === exerciseId); }
-function planDay(plan: Plan | null) { if (!plan?.start_date) return 1; const start = new Date(`${plan.start_date}T00:00:00`); return Math.max(1, Math.floor((Date.now() - start.getTime()) / 86_400_000) + 1); }
-function dosage(exercise: PlanExercise) { if (exercise.sets && exercise.reps) return `${exercise.sets} sete · ${exercise.reps} përsëritje`; return exercise.frequency || "Sipas udhëzimit"; }
-function formatDate(value?: string | null) { if (!value) return "Pa datë"; return new Date(`${value}T00:00:00`).toLocaleDateString("sq-AL", { day: "2-digit", month: "short", year: "numeric" }); }
+function dateKey(value: Date | string) {
+  return new Intl.DateTimeFormat("en-CA", { timeZone: APP_TIMEZONE, year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date(value));
+}
+
+function latestLog(logs: ExerciseLog[], exerciseId: string) {
+  return logs.find((log) => log.plan_exercise_id === exerciseId);
+}
+
+function planDay(plan: Plan | null) {
+  if (!plan?.start_date) return 1;
+  const start = new Date(`${plan.start_date}T00:00:00`);
+  return Math.max(1, Math.floor((Date.now() - start.getTime()) / 86_400_000) + 1);
+}
+
+function dosage(exercise: PlanExercise) {
+  if (exercise.sets && exercise.reps) return `${exercise.sets} sete × ${exercise.reps} përsëritje`;
+  return exercise.frequency || "Sipas udhëzimit të fizioterapeutit";
+}
+
+function formatDate(value?: string | null) {
+  if (!value) return "Pa datë";
+  return new Date(`${value}T00:00:00`).toLocaleDateString("sq-AL", { day: "2-digit", month: "short", year: "numeric" });
+}
+
 function actionErrorMessage(code?: string) {
-  if (code === "FORBIDDEN") return "Ky ushtrim nuk është më pjesë e planit tënd aktiv.";
-  if (code === "VALIDATION_ERROR") return "Kontrollo vlerën e dhimbjes dhe komentin.";
-  if (code) return "Ushtrimi nuk u regjistrua. Provo përsëri.";
+  if (code === "FORBIDDEN") return "Ky ushtrim nuk është më pjesë e planit tënd.";
+  if (code === "VALIDATION_ERROR") return "Zgjidh dhimbjen nga 0 deri në 10.";
+  if (code) return "Nuk u ruajt. Provo edhe një herë.";
   return null;
+}
+
+function youtubeEmbed(url?: string | null) {
+  if (!url) return null;
+  const match = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/shorts\/)([A-Za-z0-9_-]{6,})/);
+  return match ? `https://www.youtube-nocookie.com/embed/${match[1]}` : null;
+}
+
+function ExerciseVideo({ url, title }: { url?: string | null; title: string }) {
+  if (!url) return <div className="patient-simple-no-video">Nuk ka video për këtë ushtrim.</div>;
+  const embed = youtubeEmbed(url);
+  if (embed) return <iframe className="patient-simple-video" src={embed} title={`Video: ${title}`} allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen />;
+  if (/\.(mp4|webm|ogg)(\?|$)/i.test(url)) return <video className="patient-simple-video" controls playsInline preload="metadata" src={url}>Shfletuesi yt nuk e hap videon.</video>;
+  return <a className="patient-simple-video-link" href={url} target="_blank" rel="noreferrer">▶ Hape videon</a>;
 }
 
 export default async function PatientDashboardPage({ searchParams }: PageProps) {
   const data = await getDashboardData();
   if (data.error === "not_logged_in") redirect("/patient-portal");
-  if (data.error) return <main className="patient-clean"><section className="patient-clean-error"><h1>Nuk mund të hapet plani</h1><p>{data.error}</p><a href="/patient-portal">Kthehu te hyrja</a></section></main>;
+  if (data.error) return <main className="patient-simple-page"><section className="patient-simple-message danger"><h1>Nuk mund të hapet plani</h1><p>{data.error}</p><a href="/patient-portal">Provo përsëri</a></section></main>;
 
   const params = searchParams ? await searchParams : undefined;
   const errorCode = typeof params?.error === "string" ? params.error : undefined;
+  const completedId = typeof params?.done === "string" ? params.done : undefined;
   const actionError = actionErrorMessage(errorCode);
   const { patient, physio, activePlan, planExercises, logs, messages } = data;
-  const day = planDay(activePlan);
-  const exactDayExercises = planExercises.filter((item) => (item.day_number || 1) === day);
-  const previousOrCurrentExercises = planExercises.filter((item) => (item.day_number || 1) <= day);
-  const exercises = exactDayExercises.length ? exactDayExercises : previousOrCurrentExercises.length ? previousOrCurrentExercises : planExercises;
   const todayKey = dateKey(new Date());
+  const ended = Boolean(activePlan?.end_date && todayKey > activePlan.end_date);
+  const rawDay = planDay(activePlan);
+  const finalPlanDay = Math.max(1, ...planExercises.map((item) => item.day_number || 1));
+  const day = Math.min(rawDay, finalPlanDay);
+  const exactDayExercises = planExercises.filter((item) => (item.day_number || 1) === day);
+  const exercises = exactDayExercises.length ? exactDayExercises : planExercises.filter((item) => (item.day_number || 1) <= day);
   const todayLogs = logs.filter((log) => log.completed_on === todayKey);
   const done = exercises.filter((item) => latestLog(todayLogs, item.id)?.completed).length;
   const next = exercises.find((item) => !latestLog(todayLogs, item.id)?.completed);
+  const allDone = exercises.length > 0 && done === exercises.length;
   const lastPain = logs.find((item) => typeof item.pain_score === "number")?.pain_score;
-  const stop = typeof lastPain === "number" && lastPain >= 7;
+  const mustStop = typeof lastPain === "number" && lastPain >= 7;
   const progress = exercises.length ? Math.round((done / exercises.length) * 100) : 0;
-  const physioName = physio?.full_name || physio?.clinic_name || "Fizioterapeuti yt";
+  const physioName = physio?.full_name || physio?.clinic_name || "fizioterapeutin tënd";
 
   return (
-    <main className="patient-clean">
-      <header className="patient-clean-topbar"><BrandMark /><nav aria-label="Navigimi i pacientit"><a className="active" href="#today">Sot</a><a href="#exercises">Ushtrimet</a><a href="#messages">Mesazhet</a></nav><form action={patientLogoutAction}><button type="submit">Dil</button></form></header>
-      <section className="patient-clean-intro"><div><span>PLANI IM</span><h1>Përshëndetje, {patient.first_name}</h1><p>Hap pas hapi drejt përmirësimit.</p></div><div className="patient-clean-plan-chip"><small>Plani aktiv</small><strong>{activePlan?.title || "Program rehabilitimi"}</strong><span>{formatDate(activePlan?.start_date)} – {formatDate(activePlan?.end_date)}</span></div></section>
-      {actionError && <section className="patient-clean-error"><strong>Ushtrimi nuk u regjistrua</strong><p>{actionError}</p></section>}
-      <section className="patient-clean-layout" id="today">
-        <div className="patient-clean-main">
-          <section className="patient-clean-hero"><div><span>SOT · DITA {day}</span><h2>{exercises.length ? `Ke ${Math.max(0, exercises.length - done)} ushtrime për sot` : "Plani yt po përgatitet"}</h2><p>{next ? `Fillo me ${next.exercise_library?.name || "ushtrimin e parë"}. ${dosage(next)}.` : done === exercises.length && exercises.length ? "I ke kryer të gjitha ushtrimet për sot." : "Fizioterapeuti do ta publikojë planin sapo të jetë gati."}</p>{next && !stop && <a href={`/patient-session#exercise-${next.id}`}>▶ Fillo ushtrimin e radhës</a>}</div><div className="patient-clean-progress" style={{ background: `conic-gradient(#169c78 ${progress}%, #e5efeb 0)` }} aria-label={`${progress}% e planit të përfunduar`}><strong>{progress}%</strong><span>Përfunduar</span></div></section>
-          <section className="patient-clean-card" id="exercises"><div className="patient-clean-card-head"><div><span>USHTRIMET E SOTME</span><h2>Çka duhet të bësh sot</h2></div><b>{done}/{exercises.length} të kryera</b></div>{exercises.length === 0 && <div className="patient-clean-empty">Ende nuk ka ushtrime në plan.</div>}<div className="patient-clean-exercise-list">{exercises.map((exercise, index) => { const log = latestLog(todayLogs, exercise.id); const isDone = Boolean(log?.completed); return <article className={`patient-clean-exercise ${isDone ? "done" : ""}`} key={exercise.id}><div className="patient-clean-number">{isDone ? "✓" : index + 1}</div><div className="patient-clean-exercise-copy"><span>{isDone ? "E KRYER" : "PËR TA BËRË"}</span><h3>{exercise.exercise_library?.name || "Ushtrim"}</h3><p>{dosage(exercise)}</p></div>{!isDone && <a href={`/patient-session#exercise-${exercise.id}`}>Fillo</a>}{isDone && <strong>U krye</strong>}<details><summary>Shiko udhëzimin</summary><p>{exercise.instructions || exercise.exercise_library?.instructions_sq || "Bëje ngadalë dhe pa e shtyrë me zor."}</p>{!isDone && <form action={completeExerciseAction} className="patient-clean-complete"><input type="hidden" name="planExerciseId" value={exercise.id} /><label>Sa dhimbje ke pas ushtrimit?</label><select name="painScore" defaultValue="3">{Array.from({ length: 11 }, (_, score) => <option key={score} value={score}>{score} nga 10</option>)}</select><input name="comment" maxLength={500} placeholder="Koment për fizioterapeutin (opsional)" /><button type="submit">E kryva këtë ushtrim</button></form>}</details></article>; })}</div></section>
-        </div>
-        <aside className="patient-clean-side"><section className="patient-clean-card pain-card"><span>DHIMBJA E FUNDIT</span><strong>{typeof lastPain === "number" ? `${lastPain}/10` : "—"}</strong><p>{stop ? "Dhimbja është e lartë. Mos vazhdo me ushtrimet." : "Nëse dhimbja rritet, ndalo dhe kontakto fizioterapeutin."}</p></section><section className={`patient-clean-alert ${stop ? "danger" : ""}`}><b>Rregulli i sigurisë</b><strong>Dhimbje 7/10 ose më shumë = NDALO USHTRIMET</strong><p>Kontakto fizioterapeutin para se të vazhdosh.</p></section><section className="patient-clean-card" id="messages"><span>FIZIOTERAPEUTI YT</span><h3>{physioName}</h3><p>{messages?.[0]?.message || "Nuk ka mesazh të ri."}</p></section><section className="patient-clean-tip"><b>Këshillë e ditës</b><p>Bëji ushtrimet ngadalë. Cilësia e lëvizjes është më e rëndësishme se shpejtësia.</p></section></aside>
+    <main className="patient-simple-page">
+      <header className="patient-simple-header">
+        <BrandMark />
+        <strong>Plani im</strong>
+        <form action={patientLogoutAction}><button type="submit">Dil</button></form>
+      </header>
+
+      <section className="patient-simple-welcome">
+        <span>Përshëndetje, {patient.first_name}</span>
+        <h1>{ended ? "Programi ka përfunduar" : allDone ? "Shumë mirë! Për sot mbarove." : "Ushtrimet e tua për sot"}</h1>
+        <p>{ended ? `Kontakto ${physioName} para se të vazhdosh me ushtrime të tjera.` : allDone ? "Ushtrimet e sotme u ruajtën. Kthehu nesër për ditën tjetër." : "Shiko videon, bëje ushtrimin dhe shtyp butonin “E kreva”."}</p>
+      </section>
+
+      {ended && (
+        <section className="patient-simple-finished">
+          <div className="patient-simple-finished-icon">✓</div>
+          <h2>I ke përfunduar ditët e planit</h2>
+          <p>Që të vazhdosh në mënyrë të sigurt, telefono ose shkruaji fizioterapeutit për kontrollin e radhës.</p>
+          <a href="#physio-contact">Kontakto fizioterapeutin</a>
+        </section>
+      )}
+
+      {!ended && actionError && <section className="patient-simple-message danger"><b>Nuk u ruajt</b><p>{actionError}</p></section>}
+      {!ended && completedId && <section className="patient-simple-message success"><b>✓ U ruajt</b><p>Ushtrimi u shënua si i kryer.</p></section>}
+
+      {!ended && mustStop && (
+        <section className="patient-simple-stop">
+          <strong>NDALO USHTRIMET</strong>
+          <p>Ke raportuar dhimbje {lastPain}/10. Mos vazhdo pa folur me fizioterapeutin.</p>
+          <a href="#physio-contact">Kontakto fizioterapeutin</a>
+        </section>
+      )}
+
+      {!ended && activePlan && (
+        <section className="patient-simple-progress-card">
+          <div><span>Dita {day}</span><strong>{activePlan.title}</strong><small>{formatDate(activePlan.start_date)} – {formatDate(activePlan.end_date)}</small></div>
+          <div className="patient-simple-progress-number"><b>{done}/{exercises.length}</b><span>të kryera</span></div>
+          <div className="patient-simple-progress-bar"><i style={{ width: `${progress}%` }} /></div>
+        </section>
+      )}
+
+      {!ended && !activePlan && (
+        <section className="patient-simple-message"><h2>Plani po përgatitet</h2><p>Fizioterapeuti do ta publikojë planin sapo të jetë gati.</p></section>
+      )}
+
+      {!ended && activePlan && !allDone && !mustStop && next && (
+        <a className="patient-simple-next" href={`#exercise-${next.id}`}>Fillo ushtrimin e radhës ↓</a>
+      )}
+
+      {!ended && (
+        <section className="patient-simple-exercises" aria-label="Ushtrimet e sotme">
+          {exercises.map((exercise, index) => {
+            const log = latestLog(todayLogs, exercise.id);
+            const isDone = Boolean(log?.completed);
+            const name = exercise.exercise_library?.name || "Ushtrim";
+            return (
+              <article id={`exercise-${exercise.id}`} className={`patient-simple-exercise ${isDone ? "done" : ""}`} key={exercise.id}>
+                <div className="patient-simple-exercise-title">
+                  <span>{isDone ? "✓" : index + 1}</span>
+                  <div><small>{isDone ? "E KRYER" : "USHTRIMI I RADHËS"}</small><h2>{name}</h2><p>{dosage(exercise)}</p></div>
+                </div>
+
+                <ExerciseVideo url={exercise.exercise_library?.video_url} title={name} />
+
+                <div className="patient-simple-instructions">
+                  <b>Si ta bësh</b>
+                  <p>{exercise.instructions || exercise.exercise_library?.instructions_sq || "Bëje ngadalë. Mos e shty trupin me zor."}</p>
+                </div>
+
+                {isDone ? (
+                  <div className="patient-simple-completed">✓ Ky ushtrim u krye sot</div>
+                ) : (
+                  <form action={completeExerciseAction} className="patient-simple-form">
+                    <input type="hidden" name="planExerciseId" value={exercise.id} />
+                    <label htmlFor={`pain-${exercise.id}`}>Pas ushtrimit, sa dhimbje pate?</label>
+                    <select id={`pain-${exercise.id}`} name="painScore" defaultValue="0">
+                      {Array.from({ length: 11 }, (_, score) => <option key={score} value={score}>{score} / 10</option>)}
+                    </select>
+                    <textarea name="comment" maxLength={500} rows={2} placeholder="Shkruaj vetëm nëse ke diçka për fizioterapeutin (opsionale)" />
+                    <PatientCompleteButton />
+                    <small>Me këtë buton ushtrimi ruhet si i kryer.</small>
+                  </form>
+                )}
+              </article>
+            );
+          })}
+        </section>
+      )}
+
+      {!ended && allDone && (
+        <section className="patient-simple-day-done">
+          <div>✓</div><h2>I kreve të gjitha për sot</h2><p>Mund ta mbyllësh faqen. Progresi është ruajtur.</p>
+        </section>
+      )}
+
+      <section className="patient-simple-contact" id="physio-contact">
+        <span>Fizioterapeuti yt</span>
+        <h2>{physioName}</h2>
+        <p>{messages?.[0]?.message || "Kur ke pyetje, dhimbje të fortë ose përfundon programin, kontakto fizioterapeutin."}</p>
+      </section>
+
+      <section className="patient-simple-safety">
+        <b>Mbaje mend:</b> Dhimbje 7/10 ose më shumë = ndalo ushtrimet dhe kontakto fizioterapeutin.
       </section>
     </main>
   );
