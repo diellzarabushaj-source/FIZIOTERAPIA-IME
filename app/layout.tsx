@@ -27,6 +27,7 @@ import "./physio-dashboard-refresh.css";
 import "./admin-dashboard-refresh.css";
 import "./plan-builder.css";
 import "./public-site-fixes.css";
+import "./patient-simple.css";
 
 const siteUrl = process.env.NEXT_PUBLIC_APP_URL || "https://fizioterapia-ime.vercel.app";
 
