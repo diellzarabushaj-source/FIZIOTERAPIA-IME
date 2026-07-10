@@ -1,92 +1,104 @@
-import { BrandMark } from "@/components/BrandMark";
+import type { Metadata } from "next";
+import { CTASection, FAQList, PageSection, SafetyNotice } from "@/components/PublicPageKit";
+import { SupportCenterClient } from "@/components/SupportCenterClient";
 
-const patientSteps = [
-  "Merr username dhe kodin personal nga fizioterapeuti.",
-  "Hyr te Patient Portal dhe shiko planin e ushtrimeve.",
-  "Kryej ushtrimet ngadalë, sipas udhëzimit.",
-  "Shëno dhimbjen 0–10 pas ushtrimit.",
-  "Nëse dhimbja është 7/10 ose më shumë, ndalo dhe kontakto fizioterapeutin.",
-];
+export const metadata: Metadata = {
+  title: "Ndihmë dhe Support | Fizioterapia Ime",
+  description: "Gjej shpejt përgjigje për pacientët, planet, ushtrimet, kodet, pagesën dhe përdorimin e Fizioterapia Ime.",
+  alternates: { canonical: "/support" },
+};
 
-const physioSteps = [
-  "Kyçu me email në Physiotherapist Portal.",
-  "Sigurohu që qasja mujore është aktive.",
-  "Shto pacientin dhe gjenero username + kod.",
-  "Cakto ushtrime nga biblioteka ose krijo ushtrim privat.",
-  "Monitoro adherence, dhimbjen dhe AI score.",
-  "Gjenero raport PDF për rikontroll ose dokumentim.",
-];
-
-const faqs = [
-  ["A krijon pacienti vetë plan?", "Jo. Plani krijohet vetëm nga fizioterapeuti."],
-  ["A zëvendëson AI fizioterapeutin?", "Jo. AI Movement Check jep vetëm feedback për cilësinë e lëvizjes dhe nuk diagnostikon."],
-  ["Çka ndodh nëse pacienti ka dhimbje 7/10?", "Pacienti duhet ta ndalojë ushtrimin dhe ta kontaktojë fizioterapeutin."],
-  ["A ruhet videoja nga kamera?", "Në MVP videoja nuk ruhet. Ruhet vetëm score, feedback dhe alert type."],
-  ["Sa kushton qasja për fizioterapeutë?", "29.90 EUR / muaj. Pagesa në MVP aktivizohet manualisht nga admini."],
+const commonFaqs = [
+  {
+    question: "A mund ta përdor nga telefoni?",
+    answer: "Po. Faqet për pacientin dhe fizioterapeutin punojnë edhe në telefon, tablet dhe kompjuter.",
+  },
+  {
+    question: "A krijon pacienti plan vetë?",
+    answer: "Jo. Planin e krijon, e ndryshon dhe e aprovon vetëm fizioterapeuti.",
+  },
+  {
+    question: "A e zëvendëson AI fizioterapeutin?",
+    answer: "Jo. AI vetëm jep sugjerime. Vendimin e merr gjithmonë fizioterapeuti.",
+  },
+  {
+    question: "Çfarë bëj nëse kam dhimbje të fortë?",
+    answer: "Ndalo ushtrimin. Nëse dhimbja është 7/10 ose më shumë, kontakto fizioterapeutin. Për simptoma urgjente kërko ndihmë mjekësore.",
+  },
+  {
+    question: "Sa kushton platforma?",
+    answer: "Çmimi fillestar është 9.90 € në muaj për fizioterapeutin. Pacienti nuk paguan veçmas.",
+  },
 ];
 
 export default function SupportPage() {
   return (
-    <main className="page support-page">
-      <nav className="top-nav">
-        <BrandMark />
-        <div className="nav-actions">
-          <a href="/">Home</a>
-          <a href="/patient-portal">Patient Portal</a>
-          <a href="/physiotherapist-portal">Physio Portal</a>
-          <a href="/faq">FAQ</a>
-        </div>
-      </nav>
-
-      <section className="hero support-hero">
-        <span className="badge">Support Center · Fizioterapia ime</span>
-        <h1>Udhëzime të shpejta për pacientë dhe fizioterapeutë.</h1>
+    <main className="sc-page">
+      <section className="sc-hero pp-reveal">
+        <span className="pp-eyebrow">Qendra e ndihmës</span>
+        <h1>Si mund të të <span>ndihmojmë?</span></h1>
         <p>
-          Kjo faqe shpjegon si përdoret platforma, çka bën AI Movement Check dhe kur duhet ndalur ushtrimi.
+          Shkruaj pyetjen ose zgjidh një kategori. Përgjigjet janë të shkurtra dhe të kuptueshme.
         </p>
-        <div className="role-warning">
-          Për urgjenca, dhimbje të fortë, dobësi, mpirje, marramendje ose përkeqësim të simptomave, ndalo ushtrimet dhe kontakto profesionistin shëndetësor ose shërbimet emergjente.
+        <div className="sc-quick-links">
+          <a href="#kerko">Kërko përgjigje</a>
+          <a href="/patient-portal">Hyr si pacient</a>
+          <a href="/physiotherapist-portal">Hyr si fizioterapeut</a>
         </div>
       </section>
 
-      <section className="dashboard-grid" style={{ maxWidth: 1180, margin: "0 auto" }}>
-        <article className="dashboard-card">
-          <span className="mini-badge">Pacienti</span>
-          <h2>Si me përdorë app-in</h2>
-          <ol className="support-list">
-            {patientSteps.map((step) => <li key={step}>{step}</li>)}
-          </ol>
-          <a className="button" href="/patient-portal">Hyr si pacient</a>
-        </article>
-
-        <article className="dashboard-card green-soft-card">
-          <span className="mini-badge">Fizioterapeuti</span>
-          <h2>Workflow klinik</h2>
-          <ol className="support-list">
-            {physioSteps.map((step) => <li key={step}>{step}</li>)}
-          </ol>
-          <a className="button" href="/physiotherapist-portal">Hyr si fizioterapeut</a>
-        </article>
-      </section>
-
-      <section className="dashboard-card wide" style={{ maxWidth: 1180, margin: "24px auto 0" }}>
-        <div className="section-header-row">
-          <div>
-            <span className="mini-badge">Pyetje të shpeshta</span>
-            <h2>Ndihmë e shpejtë</h2>
-            <p>Përgjigje të shkurta për përdorim të përditshëm.</p>
-          </div>
-          <a className="button secondary" href="/medical-disclaimer">Medical disclaimer</a>
-        </div>
-        <div className="support-faq-grid">
-          {faqs.map(([question, answer]) => (
-            <article key={question}>
-              <h3>{question}</h3>
-              <p>{answer}</p>
-            </article>
-          ))}
+      <section className="sc-main" id="kerko">
+        <SupportCenterClient />
+        <div className="sc-safety-wrap">
+          <SafetyNotice
+            title="Siguria vjen e para"
+            text="Në dhimbje 7/10 ose më shumë, ndalo ushtrimin dhe kontakto fizioterapeutin. Platforma nuk jep diagnozë dhe nuk e ndryshon planin vetë."
+          />
         </div>
       </section>
+
+      <PageSection
+        eyebrow="Kontakt i drejtpërdrejtë"
+        title="Nuk e gjete përgjigjen?"
+        text="Na trego shkurt çfarë nuk po funksionon. Shëno edhe nëse je pacient apo fizioterapeut."
+        tone="soft"
+      >
+        <div className="sc-contact-grid">
+          <article className="sc-contact-card pp-reveal">
+            <span aria-hidden="true">✉️</span>
+            <h3>Email</h3>
+            <p>Për pyetje rreth llogarisë, kodit, planit ose pagesës.</p>
+            <a href="mailto:altin.physio@gmail.com?subject=Ndihmë%20-%20Fizioterapia%20Ime">altin.physio@gmail.com →</a>
+          </article>
+          <article className="sc-contact-card pp-reveal">
+            <span aria-hidden="true">👤</span>
+            <h3>Je pacient?</h3>
+            <p>Hyr me kodin që ta ka dhënë fizioterapeuti dhe shiko planin tënd.</p>
+            <a href="/patient-portal">Hyr me kod →</a>
+          </article>
+          <article className="sc-contact-card pp-reveal">
+            <span aria-hidden="true">🧑‍⚕️</span>
+            <h3>Je fizioterapeut?</h3>
+            <p>Hap portalin për të shtuar pacientë, plane dhe ushtrime.</p>
+            <a href="/physiotherapist-portal">Hap portalin →</a>
+          </article>
+        </div>
+      </PageSection>
+
+      <PageSection
+        eyebrow="Pyetje të zakonshme"
+        title="Përgjigje të shpejta"
+        text="Këto janë pyetjet që bëhen më shpesh."
+      >
+        <FAQList items={commonFaqs} />
+      </PageSection>
+
+      <CTASection
+        title="Ende ke nevojë për ndihmë?"
+        text="Na shkruaj me një përshkrim të shkurtër dhe do ta shohim problemin."
+        href="mailto:altin.physio@gmail.com?subject=Support%20-%20Fizioterapia%20Ime"
+        label="Na shkruaj"
+      />
     </main>
   );
 }
