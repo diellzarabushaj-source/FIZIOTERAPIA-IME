@@ -5,11 +5,12 @@ const isClerkConfigured = Boolean(
   process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY && process.env.CLERK_SECRET_KEY,
 );
 
+// Patient code routes are intentionally public at the Clerk layer. Their own
+// server-side patient session validation controls access to clinical data.
 const protectedRoutePrefixes = [
   "/physio",
   "/physiotherapist-portal",
   "/physiotherapist-dashboard",
-  "/patient-access",
   "/owner-hidden",
   "/admin-dashboard",
   "/admin-billing",
