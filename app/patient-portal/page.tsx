@@ -1,22 +1,30 @@
 import { ArrowRight, Camera, CheckCircle2, KeyRound, QrCode, ShieldCheck } from "lucide-react";
 import { BrandMark } from "@/components/BrandMark";
+import { DEMO_PATIENT_CODE } from "@/lib/demo-clinic";
 import { patientLoginAction } from "./actions";
 
 const highlights = [
-  ["01", "Merr kodin unik", "Fizioterapeuti ta jep kodin ose QR pas krijimit të planit."],
-  ["02", "Hyn pa llogari", "Shkruan vetëm kodin. Nuk ka username, password apo signup."],
-  ["03", "Ndjek planin", "Sheh ushtrimet, raporton dhimbjen dhe kryen AI Movement Check kur kërkohet."],
+  ["01", "Merr kodin unik", "Fizioterapeuti ta jep kodin ose QR pas krijimit te planit."],
+  ["02", "Hyn pa llogari", "Shkruan vetem kodin. Nuk ka username, password apo signup."],
+  ["03", "Ndjek planin", "Sheh ushtrimet, raporton dhimbjen dhe perdor AI Movement Check kur kerkohet."],
 ];
 
 const patientTasks = [
-  ["Glute bridge", "3 sete x 12", "AI"],
-  ["Cat cow", "2 sete x 10", "Done"],
+  ["Pelvic tilt", "2 sete x 12", "AI"],
+  ["Cat cow", "2 sete x 10", "Sot"],
   ["Pain score", "Raporto pas ushtrimit", "0-10"],
 ];
 
+function getErrorMessage(error?: string) {
+  if (error === "invalid") return "Kodi nuk eshte i sakte ose pacienti nuk eshte aktiv.";
+  if (error === "missing") return "Shkruaj kodin e pacientit ose skano QR code.";
+  if (error === "not_configured") return "Backend-i nuk eshte lidhur ende. Per demo perdor kodin ARB-4821.";
+  return null;
+}
+
 export default async function PatientPortalPage({ searchParams }: { searchParams?: Promise<{ error?: string; code?: string }> }) {
   const params = await searchParams;
-  const error = params?.error;
+  const errorMessage = getErrorMessage(params?.error);
   const code = params?.code || "";
 
   return (
@@ -32,10 +40,10 @@ export default async function PatientPortalPage({ searchParams }: { searchParams
 
       <section className="patient-login-hero">
         <div className="patient-login-copy premium-copy-stack">
-          <span className="badge"><KeyRound className="premium-button-icon" aria-hidden="true" />Patient Portal · Vetëm me kod</span>
-          <h1>Hyr në planin personal pa krijuar llogari.</h1>
+          <span className="badge"><KeyRound className="premium-button-icon" aria-hidden="true" />Patient Portal - kod ose QR</span>
+          <h1>Hyr ne planin personal pa krijuar llogari.</h1>
           <p className="premium-lead">
-            Kodi unik të lidh direkt me planin që e ka krijuar fizioterapeuti. Nëse dhimbja shkon 7/10 ose më shumë,
+            Kodi unik te lidh direkt me planin qe e ka krijuar fizioterapeuti. Nese dhimbja shkon 7/10 ose me shume,
             ndalo ushtrimin dhe kontakto fizioterapeutin.
           </p>
           <div className="patient-login-highlights">
@@ -57,15 +65,24 @@ export default async function PatientPortalPage({ searchParams }: { searchParams
           <div>
             <span className="mini-badge">Kodi nga fizioterapeuti</span>
             <h2>Hyr me kod</h2>
-            <p>Shkruaj vetëm kodin që ta ka dhënë fizioterapeuti ose hap linkun nga QR.</p>
+            <p>Shkruaj kodin qe ta ka dhene fizioterapeuti ose hap linkun nga QR.</p>
           </div>
           <label className="label" htmlFor="patient-code">Kodi i pacientit</label>
-          <input id="patient-code" className="input patient-code-input" name="code" defaultValue={code} placeholder="p.sh. ARB-482193" required />
-          {error === "invalid" && <div className="role-warning">Kodi nuk është i saktë ose nuk është aktiv.</div>}
-          {error === "missing" && <div className="role-warning">Shkruaj kodin e pacientit.</div>}
-          <button className="button" type="submit">Hyr në dashboard <ArrowRight className="premium-button-icon" aria-hidden="true" /></button>
+          <input id="patient-code" className="input patient-code-input" name="code" defaultValue={code} placeholder="p.sh. ARB-4821" required />
+          {errorMessage && <div className="role-warning">{errorMessage}</div>}
+          <button className="button" type="submit">Hyr ne dashboard <ArrowRight className="premium-button-icon" aria-hidden="true" /></button>
+          <div className="patient-demo-access">
+            <div>
+              <span className="mini-badge">Demo pacient</span>
+              <strong>{DEMO_PATIENT_CODE}</strong>
+              <small>Provoje me kod ose QR pa setup.</small>
+            </div>
+            <a className="button secondary compact-button" href={`/patient-access/${encodeURIComponent(DEMO_PATIENT_CODE)}`}>
+              <QrCode className="premium-button-icon" aria-hidden="true" />Hap QR
+            </a>
+          </div>
           <div className="generated-box">
-            <b>Privacy:</b> Pacienti nuk krijon llogari. Qasja lidhet vetëm me kodin unik të planit.
+            <b>Privacy:</b> Pacienti nuk krijon llogari. Qasja lidhet vetem me kodin unik te planit.
           </div>
         </form>
       </section>
@@ -87,27 +104,27 @@ export default async function PatientPortalPage({ searchParams }: { searchParams
         <div className="patient-info-grid">
           <article className="premium-patient-feature">
             <div className="premium-icon-tile"><KeyRound className="premium-icon" aria-hidden="true" /></div>
-            <span className="mini-badge">Për pacientë</span>
-            <h2>Qasje vetëm me kod</h2>
-            <p>Pacienti nuk ka username/password. Kodi unik e lidh direkt me planin që e ka krijuar fizioterapeuti.</p>
+            <span className="mini-badge">Per paciente</span>
+            <h2>Qasje vetem me kod</h2>
+            <p>Pacienti nuk ka username/password. Kodi unik e lidh direkt me planin qe e ka krijuar fizioterapeuti.</p>
           </article>
           <article className="premium-patient-feature">
             <div className="premium-icon-tile"><QrCode className="premium-icon" aria-hidden="true" /></div>
             <span className="mini-badge">QR Code</span>
             <h2>Skano dhe hyr</h2>
-            <p>Fizioterapeuti mund t’ia japë pacientit QR code. QR hap linkun e kodit dhe pacienti hyn direkt.</p>
+            <p>Fizioterapeuti mund t'ia jape pacientit QR code. QR hap linkun e kodit dhe pacienti hyn direkt.</p>
           </article>
           <article className="premium-patient-feature">
             <div className="premium-icon-tile"><ShieldCheck className="premium-icon" aria-hidden="true" /></div>
             <span className="mini-badge">Siguri klinike</span>
             <h2>Dhimbje 7/10 = ndalo</h2>
-            <p>Nëse dhimbja është 7 ose më shumë, pacienti ndalon ushtrimin dhe kontakton fizioterapeutin.</p>
+            <p>Nese dhimbja eshte 7 ose me shume, pacienti ndalon ushtrimin dhe kontakton fizioterapeutin.</p>
           </article>
           <article className="premium-patient-feature">
             <div className="premium-icon-tile"><Camera className="premium-icon" aria-hidden="true" /></div>
             <span className="mini-badge">AI Movement Check</span>
-            <h2>Feedback, jo diagnozë</h2>
-            <p>AI jep vetëm feedback për cilësinë e lëvizjes dhe nuk e zëvendëson fizioterapeutin.</p>
+            <h2>Feedback, jo diagnoze</h2>
+            <p>AI jep vetem feedback per cilesine e levizjes dhe nuk e zevendeson fizioterapeutin.</p>
           </article>
         </div>
       </section>
