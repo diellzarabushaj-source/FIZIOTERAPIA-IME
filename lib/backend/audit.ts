@@ -6,6 +6,8 @@ type JsonObject = Record<string, unknown>;
 
 export type AuditEvent = {
   actor?: ActorContext | null;
+  actorProfileId?: string | null;
+  actorRole?: string | null;
   action: string;
   entityType: string;
   entityId?: string | null;
@@ -50,8 +52,8 @@ export async function writeAuditEvent(event: AuditEvent): Promise<void> {
   const requestId = event.requestId || requestHeaders.get("x-vercel-id") || requestHeaders.get("x-request-id") || crypto.randomUUID();
 
   const { error } = await supabase.from("audit_logs").insert({
-    actor_profile_id: event.actor?.profileId || null,
-    actor_role: event.actor?.role || null,
+    actor_profile_id: event.actor?.profileId || event.actorProfileId || null,
+    actor_role: event.actor?.role || event.actorRole || null,
     action: event.action.slice(0, 120),
     entity_type: event.entityType.slice(0, 80),
     entity_id: event.entityId || null,
