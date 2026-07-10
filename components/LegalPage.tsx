@@ -30,6 +30,7 @@ export function LegalPage({ badge, title, intro, lastUpdated = "Korrik 2026", se
   const isTerms = documentText.includes("kusht") || documentText.includes("term");
   const isMedical = documentText.includes("medical") || documentText.includes("mjek") || documentText.includes("disclaimer");
   const isDeletion = documentText.includes("fshir") || documentText.includes("deletion");
+  const isCamera = documentText.includes("camera") || documentText.includes("kamer");
 
   const summary = isTerms
     ? {
@@ -41,6 +42,7 @@ export function LegalPage({ badge, title, intro, lastUpdated = "Korrik 2026", se
         noteText: "Platforma ndihmon me organizimin dhe ndjekjen e planit, por nuk zëvendëson vlerësimin profesional.",
         contactTitle: "Ke pyetje për kushtet?",
         subject: "Kushtet - Fizioterapia Ime",
+        actionLabel: "Lexo dhe konfirmo",
       }
     : isMedical
       ? {
@@ -52,6 +54,7 @@ export function LegalPage({ badge, title, intro, lastUpdated = "Korrik 2026", se
           noteText: "Kontakto fizioterapeutin ose shërbimet emergjente kur situata kërkon ndihmë të menjëhershme.",
           contactTitle: "Ke pyetje mjekësore për përdorimin?",
           subject: "Medical disclaimer - Fizioterapia Ime",
+          actionLabel: "Lexo dhe konfirmo",
         }
       : isDeletion
         ? {
@@ -63,17 +66,31 @@ export function LegalPage({ badge, title, intro, lastUpdated = "Korrik 2026", se
             noteText: "Mund të kërkohet konfirmim i identitetit para se të ndryshohen ose fshihen të dhënat.",
             contactTitle: "Ke pyetje për kërkesën?",
             subject: "Fshirja e të dhënave - Fizioterapia Ime",
+            actionLabel: "Dërgo kërkesën",
           }
-        : {
-            label: "Me pak fjalë",
-            title: "Të dhënat e tua trajtohen me kujdes.",
-            text: "Ky dokument shpjegon çfarë mbledhim, pse e përdorim dhe cilat të drejta ke.",
-            icon: "🔐",
-            noteTitle: "Kontrolli mbetet te ti.",
-            noteText: "Mund të kërkosh qasje, korrigjim ose fshirje të të dhënave sipas rregullave që zbatohen.",
-            contactTitle: "Ke pyetje për privatësinë?",
-            subject: "Privatësia - Fizioterapia Ime",
-          };
+        : isCamera
+          ? {
+              label: "Ti vendos",
+              title: "Kamera aktivizohet vetëm me lejen tënde.",
+              text: "Mund ta refuzosh kamerën dhe ta vazhdosh planin pa AI Movement Check.",
+              icon: "📷",
+              noteTitle: "Videoja live nuk është diagnozë.",
+              noteText: "Sistemi analizon lëvizjen për feedback teknik; fizioterapeuti mbetet përgjegjës për vendimet klinike.",
+              contactTitle: "Ke pyetje për kamerën?",
+              subject: "Pëlqimi për kamerën - Fizioterapia Ime",
+              actionLabel: "Konfirmo pëlqimin",
+            }
+          : {
+              label: "Me pak fjalë",
+              title: "Të dhënat e tua trajtohen me kujdes.",
+              text: "Ky dokument shpjegon çfarë mbledhim, pse e përdorim dhe cilat të drejta ke.",
+              icon: "🔐",
+              noteTitle: "Kontrolli mbetet te ti.",
+              noteText: "Mund të kërkosh qasje, korrigjim ose fshirje të të dhënave sipas rregullave që zbatohen.",
+              contactTitle: "Ke pyetje për privatësinë?",
+              subject: "Privatësia - Fizioterapia Ime",
+              actionLabel: "Lexo dhe konfirmo",
+            };
 
   return (
     <main className="legal-page">
@@ -102,7 +119,7 @@ export function LegalPage({ badge, title, intro, lastUpdated = "Korrik 2026", se
               {section.title}
             </a>
           ))}
-          {afterContent && <a href="#dergo-kerkesen">Dërgo kërkesën</a>}
+          {afterContent && <a href="#veprimi-ligjor">{summary.actionLabel}</a>}
         </nav>
 
         <article className="legal-content">
@@ -129,7 +146,7 @@ export function LegalPage({ badge, title, intro, lastUpdated = "Korrik 2026", se
             </section>
           ))}
 
-          {afterContent && <div id="dergo-kerkesen">{afterContent}</div>}
+          {afterContent && <div id="veprimi-ligjor">{afterContent}</div>}
 
           <section className="legal-contact">
             <h3>{summary.contactTitle}</h3>
