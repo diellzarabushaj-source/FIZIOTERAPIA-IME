@@ -51,7 +51,7 @@ export type UpdatePlanExerciseInput = Omit<AddPlanExerciseInput, "planId" | "exe
 };
 
 function editablePlanStatus(status: PlanStatus): boolean {
-  return status === "draft" || status === "pending_review" || status === "approved";
+  return status === "draft";
 }
 
 function toDateOnly(value: Date): string {
@@ -88,6 +88,9 @@ export async function createDraftPlanForActor(
   if (patientResult.data.status !== "active") {
     return fail("CONFLICT", "Nuk mund të krijohet plan për pacient joaktiv.");
   }
+  if (!patientResult.data.physio_id) {
+    return fail("CONFLICT", "Pacienti nuk ka fizioterapeut të caktuar.");
+  }
 
   const durationResult = validatePositiveInteger(input.durationDays ?? 14, "durationDays", { min: 1, max: 90 });
   if (!durationResult.ok) return durationResult;
@@ -104,7 +107,7 @@ export async function createDraftPlanForActor(
     .from("plans")
     .insert({
       patient_id: patientId,
-      physio_id: actor.profileId,
+      physio_id: patientResult.data.physio_id,
       title,
       start_date: toDateOnly(start),
       end_date: toDateOnly(end),
@@ -137,7 +140,7 @@ export async function addExerciseToPlanForActor(
   const planResult = await getPlanForActor(actor, planId);
   if (!planResult.ok) return planResult;
   if (!editablePlanStatus(planResult.data.status)) {
-    return fail("INVALID_STATUS_TRANSITION", "Plani aktiv ose i arkivuar nuk mund të editohet.");
+    return fail("INVALID_STATUS_TRANSITION", "Vetëm plani draft mund të editohet.");
   }
 
   const setsResult = validatePositiveInteger(input.sets ?? 2, "sets", { min: 1, max: 20 });
@@ -182,13 +185,7 @@ export async function addExerciseToPlanForActor(
     .single<PlanExerciseRecord>();
   if (error || !data) return fail(error?.code === "23505" ? "CONFLICT" : "DATABASE_ERROR", "Ushtrimi nuk u shtua në plan.");
 
-  await writeAuditEvent({
-    actor,
-    action: "plan.exercise_added",
-    entityType: "plan_exercise",
-    entityId: data.id,
-    after: data,
-  });
+  await writeAuditEvent({ actor, action: "plan.exercise_added", entityType: "plan_exercise", entityId: data.id, after: data });
   return ok(data);
 }
 
@@ -213,7 +210,7 @@ export async function updatePlanExerciseForActor(
   const planResult = await getPlanForActor(actor, existing.plan_id);
   if (!planResult.ok) return planResult;
   if (!editablePlanStatus(planResult.data.status)) {
-    return fail("INVALID_STATUS_TRANSITION", "Plani aktiv ose i arkivuar nuk mund të editohet.");
+    return fail("INVALID_STATUS_TRANSITION", "Vetëm plani draft mund të editohet.");
   }
 
   const setsResult = validatePositiveInteger(input.sets ?? existing.sets ?? 2, "sets", { min: 1, max: 20 });
@@ -266,7 +263,7 @@ export async function removePlanExerciseForActor(
   const planResult = await getPlanForActor(actor, existing.plan_id);
   if (!planResult.ok) return planResult;
   if (!editablePlanStatus(planResult.data.status)) {
-    return fail("INVALID_STATUS_TRANSITION", "Plani aktiv ose i arkivuar nuk mund të editohet.");
+    return fail("INVALID_STATUS_TRANSITION", "Vetëm plani draft mund të editohet.");
   }
 
   const { error } = await supabase.from("plan_exercises").delete().eq("id", planExerciseId);
@@ -302,13 +299,17 @@ export async function transitionPlanForActor(
   }
 
   if (targetStatus === "active") {
-    const { error: archiveError } = await supabase
-      .from("plans")
-      .update({ status: "archived" })
-      .eq("patient_id", plan.patient_id)
-      .eq("status", "active")
-      .neq("id", planId);
-    if (archiveError) return fail("DATABASE_ERROR", "Plani i mëparshëm aktiv nuk u arkivua.");
+    const { data, error } = await supabase.rpc("activate_plan_safely", {
+      p_plan_id: planId,
+      p_expected_status: plan.status,
+      p_actor_profile_id: actor.profileId,
+    });
+    const activated = Array.isArray(data) ? data[0] : data;
+    if (error) return fail("DATABASE_ERROR", "Plani nuk u aktivizua.");
+    if (!activated) return fail("CONFLICT", "Plani është ndryshuar nga një kërkesë tjetër. Rifresko faqen.");
+
+    await writeAuditEvent({ actor, action: "plan.status_active", entityType: "plan", entityId: planId, before: { status: plan.status }, after: { status: "active" } });
+    return ok(activated as PlanRecord);
   }
 
   const { data, error } = await supabase
@@ -322,13 +323,6 @@ export async function transitionPlanForActor(
   if (error) return fail("DATABASE_ERROR", "Statusi i planit nuk u ndryshua.");
   if (!data) return fail("CONFLICT", "Plani është ndryshuar nga një kërkesë tjetër. Rifresko faqen.");
 
-  await writeAuditEvent({
-    actor,
-    action: `plan.status_${targetStatus}`,
-    entityType: "plan",
-    entityId: planId,
-    before: { status: plan.status },
-    after: { status: targetStatus },
-  });
+  await writeAuditEvent({ actor, action: `plan.status_${targetStatus}`, entityType: "plan", entityId: planId, before: { status: plan.status }, after: { status: targetStatus } });
   return ok(data);
 }
