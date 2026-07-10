@@ -1,6 +1,7 @@
 import type { ActorContext } from "@/lib/backend/access";
 import { actorCanAccessPhysioResource } from "@/lib/backend/access";
 import { writeAuditEvent } from "@/lib/backend/audit";
+import { createAppNotification } from "@/lib/backend/notifications";
 import { fail, ok, type BackendResult } from "@/lib/backend/result";
 import { validateUuid } from "@/lib/backend/validation";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
@@ -80,6 +81,27 @@ export async function createHighPainClinicalAlert(
     .single<ClinicalAlertRecord>();
 
   if (error || !data) return fail("DATABASE_ERROR", "Alarmi klinik nuk u ruajt.");
+
+  if (patient.physio_id) {
+    const notificationResult = await createAppNotification({
+      recipientProfileId: patient.physio_id,
+      patientId: patient.id,
+      type: "high_pain",
+      severity: "critical",
+      title: data.title,
+      message: data.message,
+      link: "/physiotherapist-portal#alerts",
+      dedupeKey: `clinical-alert:${data.id}`,
+    });
+
+    if (notificationResult.ok === false) {
+      console.error("high_pain_in_app_notification_failed", {
+        alertId: data.id,
+        code: notificationResult.error.code,
+      });
+    }
+  }
+
   return ok(data);
 }
 
