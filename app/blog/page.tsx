@@ -1,62 +1,79 @@
 import { BrandMark } from "@/components/BrandMark";
+import { BlogExplorer } from "@/components/BlogExplorer";
 import { hasSanityConfig } from "@/lib/sanity/client";
 import { getBlogPosts } from "@/lib/sanity/queries";
+import styles from "./blog.module.css";
 
 export const metadata = {
-  title: "Blog | Fizioterapia ime",
-  description: "Artikuj të thjeshtë për pacientë dhe fizioterapeutë rreth ushtrimeve, sigurisë dhe përdorimit të Fizioterapia ime.",
+  title: "Knowledge Center | Fizioterapia Ime",
+  description: "Artikuj të qartë dhe të rishikuar për dhimbjen, rehabilitimin, ushtrimet në shtëpi dhe sigurinë gjatë fizioterapisë.",
+  alternates: { canonical: "/blog" },
+  openGraph: {
+    title: "Knowledge Center | Fizioterapia Ime",
+    description: "Udhëzime të kuptueshme për pacientë dhe profesionistë të fizioterapisë.",
+    type: "website",
+  },
 };
 
 export const revalidate = 60;
 
 export default async function BlogPage() {
   const posts = await getBlogPosts();
+  const categories = new Set(posts.map((post) => post.category)).size;
 
   return (
-    <main className="page launch-page blog-page">
-      <nav className="top-nav">
+    <main className={styles.page}>
+      <nav className={styles.nav}>
         <BrandMark />
-        <div className="nav-actions">
+        <div className={styles.navLinks}>
           <a href="/">Home</a>
-          <a href="/patient-portal">Patient Portal</a>
-          <a href="/pilot-runbook">Pilot Runbook</a>
+          <a href="/blog">Knowledge Center</a>
+          <a href="/patient-portal">Pacienti</a>
+          <a href="/physiotherapist-portal">Fizioterapeuti</a>
         </div>
       </nav>
 
-      <section className="launch-hero">
+      <section className={styles.hero}>
         <div>
-          <span className="badge">Blog · Fizioterapia ime</span>
-          <h1>Artikuj të thjeshtë që pacienti i kupton menjëherë.</h1>
+          <span className={styles.eyebrow}>✦ Knowledge Center · Fizioterapia Ime</span>
+          <h1>Informacion që e bën rehabilitimin më të qartë.</h1>
           <p>
-            Këtu gjeni shpjegime të qarta për ushtrimet në shtëpi, sigurinë gjatë rehabilitimit
-            dhe mënyrën si Fizioterapia Ime ndihmon pacientin të ndjekë planin e dhënë nga fizioterapeuti.
+            Artikuj praktikë për pacientë dhe profesionistë: simptoma, ushtrime, rikuperim dhe siguri—
+            të shkruara thjeshtë, pa e zëvendësuar vlerësimin klinik.
           </p>
-          <div className="hero-actions">
-            <a className="button" href="/support">Pyet për pilotin</a>
-            <a className="button secondary" href="/faq">Lexo FAQ</a>
+          <div className={styles.heroStats}>
+            <div><strong>{posts.length}</strong><span>artikuj aktivë</span></div>
+            <div><strong>{categories}</strong><span>kategori klinike</span></div>
+            <div><strong>{hasSanityConfig ? "Live" : "Demo"}</strong><span>{hasSanityConfig ? "nga Sanity" : "me fallback"}</span></div>
           </div>
         </div>
-        <div className="launch-status-card ready">
-          <span className="mini-badge">Status</span>
-          <strong>{hasSanityConfig ? "Blog live nga Sanity" : "Blog demo aktiv"}</strong>
-          <p>
-            {hasSanityConfig
-              ? "Artikujt menaxhohen në Sanity dhe shfaqen automatikisht në website."
-              : "Website-i shfaq artikuj shembull derisa të lidhet Sanity në ambientin live."}
-          </p>
+        <div className={styles.heroVisual} aria-label="Fizioterapia Ime Knowledge Center">
+          <div className={styles.heroCard}>
+            <span>Këshillë e sigurisë</span>
+            <h3>Ushtrimi duhet të përshtatet me pacientin.</h3>
+            <p>Dhimbja e fortë, mpirja, dobësia e re ose përkeqësimi kërkojnë ndalim dhe kontakt me profesionistin.</p>
+          </div>
         </div>
       </section>
 
-      <section className="launch-grid readiness-grid">
-        {posts.map((post) => (
-          <article className="launch-card" key={post.slug}>
-            {post.mainImage?.url && <img src={post.mainImage.url} alt={post.mainImage.alt || post.title} className="blog-card-image" />}
-            <span className="mini-badge">{post.category} · {post.readingTime}</span>
-            <h2>{post.title}</h2>
-            <p>{post.description}</p>
-            <a className="button secondary" href={`/blog/${post.slug}`}>Lexo artikullin</a>
-          </article>
-        ))}
+      <BlogExplorer posts={posts.map((post) => ({
+        slug: post.slug,
+        title: post.title,
+        description: post.description,
+        category: post.category,
+        readingTime: post.readingTime,
+        author: post.author,
+        date: post.date,
+        mainImage: post.mainImage,
+        safetyReviewed: post.safetyReviewed,
+      }))} />
+
+      <section className={styles.newsletter}>
+        <div>
+          <h2>Rehabilitimi bëhet më i lehtë kur e kupton planin.</h2>
+          <p>Shiko ushtrimet e tua, progresin dhe udhëzimet direkt në Fizioterapia Ime.</p>
+        </div>
+        <a href="/patient-portal">Hyr në planin tënd →</a>
       </section>
     </main>
   );
