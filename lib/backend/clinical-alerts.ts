@@ -110,7 +110,7 @@ export async function acknowledgeClinicalAlertForActor(
   alertIdInput: unknown,
 ): Promise<BackendResult<ClinicalAlertRecord>> {
   const alertIdResult = validateUuid(alertIdInput, "alertId");
-  if (!alertIdResult.ok) {
+  if (alertIdResult.ok === false) {
     return fail("VALIDATION_ERROR", alertIdResult.error.message, {
       fieldErrors: alertIdResult.error.fieldErrors,
     });
