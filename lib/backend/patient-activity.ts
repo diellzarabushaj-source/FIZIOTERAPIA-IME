@@ -1,5 +1,6 @@
 import type { ActivePatientSession } from "@/lib/backend-logic";
 import { writeAuditEvent } from "@/lib/backend/audit";
+import { createHighPainClinicalAlert } from "@/lib/backend/clinical-alerts";
 import { fail, ok, type BackendResult } from "@/lib/backend/result";
 import { cleanText, validatePainScore, validateUuid } from "@/lib/backend/validation";
 import { notifyPhysioHighPain } from "@/lib/clinical-notifications";
@@ -20,6 +21,7 @@ export type PatientExerciseCompletion = {
   was_created: boolean;
   previous_pain_score: number | null;
   high_pain_alert_triggered: boolean;
+  clinical_alert_created: boolean;
 };
 
 export type CompletePatientExerciseInput = {
@@ -28,7 +30,10 @@ export type CompletePatientExerciseInput = {
   comment?: unknown;
 };
 
-type CompletionRpcRow = Omit<PatientExerciseCompletion, "high_pain_alert_triggered">;
+type CompletionRpcRow = Omit<
+  PatientExerciseCompletion,
+  "high_pain_alert_triggered" | "clinical_alert_created"
+>;
 
 function mapCompletionError(error: { code?: string; message?: string } | null | undefined) {
   if (error?.code === "42501") {
@@ -94,7 +99,24 @@ export async function recordPatientExerciseCompletion(
     row.pain_score >= HIGH_PAIN_THRESHOLD &&
     (row.was_created || row.previous_pain_score === null || row.previous_pain_score < HIGH_PAIN_THRESHOLD);
 
+  let clinicalAlertCreated = false;
   if (crossedHighPainThreshold) {
+    const alertResult = await createHighPainClinicalAlert({
+      patientId: patient.id,
+      exerciseLogId: row.log_id,
+      planExerciseId: row.plan_exercise_id,
+      painScore: row.pain_score,
+      completedOn: row.completed_on,
+    });
+    clinicalAlertCreated = alertResult.ok;
+    if (!alertResult.ok) {
+      console.error("clinical_alert_create_failed", {
+        patientId: patient.id,
+        exerciseLogId: row.log_id,
+        code: alertResult.error.code,
+      });
+    }
+
     await notifyPhysioHighPain({
       supabase,
       patientId: patient.id,
@@ -115,11 +137,13 @@ export async function recordPatientExerciseCompletion(
       completed_on: row.completed_on,
       has_comment: Boolean(row.comment),
       high_pain_alert_triggered: crossedHighPainThreshold,
+      clinical_alert_created: clinicalAlertCreated,
     },
   });
 
   return ok({
     ...row,
     high_pain_alert_triggered: crossedHighPainThreshold,
+    clinical_alert_created: clinicalAlertCreated,
   });
 }
