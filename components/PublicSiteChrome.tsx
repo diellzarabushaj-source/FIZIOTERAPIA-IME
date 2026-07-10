@@ -15,7 +15,11 @@ export function PublicSiteChrome() {
     pathname === "/cmimi" ||
     pathname === "/support" ||
     pathname === "/contact" ||
-    pathname === "/faq";
+    pathname === "/faq" ||
+    pathname === "/privacy" ||
+    pathname === "/terms" ||
+    pathname === "/medical-disclaimer" ||
+    pathname === "/data-deletion";
 
   if (!isPublic) return null;
   return <div className="public-site-chrome"><SiteHeader /></div>;
