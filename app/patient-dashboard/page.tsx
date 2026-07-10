@@ -36,6 +36,7 @@ type PlanExercise = {
   reps: number | null;
   frequency: string | null;
   day_number: number | null;
+  schedule_days: number[] | null;
   instructions: string | null;
   exercise_library?: {
     name: string;
@@ -103,7 +104,7 @@ async function getDashboardData() {
   const { data: planExercises } = activePlan
     ? await supabase
         .from("plan_exercises")
-        .select("id,sets,reps,frequency,day_number,instructions,exercise_library(name,video_url,instructions_sq)")
+        .select("id,sets,reps,frequency,day_number,schedule_days,instructions,exercise_library(name,video_url,instructions_sq)")
         .eq("plan_id", activePlan.id)
         .order("day_number", { ascending: true })
         .returns<PlanExercise[]>()
@@ -197,6 +198,15 @@ function youtubeEmbed(url?: string | null) {
 function ExerciseVideo({ url, title }: { url?: string | null; title: string }) {
   if (!url) return <div className="patient-simple-no-video">Nuk ka video. Ndiq udhëzimin më poshtë.</div>;
 
+  if (/\.(jpe?g|png|webp|gif)(\?|$)/i.test(url)) {
+    return (
+      <div className="patient-video-wrap">
+        <span>Shiko pozicionin para se ta fillosh</span>
+        <img className="patient-simple-video" src={url} alt={`Demonstrim i ushtrimit ${title}`} loading="lazy" />
+      </div>
+    );
+  }
+
   const embed = youtubeEmbed(url);
   if (embed) {
     return (
@@ -260,7 +270,10 @@ export default async function PatientDashboardPage({ searchParams }: PageProps) 
   const day = planDay(activePlan);
   const exercises = hasNotStarted || ended
     ? []
-    : planExercises.filter((item) => (item.day_number || 1) === day);
+    : planExercises.filter((item) => {
+        const scheduledDays = item.schedule_days?.length ? item.schedule_days : [item.day_number || 1];
+        return scheduledDays.includes(day);
+      });
   const todayLogs = logs.filter((log) => log.completed_on === todayKey);
   const done = exercises.filter((item) => latestLog(todayLogs, item.id)?.completed).length;
   const next = exercises.find((item) => !latestLog(todayLogs, item.id)?.completed);
@@ -274,7 +287,7 @@ export default async function PatientDashboardPage({ searchParams }: PageProps) 
   const hasDirectContact = Boolean(physio?.whatsapp || physio?.phone || physio?.email);
 
   const scheduledDays = Array.from(
-    new Set(planExercises.map((item) => item.day_number || 1)),
+    new Set(planExercises.flatMap((item) => item.schedule_days?.length ? item.schedule_days : [item.day_number || 1])),
   ).sort((a, b) => a - b);
   const lastScheduledDay = scheduledDays.at(-1) || 1;
   const nextScheduledDay = scheduledDays.find((scheduledDay) => scheduledDay > day) || null;
