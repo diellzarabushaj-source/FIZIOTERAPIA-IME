@@ -1,0 +1,54 @@
+name: Production QA
+
+on:
+  workflow_dispatch:
+    inputs:
+      base_url:
+        description: Production or preview URL to test
+        required: false
+        default: https://fizioterapia-ime.vercel.app
+  schedule:
+    - cron: "17 5 * * *"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: production-qa-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  production-qa:
+    name: Public and security smoke tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm install --ignore-scripts --no-audit --no-fund
+
+      - name: Wait for production propagation
+        run: sleep 20
+
+      - name: Run production QA
+        run: npm run qa:production
+        env:
+          SMOKE_BASE_URL: ${{ inputs.base_url || 'https://fizioterapia-ime.vercel.app' }}
+          QA_BASE_URL: ${{ inputs.base_url || 'https://fizioterapia-ime.vercel.app' }}
+
+      - name: Upload QA reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: production-qa-reports
+          path: reports/*.json
+          if-no-files-found: warn
+          retention-days: 30
