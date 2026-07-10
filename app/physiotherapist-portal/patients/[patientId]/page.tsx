@@ -1,8 +1,10 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requirePhysioActor } from "@/lib/backend/access";
 import { getPatientForActor } from "@/lib/backend/patients";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import { EditPatientForm } from "./EditPatientForm";
+import { PatientRecordNav } from "./PatientRecordNav";
 import SessionForm from "./SessionForm";
 import styles from "../../dashboard.module.css";
 
@@ -12,11 +14,8 @@ type SessionRow = {
   session_date: string;
   pain_before: number | null;
   pain_after: number | null;
-  subjective: string | null;
-  objective: string | null;
   treatment: string | null;
   response: string | null;
-  next_plan: string | null;
 };
 
 export default async function PatientRecordPage({
@@ -37,13 +36,14 @@ export default async function PatientRecordPage({
   if (!supabase) throw new Error("Supabase nuk është konfiguruar.");
   const { data: sessions, error } = await supabase
     .from("patient_sessions")
-    .select("id,session_number,session_date,pain_before,pain_after,subjective,objective,treatment,response,next_plan")
+    .select("id,session_number,session_date,pain_before,pain_after,treatment,response")
     .eq("patient_id", patientId)
     .order("session_number", { ascending: false })
     .returns<SessionRow[]>();
   if (error) throw new Error("Seancat nuk mund të ngarkohen.");
 
   const nextSessionNumber = (sessions?.[0]?.session_number || 0) + 1;
+  const latestSession = sessions?.[0] || null;
 
   return (
     <>
@@ -55,10 +55,12 @@ export default async function PatientRecordPage({
             <span>Datëlindja: {patient.date_of_birth || "—"}</span>
             <span>Mosha: {patient.age ?? "—"}</span>
             <span>Kodi: {patient.patient_code}</span>
-            <span>Seanca të regjistruara: {sessions?.length || 0}</span>
+            <span>Seanca: {sessions?.length || 0}</span>
           </div>
         </div>
       </header>
+
+      <PatientRecordNav patientId={patientId} active="record" />
 
       {(notices.created || notices.existing) && (
         <section className={styles.section}>
@@ -68,6 +70,23 @@ export default async function PatientRecordPage({
           </div>
         </section>
       )}
+
+      <section className={styles.patientSummaryGrid}>
+        <article className={styles.summaryPanel}>
+          <span>Diagnoza aktuale</span>
+          <strong>{patient.diagnosis || "Nuk është shënuar ende."}</strong>
+        </article>
+        <article className={styles.summaryPanel}>
+          <span>Seanca e fundit</span>
+          <strong>{latestSession ? `Seanca ${latestSession.session_number} · ${latestSession.session_date}` : "Ende pa seanca"}</strong>
+          {latestSession && <small>Dhimbja: {latestSession.pain_before ?? "—"} → {latestSession.pain_after ?? "—"}</small>}
+        </article>
+        <article className={styles.summaryPanel}>
+          <span>Historiku klinik</span>
+          <strong>{sessions?.length || 0} seanca të dokumentuara</strong>
+          <Link href={`/physiotherapist-portal/patients/${patientId}/history`}>Hap timeline-in e plotë</Link>
+        </article>
+      </section>
 
       <section className={styles.section}>
         <div className={styles.sectionHeading}>
@@ -98,37 +117,6 @@ export default async function PatientRecordPage({
           <span className={styles.statusPill}>Ruhet në kartelën klinike</span>
         </div>
         <SessionForm patientId={patientId} />
-      </section>
-
-      <section className={styles.section}>
-        <div className={styles.sectionHeading}>
-          <div>
-            <span className={styles.eyebrow}>Historiku</span>
-            <h2>Seancat e regjistruara</h2>
-          </div>
-          <span className={styles.statusPill}>{sessions?.length || 0} gjithsej</span>
-        </div>
-
-        {(sessions || []).map((session) => (
-          <article className={styles.session} key={session.id}>
-            <div className={styles.sessionHead}>
-              <strong>Seanca {session.session_number}</strong>
-              <span>{session.session_date}</span>
-            </div>
-            <div className={styles.meta}>
-              <span>Dhimbja para: {session.pain_before ?? "—"}</span>
-              <span>Dhimbja pas: {session.pain_after ?? "—"}</span>
-            </div>
-            <div className={styles.sessionGrid}>
-              <div className={styles.sessionBlock}><b>Subjektive</b>{session.subjective || "—"}</div>
-              <div className={styles.sessionBlock}><b>Objektive</b>{session.objective || "—"}</div>
-              <div className={styles.sessionBlock}><b>Trajtimi</b>{session.treatment || "—"}</div>
-              <div className={styles.sessionBlock}><b>Reagimi</b>{session.response || "—"}</div>
-              <div className={styles.sessionBlock}><b>Plani tjetër</b>{session.next_plan || "—"}</div>
-            </div>
-          </article>
-        ))}
-        {!sessions?.length && <div className={styles.emptyState}>Ende nuk ka seanca të regjistruara. Plotëso formularin më sipër për ta krijuar seancën e parë.</div>}
       </section>
     </>
   );
