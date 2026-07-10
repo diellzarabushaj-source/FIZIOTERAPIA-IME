@@ -3,26 +3,27 @@ const requiredWebEnv = [
   "SUPABASE_SERVICE_ROLE_KEY",
   "NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY",
   "CLERK_SECRET_KEY",
+  "PATIENT_SESSION_SECRET",
+  "NEXT_PUBLIC_APP_URL",
 ];
 
 const recommendedWebEnv = [
   "NEXT_PUBLIC_SUPABASE_ANON_KEY",
+  "ADMIN_EMAIL",
   "RESEND_API_KEY",
   "RESEND_FROM_EMAIL",
   "RESEND_REPLY_TO_EMAIL",
-  "NEXT_PUBLIC_APP_URL",
   "NEXT_PUBLIC_SANITY_PROJECT_ID",
   "NEXT_PUBLIC_SANITY_DATASET",
   "NEXT_PUBLIC_SANITY_API_VERSION",
 ];
 
-const requiredMobileEnv = [
-  "EXPO_PUBLIC_API_BASE_URL",
-];
+const requiredMobileEnv = ["EXPO_PUBLIC_API_BASE_URL"];
 
 function statusFor(name) {
   const value = process.env[name];
   if (!value) return "missing";
+  if (name === "PATIENT_SESSION_SECRET" && value.length < 32) return "too_short";
   return "present";
 }
 
@@ -37,24 +38,15 @@ const rows = [
 ];
 
 console.table(rows);
+const invalidRequired = rows.filter((row) => row.required && row.status !== "present");
 
-const missingRequired = rows.filter((row) => row.required && row.status === "missing");
-
-if (missingRequired.length) {
-  console.error("\nMissing required environment variables:");
-  for (const row of missingRequired) {
-    console.error(`- ${row.name} (${row.group})`);
-  }
-  console.error("\nSet these in Vercel for web/backend and in EAS/Expo local env for mobile as appropriate.");
-
-  if (process.env.REQUIRE_ENV === "1") {
-    process.exit(1);
-  }
-
-  console.error("\nNon-blocking mode: set REQUIRE_ENV=1 to fail CI when required env vars are missing.");
+if (invalidRequired.length) {
+  console.error("\nMissing or invalid required environment variables:");
+  for (const row of invalidRequired) console.error(`- ${row.name} (${row.group}): ${row.status}`);
+  console.error("\nSet these in Vercel for web/backend and in EAS/Expo for mobile.");
+  process.exitCode = 1;
 } else {
   console.log("\nRequired environment variables are present.");
 }
 
-console.log("\nSanity note: NEXT_PUBLIC_SANITY_PROJECT_ID, NEXT_PUBLIC_SANITY_DATASET and NEXT_PUBLIC_SANITY_API_VERSION are recommended. If they are missing, /blog uses static fallback.");
-console.log("\nSecurity reminder: never print or commit secret values. This script only reports presence/missing status.");
+console.log("\nSecurity reminder: never print or commit secret values. This script only reports readiness state.");
