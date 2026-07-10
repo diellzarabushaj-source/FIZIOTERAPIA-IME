@@ -1,12 +1,6 @@
-import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
 import { PatientSessionClient } from "@/components/PatientSessionClient";
-import {
-  getActivePatientBySignedCode,
-  PATIENT_CODE_COOKIE,
-  PATIENT_SESSION_COOKIE,
-} from "@/lib/backend-logic";
-import { getSupabaseAdmin, normalizePatientCode } from "@/lib/supabase-admin";
+import { requireCurrentPatientSession } from "@/lib/patient-session";
+import { getSupabaseAdmin } from "@/lib/supabase-admin";
 
 type Patient = {
   id: string;
@@ -61,13 +55,7 @@ export default async function PatientSessionPage() {
     return <main className="page"><div className="role-warning">Supabase nuk është konfiguruar.</div></main>;
   }
 
-  const cookieStore = await cookies();
-  const code = normalizePatientCode(cookieStore.get(PATIENT_CODE_COOKIE)?.value || "");
-  const signature = cookieStore.get(PATIENT_SESSION_COOKIE)?.value || "";
-  if (!code) redirect("/patient-portal");
-
-  const session = await getActivePatientBySignedCode({ supabase, code, signature });
-  if (!session) redirect("/patient-portal");
+  const session = await requireCurrentPatientSession();
 
   const { data: patient } = await supabase
     .from("patients")
@@ -76,7 +64,9 @@ export default async function PatientSessionPage() {
     .eq("status", "active")
     .maybeSingle<Patient>();
 
-  if (!patient) redirect("/patient-portal");
+  if (!patient) {
+    return <main className="page"><div className="role-warning">Pacienti nuk është aktiv.</div></main>;
+  }
 
   const { data: physio } = patient.physio_id
     ? await supabase.from("profiles").select("full_name,clinic_name").eq("id", patient.physio_id).maybeSingle()
@@ -114,11 +104,18 @@ export default async function PatientSessionPage() {
     .order("day_number", { ascending: true })
     .returns<PlanExercise[]>();
 
+  const today = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Europe/Belgrade",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date());
+
   const { data: logs } = await supabase
     .from("exercise_logs")
     .select("plan_exercise_id,completed,completed_at")
     .eq("patient_id", patient.id)
-    .gte("completed_at", new Date(new Date().setHours(0, 0, 0, 0)).toISOString())
+    .eq("completed_on", today)
     .order("completed_at", { ascending: false })
     .returns<ExerciseLog[]>();
 
