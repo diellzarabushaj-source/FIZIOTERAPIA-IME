@@ -1,10 +1,11 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { requirePhysioActor, type ActorContext } from "@/lib/backend/access";
 import { writeAuditEvent } from "@/lib/backend/audit";
 import { addExerciseToPlanForActor, createDraftPlanForActor } from "@/lib/backend/plans";
-import { createPatientForActor } from "@/lib/backend/patients";
+import { createPatientForActor, getPatientForActor } from "@/lib/backend/patients";
 import type { BackendResult } from "@/lib/backend/result";
 import { cleanText } from "@/lib/backend/validation";
 import { hasActivePhysioAccess } from "@/lib/billing";
@@ -61,51 +62,104 @@ export async function createPatientAction(formData: FormData) {
   const program = getClinicalProgramTemplate(String(formData.get("programKey") || ""));
   const planTitle = cleanText(formData.get("planTitle") || program.title, 180) || program.title;
 
-  const patient = unwrap(await createPatientForActor(actor, {
+  const outcome = unwrap(await createPatientForActor(actor, {
     firstName: formData.get("firstName"),
     lastName: formData.get("lastName"),
     diagnosis: formData.get("diagnosis") || program.diagnosisLabel,
     phone: formData.get("phone"),
-    age: formData.get("age"),
+    dateOfBirth: formData.get("dateOfBirth"),
   }));
 
-  try {
-    const plan = unwrap(await createDraftPlanForActor(actor, {
-      patientId: patient.id,
-      title: planTitle,
-      durationDays: program.durationDays,
-    }));
+  const patient = outcome.patient;
 
-    const available = await findAvailableExercises(actor, program.exercises.map((item) => item.exerciseName));
-    const byName = new Map(available.map((item) => [item.name, item.id]));
-
-    for (const template of program.exercises) {
-      const exerciseId = byName.get(template.exerciseName);
-      if (!exerciseId) continue;
-      unwrap(await addExerciseToPlanForActor(actor, {
-        planId: plan.id,
-        exerciseId,
-        sets: template.sets,
-        reps: template.reps ?? undefined,
-        frequency: template.frequency,
-        dayNumber: template.dayNumber,
-        instructions: `${template.instructions}\n\nSafety: ${program.safetyNote}`,
+  if (outcome.created) {
+    try {
+      const plan = unwrap(await createDraftPlanForActor(actor, {
+        patientId: patient.id,
+        title: planTitle,
+        durationDays: program.durationDays,
       }));
+
+      const available = await findAvailableExercises(actor, program.exercises.map((item) => item.exerciseName));
+      const byName = new Map(available.map((item) => [item.name, item.id]));
+
+      for (const template of program.exercises) {
+        const exerciseId = byName.get(template.exerciseName);
+        if (!exerciseId) continue;
+        unwrap(await addExerciseToPlanForActor(actor, {
+          planId: plan.id,
+          exerciseId,
+          sets: template.sets,
+          reps: template.reps ?? undefined,
+          frequency: template.frequency,
+          dayNumber: template.dayNumber,
+          instructions: `${template.instructions}\n\nSafety: ${program.safetyNote}`,
+        }));
+      }
+    } catch (error) {
+      await supabase.from("plans").update({ status: "archived" }).eq("patient_id", patient.id).eq("status", "draft");
+      await writeAuditEvent({
+        actor,
+        action: "patient.initial_plan_failed",
+        entityType: "patient",
+        entityId: patient.id,
+        after: { reason: error instanceof Error ? error.message : "Unknown error" },
+      });
+      throw error;
     }
-  } catch (error) {
-    await supabase.from("plans").update({ status: "archived" }).eq("patient_id", patient.id).eq("status", "draft");
-    await supabase.from("patients").update({ status: "inactive" }).eq("id", patient.id).eq("physio_id", patient.physio_id);
-    await writeAuditEvent({
-      actor,
-      action: "patient.creation_rolled_back",
-      entityType: "patient",
-      entityId: patient.id,
-      after: { reason: error instanceof Error ? error.message : "Unknown error", status: "inactive" },
-    });
-    throw error;
   }
 
-  revalidatePath("/physiotherapist-portal");
+  revalidatePath("/physiotherapist-portal/patients");
+  redirect(`/physiotherapist-portal/patients/${patient.id}?${outcome.created ? "created=1" : "existing=1"}`);
+}
+
+export async function createPatientSessionAction(formData: FormData) {
+  const { actor, supabase } = await requirePaidContext();
+  const patientId = cleanText(formData.get("patientId"), 80);
+  if (!patientId) throw new Error("Pacienti mungon.");
+
+  const patient = unwrap(await getPatientForActor(actor, patientId));
+  if (patient.archived_at) throw new Error("Pacienti është i arkivuar dhe nuk mund të ketë seancë të re.");
+
+  const parsePain = (value: FormDataEntryValue | null) => {
+    if (value === null || String(value).trim() === "") return null;
+    const pain = Number(value);
+    if (!Number.isInteger(pain) || pain < 0 || pain > 10) throw new Error("Dhimbja duhet të jetë nga 0 deri në 10.");
+    return pain;
+  };
+
+  const payload = {
+    patient_id: patient.id,
+    physio_id: patient.physio_id || actor.profileId,
+    created_by: actor.profileId,
+    session_date: cleanText(formData.get("sessionDate"), 40) || new Date().toISOString(),
+    status: "completed",
+    pain_before: parsePain(formData.get("painBefore")),
+    pain_after: parsePain(formData.get("painAfter")),
+    treatment_summary: cleanText(formData.get("treatmentSummary"), 2000) || null,
+    clinical_notes: cleanText(formData.get("clinicalNotes"), 4000) || null,
+    next_steps: cleanText(formData.get("nextSteps"), 2000) || null,
+  };
+
+  const { data, error } = await supabase
+    .from("patient_sessions")
+    .insert(payload)
+    .select("id,session_date,status,pain_before,pain_after,treatment_summary,clinical_notes,next_steps")
+    .single();
+
+  if (error || !data) throw new Error("Seanca nuk u ruajt.");
+
+  await writeAuditEvent({
+    actor,
+    action: "patient.session_created",
+    entityType: "patient_session",
+    entityId: data.id,
+    after: { patient_id: patient.id, session_date: data.session_date, status: data.status },
+  });
+
+  revalidatePath(`/physiotherapist-portal/patients/${patient.id}`);
+  revalidatePath("/physiotherapist-portal/overview");
+  redirect(`/physiotherapist-portal/patients/${patient.id}?session=created`);
 }
 
 export async function createPrivateExerciseAction(formData: FormData) {
@@ -133,7 +187,7 @@ export async function createPrivateExerciseAction(formData: FormData) {
   if (error || !data) throw new Error(error?.code === "23505" ? "Ky ushtrim ekziston." : "Ushtrimi nuk u krijua.");
 
   await writeAuditEvent({ actor, action: "exercise.created", entityType: "exercise", entityId: data.id, after: data });
-  revalidatePath("/physiotherapist-portal");
+  revalidatePath("/physiotherapist-portal/exercises");
 }
 
 export async function addExerciseToPlanAction(formData: FormData) {
@@ -170,5 +224,5 @@ export async function addExerciseToPlanAction(formData: FormData) {
     instructions: formData.get("instructions") || "Kryeje me kontroll dhe pa dhimbje të fortë.",
   }));
 
-  revalidatePath("/physiotherapist-portal");
+  revalidatePath(`/physiotherapist-portal/patients/${patientId}`);
 }
