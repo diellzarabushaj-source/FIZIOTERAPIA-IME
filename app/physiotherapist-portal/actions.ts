@@ -1,376 +1,173 @@
 "use server";
 
-import { currentUser } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
+import { requirePhysioActor, type ActorContext } from "@/lib/backend/access";
+import { writeAuditEvent } from "@/lib/backend/audit";
+import { addExerciseToPlanForActor, createDraftPlanForActor } from "@/lib/backend/plans";
+import { createPatientForActor } from "@/lib/backend/patients";
+import type { BackendResult } from "@/lib/backend/result";
+import { cleanText } from "@/lib/backend/validation";
 import { hasActivePhysioAccess } from "@/lib/billing";
 import { getClinicalProgramTemplate } from "@/lib/clinical-programs";
-import { createPatientUsername, createUniquePatientCode, getSupabaseAdmin } from "@/lib/supabase-admin";
+import { getSupabaseAdmin } from "@/lib/supabase-admin";
 
-const defaultAdminEmail = "diellzarabushaj@gmail.com";
-const blockedProfileStatuses = new Set(["inactive", "suspended", "blocked"]);
-
-type Profile = {
-  id: string;
-  email: string;
-  role: "owner" | "admin" | "physio";
-  full_name: string | null;
-  clinic_name: string | null;
-  status: string | null;
-};
-
-type ExerciseLibraryMatch = {
-  id: string;
-  name: string;
-  ai_enabled: boolean | null;
-  is_default: boolean | null;
-  owner_physio_id: string | null;
-};
-
-function isAdminRole(role?: string | null) {
-  return role === "owner" || role === "admin";
+function unwrap<T>(result: BackendResult<T>): T {
+  if (!result.ok) throw new Error(result.error.message);
+  return result.data;
 }
 
-async function requireProfile() {
+async function requirePaidContext() {
+  const actor = await requirePhysioActor();
   const supabase = getSupabaseAdmin();
-  if (!supabase) {
-    throw new Error("Supabase server keys are missing in Vercel.");
-  }
+  if (!supabase) throw new Error("Supabase nuk është konfiguruar.");
 
-  const user = await currentUser();
-  const email = user?.primaryEmailAddress?.emailAddress?.toLowerCase();
-  const clerkUserId = user?.id;
-
-  if (!email || !clerkUserId) {
-    throw new Error("Please sign in first.");
-  }
-
-  const fullName = user.fullName || user.firstName || email;
-  const adminEmail = (process.env.ADMIN_EMAIL || defaultAdminEmail).toLowerCase();
-  const role = email === adminEmail ? "owner" : "physio";
-
-  const { data: existing } = await supabase
-    .from("profiles")
-    .select("*")
-    .or(`clerk_user_id.eq.${clerkUserId},email.eq.${email}`)
-    .maybeSingle();
-
-  if (existing) {
-    if (existing.status && blockedProfileStatuses.has(existing.status)) {
-      throw new Error("Profili është i bllokuar. Kontakto adminin e platformës.");
-    }
-
-    const updates: Record<string, string> = {};
-    if (!existing.clerk_user_id) updates.clerk_user_id = clerkUserId;
-    if (!existing.full_name) updates.full_name = fullName;
-
-    if (Object.keys(updates).length > 0) {
-      await supabase.from("profiles").update(updates).eq("id", existing.id);
-      return { ...existing, ...updates } as Profile;
-    }
-
-    return existing as Profile;
-  }
-
-  if (role !== "owner") {
-    throw new Error("Profili i fizioterapeutit duhet të krijohet dhe aktivizohet nga admini para përdorimit të dashboard-it.");
-  }
-
-  const { data, error } = await supabase
-    .from("profiles")
-    .insert({
-      clerk_user_id: clerkUserId,
-      email,
-      role,
-      full_name: fullName,
-      clinic_name: "Fizioterapia ime Clinic",
-      status: "active",
-    })
-    .select("*")
-    .single();
-
-  if (error) throw new Error(error.message);
-  return data as Profile;
-}
-
-async function requirePaidAccess(profile: Profile) {
-  const supabase = getSupabaseAdmin();
-  if (!supabase) throw new Error("Missing Supabase service key.");
-
-  const { data: subscription } = await supabase
+  const { data: subscription, error } = await supabase
     .from("subscriptions")
     .select("status,current_period_end,price,currency")
-    .eq("physio_id", profile.id)
+    .eq("physio_id", actor.profileId)
     .order("created_at", { ascending: false })
     .limit(1)
     .maybeSingle();
 
-  if (!hasActivePhysioAccess(profile.role, subscription)) {
-    throw new Error("Qasja është e bllokuar. Fizioterapeuti duhet të paguajë 29.90 EUR / muaj për të përdorur dashboard-in.");
-  }
-}
-
-async function requireOwnedPatient(patientId: string, profile: Profile) {
-  const supabase = getSupabaseAdmin();
-  if (!supabase) throw new Error("Missing Supabase service key.");
-
-  const query = supabase
-    .from("patients")
-    .select("id,physio_id")
-    .eq("id", patientId)
-    .eq("status", "active");
-
-  if (!isAdminRole(profile.role)) {
-    query.eq("physio_id", profile.id);
+  if (error) throw new Error("Statusi i abonimit nuk mund të verifikohet.");
+  if (!hasActivePhysioAccess(actor.role, subscription)) {
+    throw new Error("Qasja është e bllokuar. Aktivizo abonimin për të përdorur dashboard-in.");
   }
 
-  const { data: patient } = await query.maybeSingle();
-  if (!patient) throw new Error("Patient not found or not assigned to your account.");
-  return patient;
+  return { actor, supabase };
 }
 
-async function requireAccessibleExercise(exerciseId: string, profile: Profile) {
+async function findAvailableExercises(actor: ActorContext, names: string[]) {
   const supabase = getSupabaseAdmin();
-  if (!supabase) throw new Error("Missing Supabase service key.");
+  if (!supabase || !names.length) return [] as Array<{ id: string; name: string }>;
 
-  const query = supabase
+  let query = supabase
     .from("exercise_library")
-    .select("id,is_default,owner_physio_id,status")
-    .eq("id", exerciseId)
+    .select("id,name")
+    .in("name", names)
     .eq("status", "published");
 
-  if (!isAdminRole(profile.role)) {
-    query.or(`is_default.eq.true,owner_physio_id.eq.${profile.id}`);
+  if (actor.role === "physio") {
+    query = query.or(`is_default.eq.true,owner_physio_id.eq.${actor.profileId}`);
   }
 
-  const { data: exercise } = await query.maybeSingle();
-  if (!exercise) throw new Error("Exercise not found or not available for your account.");
-  return exercise;
-}
-
-async function getTemplateExercises(profile: Profile, exerciseNames: string[]) {
-  const supabase = getSupabaseAdmin();
-  if (!supabase) throw new Error("Missing Supabase service key.");
-
-  if (!exerciseNames.length) return [] as ExerciseLibraryMatch[];
-
-  const query = supabase
-    .from("exercise_library")
-    .select("id,name,ai_enabled,is_default,owner_physio_id")
-    .in("name", exerciseNames)
-    .eq("status", "published");
-
-  if (!isAdminRole(profile.role)) {
-    query.or(`is_default.eq.true,owner_physio_id.eq.${profile.id}`);
-  }
-
-  const { data } = await query.returns<ExerciseLibraryMatch[]>();
+  const { data, error } = await query.returns<Array<{ id: string; name: string }>>();
+  if (error) throw new Error("Ushtrimet e programit nuk mund të ngarkohen.");
   return data || [];
 }
 
 export async function createPatientAction(formData: FormData) {
-  const supabase = getSupabaseAdmin();
-  if (!supabase) throw new Error("Missing Supabase service key.");
+  const { actor, supabase } = await requirePaidContext();
+  const program = getClinicalProgramTemplate(String(formData.get("programKey") || ""));
+  const planTitle = cleanText(formData.get("planTitle") || program.title, 180) || program.title;
 
-  const profile = await requireProfile();
-  await requirePaidAccess(profile);
+  const patient = unwrap(await createPatientForActor(actor, {
+    firstName: formData.get("firstName"),
+    lastName: formData.get("lastName"),
+    diagnosis: formData.get("diagnosis") || program.diagnosisLabel,
+    phone: formData.get("phone"),
+    age: formData.get("age"),
+  }));
 
-  const firstName = String(formData.get("firstName") || "").trim();
-  const lastName = String(formData.get("lastName") || "").trim();
-  const diagnosis = String(formData.get("diagnosis") || "").trim();
-  const phone = String(formData.get("phone") || "").trim();
-  const ageValue = String(formData.get("age") || "").trim();
-  const programKey = String(formData.get("programKey") || "").trim();
-  const program = getClinicalProgramTemplate(programKey);
-  const planTitle = String(formData.get("planTitle") || program.title).trim();
+  try {
+    const plan = unwrap(await createDraftPlanForActor(actor, {
+      patientId: patient.id,
+      title: planTitle,
+      durationDays: program.durationDays,
+    }));
 
-  if (!firstName) throw new Error("Patient first name is required.");
+    const available = await findAvailableExercises(actor, program.exercises.map((item) => item.exerciseName));
+    const byName = new Map(available.map((item) => [item.name, item.id]));
 
-  const patientCode = await createUniquePatientCode(supabase, firstName);
-  const patientUsername = createPatientUsername(firstName, lastName, patientCode);
-
-  const { data: patient, error: patientError } = await supabase
-    .from("patients")
-    .insert({
-      physio_id: profile.id,
-      first_name: firstName,
-      last_name: lastName || null,
-      phone: phone || null,
-      age: ageValue ? Number(ageValue) : null,
-      diagnosis: diagnosis || program.diagnosisLabel,
-      patient_code: patientCode,
-      patient_username: patientUsername,
-      status: "active",
-    })
-    .select("*")
-    .single();
-
-  if (patientError) throw new Error(patientError.message);
-
-  const today = new Date();
-  const end = new Date();
-  end.setDate(today.getDate() + program.durationDays - 1);
-
-  const { data: plan, error: planError } = await supabase
-    .from("plans")
-    .insert({
-      patient_id: patient.id,
-      physio_id: profile.id,
-      title: planTitle || program.title,
-      start_date: today.toISOString().slice(0, 10),
-      end_date: end.toISOString().slice(0, 10),
-      status: "active",
-    })
-    .select("*")
-    .single();
-
-  if (planError) throw new Error(planError.message);
-
-  const templateExerciseNames = program.exercises.map((exercise) => exercise.exerciseName);
-  const matchingExercises = await getTemplateExercises(profile, templateExerciseNames);
-  const exerciseByName = new Map(matchingExercises.map((exercise) => [exercise.name, exercise]));
-
-  const templateRows = program.exercises
-    .map((templateExercise) => {
-      const exercise = exerciseByName.get(templateExercise.exerciseName);
-      if (!exercise) return null;
-
-      return {
-        plan_id: plan.id,
-        exercise_id: exercise.id,
-        sets: templateExercise.sets,
-        reps: templateExercise.reps,
-        frequency: templateExercise.frequency,
-        day_number: templateExercise.dayNumber,
-        instructions: `${templateExercise.instructions}\n\nSafety: ${program.safetyNote}`,
-      };
-    })
-    .filter((row): row is NonNullable<typeof row> => Boolean(row));
-
-  if (templateRows.length) {
-    await supabase.from("plan_exercises").insert(templateRows);
-  } else {
-    const { data: defaultExercises } = await supabase
-      .from("exercise_library")
-      .select("id,name")
-      .eq("is_default", true)
-      .eq("status", "published")
-      .limit(3);
-
-    if (defaultExercises?.length) {
-      await supabase.from("plan_exercises").insert(
-        defaultExercises.map((exercise, index) => ({
-          plan_id: plan.id,
-          exercise_id: exercise.id,
-          sets: index === 2 ? 3 : 2,
-          reps: index === 2 ? null : 10,
-          frequency: index === 2 ? "3 × 30 sek" : "Çdo ditë",
-          day_number: 1,
-          instructions: `Kryeje ushtrimin ngadalë dhe ndalo nëse dhimbja rritet.\n\nSafety: ${program.safetyNote}`,
-        })),
-      );
+    for (const template of program.exercises) {
+      const exerciseId = byName.get(template.exerciseName);
+      if (!exerciseId) continue;
+      unwrap(await addExerciseToPlanForActor(actor, {
+        planId: plan.id,
+        exerciseId,
+        sets: template.sets,
+        reps: template.reps ?? undefined,
+        frequency: template.frequency,
+        dayNumber: template.dayNumber,
+        instructions: `${template.instructions}\n\nSafety: ${program.safetyNote}`,
+      }));
     }
+  } catch (error) {
+    await supabase.from("patients").delete().eq("id", patient.id).eq("physio_id", patient.physio_id);
+    await writeAuditEvent({
+      actor,
+      action: "patient.creation_rolled_back",
+      entityType: "patient",
+      entityId: patient.id,
+      after: { reason: error instanceof Error ? error.message : "Unknown error" },
+    });
+    throw error;
   }
 
   revalidatePath("/physiotherapist-portal");
 }
 
 export async function createPrivateExerciseAction(formData: FormData) {
-  const supabase = getSupabaseAdmin();
-  if (!supabase) throw new Error("Missing Supabase service key.");
-
-  const profile = await requireProfile();
-  await requirePaidAccess(profile);
-
-  const name = String(formData.get("name") || "").trim();
-  const category = String(formData.get("category") || "").trim();
-  const diagnosis = String(formData.get("diagnosis") || "").trim();
-  const instructions = String(formData.get("instructions") || "").trim();
+  const { actor, supabase } = await requirePaidContext();
+  const name = cleanText(formData.get("name"), 140);
+  const category = cleanText(formData.get("category"), 100);
+  const diagnosis = cleanText(formData.get("diagnosis"), 300);
+  const instructions = cleanText(formData.get("instructions"), 2000);
   const aiEnabled = String(formData.get("aiEnabled") || "") === "on";
 
-  if (!name) throw new Error("Exercise name is required.");
+  if (name.length < 2) throw new Error("Emri i ushtrimit është i detyrueshëm.");
 
-  const { error } = await supabase.from("exercise_library").insert({
+  const { data, error } = await supabase.from("exercise_library").insert({
     name,
     category: category || null,
     diagnosis: diagnosis || null,
     instructions_sq: instructions || null,
     ai_enabled: aiEnabled,
     scoring_rules: {},
-    is_default: profile.role === "owner" ? true : false,
-    owner_physio_id: profile.role === "owner" ? null : profile.id,
+    is_default: actor.role === "owner",
+    owner_physio_id: actor.role === "owner" ? null : actor.profileId,
     status: "published",
-  });
+  }).select("id,name,status,owner_physio_id,is_default").single();
 
-  if (error) throw new Error(error.message);
+  if (error || !data) throw new Error(error?.code === "23505" ? "Ky ushtrim ekziston." : "Ushtrimi nuk u krijua.");
+
+  await writeAuditEvent({ actor, action: "exercise.created", entityType: "exercise", entityId: data.id, after: data });
   revalidatePath("/physiotherapist-portal");
 }
 
 export async function addExerciseToPlanAction(formData: FormData) {
-  const supabase = getSupabaseAdmin();
-  if (!supabase) throw new Error("Missing Supabase service key.");
+  const { actor, supabase } = await requirePaidContext();
+  const patientId = cleanText(formData.get("patientId"), 80);
+  const exerciseId = cleanText(formData.get("exerciseId"), 80);
+  if (!patientId || !exerciseId) throw new Error("Pacienti dhe ushtrimi janë të detyrueshëm.");
 
-  const profile = await requireProfile();
-  await requirePaidAccess(profile);
-
-  const patientId = String(formData.get("patientId") || "");
-  const exerciseId = String(formData.get("exerciseId") || "");
-  const sets = Number(formData.get("sets") || 2);
-  const reps = Number(formData.get("reps") || 10);
-  const dayNumber = Number(formData.get("dayNumber") || 1);
-  const instructions = String(formData.get("instructions") || "").trim();
-
-  if (!patientId || !exerciseId) throw new Error("Patient and exercise are required.");
-
-  const patient = await requireOwnedPatient(patientId, profile);
-  await requireAccessibleExercise(exerciseId, profile);
-
-  const planQuery = supabase
+  let query = supabase
     .from("plans")
     .select("id")
     .eq("patient_id", patientId)
-    .eq("status", "active")
+    .eq("status", "draft")
     .order("created_at", { ascending: false })
     .limit(1);
+  if (actor.role === "physio") query = query.eq("physio_id", actor.profileId);
 
-  if (!isAdminRole(profile.role)) {
-    planQuery.eq("physio_id", profile.id);
-  }
+  const { data: existingDraft, error: draftError } = await query.maybeSingle<{ id: string }>();
+  if (draftError) throw new Error("Drafti i planit nuk mund të ngarkohet.");
 
-  const { data: existingPlan } = await planQuery.maybeSingle();
-  let planId = existingPlan?.id;
+  const planId = existingDraft?.id || unwrap(await createDraftPlanForActor(actor, {
+    patientId,
+    title: "Program rehabilitimi 14 ditë",
+    durationDays: 14,
+  })).id;
 
-  if (!planId) {
-    const today = new Date();
-    const end = new Date();
-    end.setDate(today.getDate() + 13);
-
-    const { data: createdPlan, error: planError } = await supabase
-      .from("plans")
-      .insert({
-        patient_id: patientId,
-        physio_id: patient.physio_id || profile.id,
-        title: "Program rehabilitimi 14 ditë",
-        start_date: today.toISOString().slice(0, 10),
-        end_date: end.toISOString().slice(0, 10),
-        status: "active",
-      })
-      .select("id")
-      .single();
-
-    if (planError) throw new Error(planError.message);
-    planId = createdPlan.id;
-  }
-
-  const { error } = await supabase.from("plan_exercises").insert({
-    plan_id: planId,
-    exercise_id: exerciseId,
-    sets,
-    reps,
+  unwrap(await addExerciseToPlanForActor(actor, {
+    planId,
+    exerciseId,
+    sets: formData.get("sets") || 2,
+    reps: formData.get("reps") || 10,
     frequency: "Çdo ditë",
-    day_number: dayNumber,
-    instructions: instructions || "Kryeje me kontroll dhe pa dhimbje të fortë.",
-  });
+    dayNumber: formData.get("dayNumber") || 1,
+    instructions: formData.get("instructions") || "Kryeje me kontroll dhe pa dhimbje të fortë.",
+  }));
 
-  if (error) throw new Error(error.message);
   revalidatePath("/physiotherapist-portal");
 }
