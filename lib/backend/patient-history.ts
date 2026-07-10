@@ -14,12 +14,13 @@ export type PatientHistoryEvent = {
 
 type SessionRow = {
   id: string;
-  session_number: number;
   session_date: string;
+  status: string;
   pain_before: number | null;
   pain_after: number | null;
-  treatment: string | null;
-  response: string | null;
+  treatment_summary: string | null;
+  clinical_notes: string | null;
+  next_steps: string | null;
   created_at: string | null;
 };
 
@@ -77,14 +78,16 @@ export async function getPatientHistoryForActor(
   const [sessionsResult, plansResult, auditResult] = await Promise.all([
     supabase
       .from("patient_sessions")
-      .select("id,session_number,session_date,pain_before,pain_after,treatment,response,created_at")
+      .select("id,session_date,status,pain_before,pain_after,treatment_summary,clinical_notes,next_steps,created_at")
       .eq("patient_id", patientId)
-      .order("session_number", { ascending: false })
+      .eq("physio_id", actor.profileId)
+      .order("session_date", { ascending: false })
       .returns<SessionRow[]>(),
     supabase
       .from("plans")
       .select("id,title,status,start_date,end_date,created_at,updated_at")
       .eq("patient_id", patientId)
+      .eq("physio_id", actor.profileId)
       .order("created_at", { ascending: false })
       .returns<PlanRow[]>(),
     supabase
@@ -98,26 +101,36 @@ export async function getPatientHistoryForActor(
   ]);
 
   if (sessionsResult.error || plansResult.error || auditResult.error) {
+    console.error("patient_history_load_failed", {
+      patientId,
+      physioId: actor.profileId,
+      sessionsError: sessionsResult.error?.message,
+      plansError: plansResult.error?.message,
+      auditError: auditResult.error?.message,
+    });
     return fail("DATABASE_ERROR", "Historiku klinik nuk mund të ngarkohet.");
   }
 
   const events: PatientHistoryEvent[] = [];
+  const sessions = sessionsResult.data || [];
 
-  for (const session of sessionsResult.data || []) {
+  sessions.forEach((session, index) => {
+    const chronologicalNumber = sessions.length - index;
     events.push({
       id: `session-${session.id}`,
-      occurredAt: displayDate(session.created_at || `${session.session_date}T12:00:00.000Z`),
+      occurredAt: displayDate(session.created_at || session.session_date),
       kind: "session",
-      title: `Seanca ${session.session_number}`,
-      summary: session.treatment || "Seancë klinike e regjistruar.",
+      title: `Seanca ${chronologicalNumber}`,
+      summary: session.treatment_summary || "Seancë klinike e regjistruar.",
       metadata: {
-        data: session.session_date,
+        statusi: session.status,
         "dhimbja para": session.pain_before,
         "dhimbja pas": session.pain_after,
-        reagimi: session.response,
+        "shënime klinike": session.clinical_notes,
+        "hapi i ardhshëm": session.next_steps,
       },
     });
-  }
+  });
 
   for (const plan of plansResult.data || []) {
     events.push({
