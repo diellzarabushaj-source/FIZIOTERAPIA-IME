@@ -25,11 +25,11 @@ export default async function PatientAccessCardPage({ params }: PageProps) {
           <BrandMark compact />
           <span className="badge">Patient access card</span>
           <h1>Hyrje me kod unik</h1>
-          <p>Ky kod është personal për një pacient. Mos e ndaj me persona të tjerë.</p>
+          <p>Ky kod eshte personal per nje pacient. Mos e ndaj me persona te tjere.</p>
         </div>
 
         <div className="patient-access-qr-box">
-          <img src={`/api/patient/access-qr/${encodeURIComponent(code)}`} alt={`QR code për ${code}`} />
+          <img src={`/api/patient/access-qr/${encodeURIComponent(code)}`} alt={`QR code per ${code}`} />
         </div>
 
         <div className="patient-access-code-box">
@@ -45,7 +45,7 @@ export default async function PatientAccessCardPage({ params }: PageProps) {
         </div>
 
         <a className="button no-print" href={accessUrl}>Testo linkun e pacientit</a>
-        <p className="patient-access-note">AI Movement Check është vetëm feedback për lëvizje. Dhimbje 7/10 ose më shumë = ndalo dhe kontakto fizioterapeutin.</p>
+        <p className="patient-access-note">AI Movement Check eshte vetem feedback per levizje. Dhimbje 7/10 ose me shume = ndalo dhe kontakto fizioterapeutin.</p>
       </section>
     </main>
   );
