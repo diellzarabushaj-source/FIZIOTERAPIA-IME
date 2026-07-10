@@ -43,6 +43,9 @@ jobs:
       - name: Security regression gate
         run: npm run check:security
 
+      - name: Clinical backend regression tests
+        run: npm run test:backend
+
       - name: Lint
         run: npm run lint
 
