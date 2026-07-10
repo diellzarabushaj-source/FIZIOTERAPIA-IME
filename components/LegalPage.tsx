@@ -23,6 +23,55 @@ function sectionId(title: string, index: number) {
 }
 
 export function LegalPage({ badge, title, intro, lastUpdated = "Korrik 2026", sections = [] }: LegalPageProps) {
+  const documentText = `${badge} ${title}`.toLowerCase();
+  const isTerms = documentText.includes("kusht") || documentText.includes("term");
+  const isMedical = documentText.includes("medical") || documentText.includes("mjek") || documentText.includes("disclaimer");
+  const isDeletion = documentText.includes("fshir") || documentText.includes("deletion");
+
+  const summary = isTerms
+    ? {
+        label: "Me pak fjalë",
+        title: "Përdore platformën në mënyrë të sigurt dhe të përgjegjshme.",
+        text: "Këto kushte shpjegojnë rolin e pacientit, fizioterapeutit dhe platformës.",
+        icon: "✓",
+        noteTitle: "Vendimi klinik mbetet te profesionisti.",
+        noteText: "Platforma ndihmon me organizimin dhe ndjekjen e planit, por nuk zëvendëson vlerësimin profesional.",
+        contactTitle: "Ke pyetje për kushtet?",
+        subject: "Kushtet - Fizioterapia Ime",
+      }
+    : isMedical
+      ? {
+          label: "E rëndësishme",
+          title: "Platforma nuk ofron diagnozë ose shërbim emergjent.",
+          text: "Udhëzimet digjitale përdoren vetëm si pjesë e planit të caktuar nga profesionisti.",
+          icon: "⚕️",
+          noteTitle: "Në simptoma të forta, ndalo.",
+          noteText: "Kontakto fizioterapeutin ose shërbimet emergjente kur situata kërkon ndihmë të menjëhershme.",
+          contactTitle: "Ke pyetje mjekësore për përdorimin?",
+          subject: "Medical disclaimer - Fizioterapia Ime",
+        }
+      : isDeletion
+        ? {
+            label: "Kontrolli yt",
+            title: "Mund të kërkosh fshirjen e të dhënave.",
+            text: "Kjo faqe shpjegon si bëhet kërkesa dhe çfarë mund të duhet të ruhet sipas ligjit.",
+            icon: "🗑️",
+            noteTitle: "Kërkesa duhet të verifikohet.",
+            noteText: "Për siguri, mund të kërkojmë konfirmim të identitetit para se të veprojmë.",
+            contactTitle: "Dëshiron të kërkosh fshirje?",
+            subject: "Fshirja e të dhënave - Fizioterapia Ime",
+          }
+        : {
+            label: "Me pak fjalë",
+            title: "Të dhënat e tua trajtohen me kujdes.",
+            text: "Ky dokument shpjegon çfarë mbledhim, pse e përdorim dhe cilat të drejta ke.",
+            icon: "🔐",
+            noteTitle: "Kontrolli mbetet te ti.",
+            noteText: "Mund të kërkosh qasje, korrigjim ose fshirje të të dhënave sipas rregullave që zbatohen.",
+            contactTitle: "Ke pyetje për privatësinë?",
+            subject: "Privatësia - Fizioterapia Ime",
+          };
+
   return (
     <main className="legal-page">
       <section className="legal-hero pp-reveal">
@@ -32,14 +81,14 @@ export function LegalPage({ badge, title, intro, lastUpdated = "Korrik 2026", se
           <p>{intro}</p>
         </div>
         <aside className="legal-summary" aria-label="Përmbledhje e dokumentit">
-          <span>Me pak fjalë</span>
-          <strong>Të dhënat e tua trajtohen me kujdes.</strong>
-          <p>Ky dokument shpjegon çfarë mbledhim, pse e përdorim dhe cilat të drejta ke.</p>
+          <span>{summary.label}</span>
+          <strong>{summary.title}</strong>
+          <p>{summary.text}</p>
         </aside>
       </section>
 
       <div className="legal-disclaimer" role="note">
-        Ky dokument është draft informues për MVP dhe duhet të verifikohet nga jurist ose konsulent për privatësi para publikimit final.
+        Ky dokument është draft informues për MVP dhe duhet të verifikohet nga jurist ose konsulent përkatës para publikimit final.
       </div>
 
       <section className="legal-shell">
@@ -62,10 +111,10 @@ export function LegalPage({ badge, title, intro, lastUpdated = "Korrik 2026", se
           </div>
 
           <div className="legal-note">
-            <span aria-hidden="true">🔐</span>
+            <span aria-hidden="true">{summary.icon}</span>
             <div>
-              <strong>Kontrolli mbetet te ti.</strong><br />
-              Mund të kërkosh qasje, korrigjim ose fshirje të të dhënave sipas rregullave që zbatohen.
+              <strong>{summary.noteTitle}</strong><br />
+              {summary.noteText}
             </div>
           </div>
 
@@ -77,9 +126,9 @@ export function LegalPage({ badge, title, intro, lastUpdated = "Korrik 2026", se
           ))}
 
           <section className="legal-contact">
-            <h3>Ke pyetje për privatësinë?</h3>
+            <h3>{summary.contactTitle}</h3>
             <p>Na shkruaj pa përfshirë të dhëna të ndjeshme mjekësore në email.</p>
-            <a href="mailto:altin.physio@gmail.com?subject=Privatësia%20-%20Fizioterapia%20Ime">altin.physio@gmail.com →</a>
+            <a href={`mailto:altin.physio@gmail.com?subject=${encodeURIComponent(summary.subject)}`}>altin.physio@gmail.com →</a>
           </section>
         </article>
       </section>
