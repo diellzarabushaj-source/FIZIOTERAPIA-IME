@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { getCurrentPatientSession } from "@/lib/patient-session";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
+import "./patient-safety.css";
 
 export default async function PatientDashboardLayout({ children }: { children: ReactNode }) {
   const session = await getCurrentPatientSession();
