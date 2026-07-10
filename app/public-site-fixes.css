@@ -1,0 +1,79 @@
+.public-site-chrome {
+  padding: 20px 32px 0;
+  background: transparent;
+}
+
+.public-site-header-wrap {
+  width: 100%;
+}
+
+.public-site-chrome .top-nav {
+  margin-bottom: 0;
+}
+
+.public-site-chrome + main > nav {
+  display: none !important;
+}
+
+.public-site-chrome + main {
+  min-height: calc(100vh - 96px);
+}
+
+.public-site-chrome + main.landing-page {
+  padding-top: 20px;
+}
+
+.public-site-chrome + main[class*="page"] {
+  background-color: transparent;
+}
+
+.public-site-nav-actions a.active {
+  color: var(--fi-teal-dark);
+  background: rgba(48, 181, 168, 0.12);
+}
+
+@media (max-width: 900px) {
+  .public-site-chrome {
+    padding: 14px 16px 0;
+  }
+
+  .public-site-header {
+    gap: 10px;
+    padding: 10px 12px;
+  }
+
+  .public-site-nav-actions {
+    max-width: calc(100vw - 150px);
+    overflow-x: auto;
+    gap: 4px;
+    scrollbar-width: none;
+  }
+
+  .public-site-nav-actions::-webkit-scrollbar {
+    display: none;
+  }
+
+  .public-site-nav-actions a {
+    white-space: nowrap;
+    flex: 0 0 auto;
+  }
+}
+
+@media (max-width: 640px) {
+  .public-site-chrome {
+    padding: 10px 10px 0;
+  }
+
+  .public-site-header {
+    border-radius: 18px;
+  }
+
+  .public-site-nav-actions > a:not(:last-of-type) {
+    display: none;
+  }
+
+  .public-site-nav-actions {
+    max-width: none;
+    overflow: visible;
+  }
+}
