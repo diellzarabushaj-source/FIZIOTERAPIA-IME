@@ -6,6 +6,7 @@ import {
   ClipboardList,
   CreditCard,
   FileText,
+  Image as ImageIcon,
   LayoutDashboard,
   PlusCircle,
   QrCode,
@@ -17,6 +18,7 @@ import { AuthControls } from "@/components/AuthControls";
 import { BrandMark } from "@/components/BrandMark";
 import { getBillingStatusLabel, hasActivePhysioAccess, PHYSIO_MONTHLY_PRICE_LABEL } from "@/lib/billing";
 import { clinicalProgramTemplates } from "@/lib/clinical-programs";
+import { getDemoPhysioPortalData } from "@/lib/demo-clinic";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import { addExerciseToPlanAction, createPatientAction, createPrivateExerciseAction } from "./actions";
 
@@ -36,6 +38,7 @@ type ExerciseRow = {
   name: string;
   category: string | null;
   diagnosis: string | null;
+  video_url: string | null;
   ai_enabled: boolean | null;
   is_default: boolean | null;
   owner_physio_id: string | null;
@@ -61,21 +64,32 @@ type SubscriptionRow = {
   invoice_reference: string | null;
 };
 
-async function getPhysioData() {
+type PhysioData = {
+  configured: boolean;
+  demoMode?: boolean;
+  profile: ProfileRow | null;
+  subscription: SubscriptionRow | null;
+  patients: PatientRow[];
+  exercises: ExerciseRow[];
+  logs: any[];
+  aiChecks: any[];
+  error: string | null;
+};
+
+type ClerkUser = Awaited<ReturnType<typeof currentUser>>;
+
+async function getPhysioData(user: ClerkUser | null): Promise<PhysioData> {
   const supabase = getSupabaseAdmin();
-  const user = await currentUser();
   const email = user?.primaryEmailAddress?.emailAddress?.toLowerCase();
 
   if (!supabase || !email) {
+    const demo = getDemoPhysioPortalData() as PhysioData;
     return {
+      ...demo,
       configured: Boolean(supabase),
-      profile: null,
-      subscription: null as SubscriptionRow | null,
-      patients: [] as PatientRow[],
-      exercises: [] as ExerciseRow[],
-      logs: [],
-      aiChecks: [],
-      error: supabase ? null : "Supabase service key mungon në Vercel.",
+      error: !supabase
+        ? "Demo mode: Supabase nuk eshte lidhur ende. UI dhe rrjedha jane aktive, ruajtja reale kerkon backend."
+        : "Demo mode: kycu me Clerk per ruajtje reale te pacienteve.",
     };
   }
 
@@ -89,12 +103,12 @@ async function getPhysioData() {
     return {
       configured: true,
       profile: null,
-      subscription: null as SubscriptionRow | null,
-      patients: [] as PatientRow[],
-      exercises: [] as ExerciseRow[],
+      subscription: null,
+      patients: [],
+      exercises: [],
       logs: [],
       aiChecks: [],
-      error: "Profili nuk është krijuar ende. Kliko 'Shto pacient' një herë ose bëj sign out/sign in.",
+      error: "Profili nuk eshte krijuar ende. Kycu si fizioterapeut dhe aktivizo pagesen per te ruajtur paciente real.",
     };
   }
 
@@ -117,14 +131,18 @@ async function getPhysioData() {
 
   const { data: patients } = await patientQuery.returns<PatientRow[]>();
 
-  const { data: exercises } = await supabase
+  const exerciseQuery = supabase
     .from("exercise_library")
-    .select("id,name,category,diagnosis,ai_enabled,is_default,owner_physio_id,status")
-    .or(`is_default.eq.true,owner_physio_id.eq.${profile.id}`)
+    .select("id,name,category,diagnosis,video_url,ai_enabled,is_default,owner_physio_id,status")
+    .eq("status", "published")
     .order("is_default", { ascending: false })
-    .order("name")
-    .returns<ExerciseRow[]>();
+    .order("name");
 
+  if (!isAdmin) {
+    exerciseQuery.or(`is_default.eq.true,owner_physio_id.eq.${profile.id}`);
+  }
+
+  const { data: exercises } = await exerciseQuery.returns<ExerciseRow[]>();
   const patientIds = (patients || []).map((patient) => patient.id);
 
   const { data: logs } = patientIds.length
@@ -165,15 +183,15 @@ function getPatientStats(patientId: string, logs: any[], aiChecks: any[]) {
 
   return {
     completed,
-    latestPain: latestPain ?? "—",
-    latestAi: latestAi ? `${latestAi}%` : "—",
+    latestPain: latestPain ?? "-",
+    latestAi: latestAi ? `${latestAi}%` : "-",
     painAlert: typeof latestPain === "number" && latestPain >= 7,
     aiAlert: typeof latestAi === "number" && latestAi < 60,
   };
 }
 
 function formatDate(value?: string | null) {
-  if (!value) return "—";
+  if (!value) return "-";
   return new Date(value).toLocaleDateString("sq-AL");
 }
 
@@ -181,12 +199,24 @@ function codePath(code: string) {
   return encodeURIComponent(code);
 }
 
+function mediaLabel(url?: string | null) {
+  if (!url) return "Pa media";
+  if (/\.(mp4|webm|mov|m4v)(\?.*)?$/i.test(url)) return "Video";
+  if (/\.(svg|png|jpe?g|webp|gif|avif)(\?.*)?$/i.test(url)) return "Foto";
+  return "Link";
+}
+
+function StethoscopeIcon() {
+  return <Activity className="premium-icon" aria-hidden="true" />;
+}
+
 export default async function PhysiotherapistPortalPage() {
   const clerkConfigured = Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY && process.env.CLERK_SECRET_KEY);
   const user = clerkConfigured ? await currentUser() : null;
-  const displayName = user?.firstName || user?.primaryEmailAddress?.emailAddress || "Fizioterapeut";
-  const { configured, profile, subscription, patients, exercises, logs, aiChecks, error } = await getPhysioData();
-  const accessActive = hasActivePhysioAccess(profile?.role, subscription);
+  const displayName = user?.firstName || user?.primaryEmailAddress?.emailAddress || "Fizioterapeut demo";
+  const { configured, demoMode, profile, subscription, patients, exercises, logs, aiChecks, error } = await getPhysioData(user);
+  const accessActive = Boolean(demoMode) || hasActivePhysioAccess(profile?.role, subscription);
+  const persistDisabled = Boolean(demoMode);
   const defaultExercises = exercises.filter((exercise) => exercise.is_default);
   const privateExercises = exercises.filter((exercise) => !exercise.is_default);
   const activePatients = patients.filter((patient) => patient.status !== "inactive");
@@ -218,7 +248,7 @@ export default async function PhysiotherapistPortalPage() {
           </div>
           <a className="premium-side-link active" href="#overview"><LayoutDashboard className="premium-button-icon" aria-hidden="true" />Overview</a>
           <a className="premium-side-link" href="#new-patient"><UserRoundPlus className="premium-button-icon" aria-hidden="true" />Shto pacient</a>
-          <a className="premium-side-link" href="#patients"><UsersRound className="premium-button-icon" aria-hidden="true" />Pacientët</a>
+          <a className="premium-side-link" href="#patients"><UsersRound className="premium-button-icon" aria-hidden="true" />Pacientet</a>
           <a className="premium-side-link" href="#library"><BookOpen className="premium-button-icon" aria-hidden="true" />Biblioteka</a>
           <a className="premium-side-link" href="#plan-builder"><ClipboardList className="premium-button-icon" aria-hidden="true" />Plan builder</a>
           <a className="premium-side-link" href="/ai-check"><Activity className="premium-button-icon" aria-hidden="true" />AI Check</a>
@@ -227,25 +257,23 @@ export default async function PhysiotherapistPortalPage() {
         <div className="premium-main-stack">
           <section className="physio-hero" id="overview">
             <div className="physio-hero-copy">
-              <span className="badge"><ShieldCheck className="premium-button-icon" aria-hidden="true" />Fizioterapist Portal · {PHYSIO_MONTHLY_PRICE_LABEL}</span>
-              <h1>Dashboard për pacientë, plane dhe progres klinik.</h1>
-              <p>I kyçur si: <b>{displayName}</b></p>
-              <p>
-                Krijo pacientë me kod unik, jep QR code, cakto ushtrime, monitoro dhimbjen, AI score dhe gjenero raporte PDF.
-              </p>
+              <span className="badge"><ShieldCheck className="premium-button-icon" aria-hidden="true" />Fizioterapeut Portal - {PHYSIO_MONTHLY_PRICE_LABEL}</span>
+              <h1>Dashboard per paciente, plane dhe progres klinik.</h1>
+              <p>I kycur si: <b>{displayName}</b></p>
+              <p>Krijo paciente me kod unik, jep QR code, cakto ushtrime, monitoro dhimbjen, AI score dhe raporte PDF.</p>
               <div className="physio-hero-actions premium-inline-actions">
                 <a className="button" href="#new-patient"><PlusCircle className="premium-button-icon" aria-hidden="true" />Shto pacient</a>
-                <a className="button secondary" href="#patients"><UsersRound className="premium-button-icon" aria-hidden="true" />Shiko pacientët</a>
+                <a className="button secondary" href="#patients"><UsersRound className="premium-button-icon" aria-hidden="true" />Shiko pacientet</a>
                 <a className="button secondary" href="#library"><BookOpen className="premium-button-icon" aria-hidden="true" />Exercise Library</a>
               </div>
-              {!clerkConfigured && <div className="role-warning">Clerk keys mungojnë në Vercel.</div>}
-              {!configured && <div className="role-warning">SUPABASE_SERVICE_ROLE_KEY mungon në Vercel.</div>}
+              {!clerkConfigured && <div className="role-warning">Clerk nuk eshte lidhur. Po shfaqet demo flow.</div>}
+              {!configured && <div className="role-warning">Supabase nuk eshte lidhur. Po shfaqet demo flow.</div>}
               {error && <div className="role-warning">{error}</div>}
             </div>
 
             <div className="physio-hero-panel">
               <span>Billing</span>
-              <strong>{getBillingStatusLabel(subscription)}</strong>
+              <strong>{demoMode ? "Demo aktive" : getBillingStatusLabel(subscription)}</strong>
               <small>{subscription?.current_period_end ? `Aktiv deri: ${formatDate(subscription.current_period_end)}` : PHYSIO_MONTHLY_PRICE_LABEL}</small>
               <div className={accessActive ? "access-pill active" : "access-pill locked"}>{accessActive ? "Qasje aktive" : "Qasje e bllokuar"}</div>
             </div>
@@ -253,24 +281,24 @@ export default async function PhysiotherapistPortalPage() {
 
           <section className="dashboard-kpis physio-kpis">
             <div className="kpi-card">
-              <span>Pacientë aktivë</span>
-              <strong>{accessActive ? activePatients.length : "—"}</strong>
+              <span>Paciente aktive</span>
+              <strong>{accessActive ? activePatients.length : "-"}</strong>
               <small>{profile?.clinic_name || "Fizioterapia ime"}</small>
             </div>
             <div className="kpi-card">
-              <span>Ushtrime në bibliotekë</span>
-              <strong>{accessActive ? exercises.length : "—"}</strong>
-              <small>{defaultExercises.length} default · {privateExercises.length} private</small>
+              <span>Ushtrime ne biblioteke</span>
+              <strong>{accessActive ? exercises.length : "-"}</strong>
+              <small>{defaultExercises.length} default - {privateExercises.length} private</small>
             </div>
             <div className="kpi-card">
               <span>Alerts dhimbje</span>
-              <strong>{accessActive ? painAlerts : "—"}</strong>
-              <small>Dhimbje 7/10 ose më shumë</small>
+              <strong>{accessActive ? painAlerts : "-"}</strong>
+              <small>Dhimbje 7/10 ose me shume</small>
             </div>
             <div className="kpi-card">
               <span>AI mesatare</span>
-              <strong>{accessActive ? `${aiAverage}%` : "—"}</strong>
-              <small>{aiChecks.length} kontrolle të fundit</small>
+              <strong>{accessActive ? `${aiAverage}%` : "-"}</strong>
+              <small>{aiChecks.length} kontrolle te fundit</small>
             </div>
           </section>
 
@@ -278,11 +306,8 @@ export default async function PhysiotherapistPortalPage() {
             <section className="physio-paywall">
               <div>
                 <span className="badge"><CreditCard className="premium-button-icon" aria-hidden="true" />Qasja e bllokuar</span>
-                <h2>Pagesa mujore kërkohet për akses.</h2>
-                <p>
-                  Për me përdorë dashboard-in, fizioterapeuti duhet të ketë subscription aktiv prej <b>29.90 EUR / muaj</b>.
-                  Pagesa bëhet manualisht tani; më vonë lidhet me bankë lokale.
-                </p>
+                <h2>Pagesa mujore kerkohet per akses.</h2>
+                <p>Per me perdore dashboard-in, fizioterapeuti duhet te kete subscription aktiv prej <b>29.90 EUR / muaj</b>.</p>
               </div>
               <div className="paywall-card">
                 <span>Statusi aktual</span>
@@ -298,46 +323,46 @@ export default async function PhysiotherapistPortalPage() {
                 <form action={createPatientAction} className="dashboard-card physio-form-card premium-form-section">
                   <span className="mini-badge">Pacient i ri</span>
                   <h2>Shto pacient + program</h2>
-                  <p>Zgjidh template klinik. App-i krijon planin, ushtrimet dhe kodin unik për pacientin automatikisht.</p>
+                  <p>Zgjidh template klinik. App-i krijon planin, ushtrimet dhe kodin unik per pacientin automatikisht.</p>
                   <div className="premium-form-grid">
                     <div>
                       <label className="label">Emri</label>
-                      <input className="input" name="firstName" placeholder="Arber" required />
+                      <input className="input" name="firstName" placeholder="Arber" required disabled={persistDisabled} />
                     </div>
                     <div>
                       <label className="label">Mbiemri</label>
-                      <input className="input" name="lastName" placeholder="Krasniqi" />
+                      <input className="input" name="lastName" placeholder="Krasniqi" disabled={persistDisabled} />
                     </div>
                     <div>
                       <label className="label">Telefoni</label>
-                      <input className="input" name="phone" placeholder="+383..." />
+                      <input className="input" name="phone" placeholder="+383..." disabled={persistDisabled} />
                     </div>
                     <div>
                       <label className="label">Mosha</label>
-                      <input className="input" name="age" type="number" min="1" max="120" placeholder="45" />
+                      <input className="input" name="age" type="number" min="1" max="120" placeholder="45" disabled={persistDisabled} />
                     </div>
                     <div className="full-span">
                       <label className="label">Diagnoza / problemi</label>
-                      <input className="input" name="diagnosis" placeholder="Opsionale, p.sh. Lumbosciatica" />
+                      <input className="input" name="diagnosis" placeholder="Opsionale, p.sh. Lumbosciatica" disabled={persistDisabled} />
                     </div>
                     <div className="full-span">
                       <label className="label">Program template</label>
-                      <select className="input" name="programKey" defaultValue="lumbosciatica" required>
+                      <select className="input" name="programKey" defaultValue="lumbosciatica" required disabled={persistDisabled}>
                         {clinicalProgramTemplates.map((program) => (
-                          <option key={program.key} value={program.key}>{program.title} · {program.durationDays} ditë</option>
+                          <option key={program.key} value={program.key}>{program.title} - {program.durationDays} dite</option>
                         ))}
                       </select>
                     </div>
                     <div className="full-span">
                       <label className="label">Titulli i planit</label>
-                      <input className="input" name="planTitle" placeholder="Lihet bosh për titullin e template-it" />
+                      <input className="input" name="planTitle" placeholder="Lihet bosh per titullin e template-it" disabled={persistDisabled} />
                     </div>
                   </div>
                   <div className="generated-box">
-                    <b>Access:</b> Pacienti hyn vetëm me kod unik ose QR. <br />
-                    <b>Safety rule:</b> Dhimbje 7/10 ose më shumë = ndalo ushtrimin dhe kontakto fizioterapeutin. AI është vetëm feedback për lëvizje.
+                    <b>Access:</b> Pacienti hyn vetem me kod unik ose QR. <br />
+                    <b>Safety:</b> Dhimbje 7/10 ose me shume = ndalo ushtrimin dhe kontakto fizioterapeutin.
                   </div>
-                  <button className="button" type="submit"><UserRoundPlus className="premium-button-icon" aria-hidden="true" />Ruaj pacientin + krijo planin</button>
+                  <button className="button" type="submit" disabled={persistDisabled}><UserRoundPlus className="premium-button-icon" aria-hidden="true" />Ruaj pacientin + krijo planin</button>
                 </form>
 
                 <div className="dashboard-card wide" id="templates">
@@ -345,7 +370,7 @@ export default async function PhysiotherapistPortalPage() {
                     <div>
                       <span className="mini-badge">Clinical templates</span>
                       <h2>Programet e gatshme</h2>
-                      <p>Zgjedhja e template-it e mbush planin me ushtrime, dozime dhe safety note.</p>
+                      <p>Template-i mbush planin me ushtrime, dozime dhe safety note.</p>
                     </div>
                     <span className="badge">{clinicalProgramTemplates.length} templates</span>
                   </div>
@@ -355,7 +380,7 @@ export default async function PhysiotherapistPortalPage() {
                         <span className="mini-badge">{program.category}</span>
                         <h3>{program.title}</h3>
                         <p>{program.shortDescription}</p>
-                        <small>{program.exercises.length} ushtrime · {program.durationDays} ditë</small>
+                        <small>{program.exercises.length} ushtrime - {program.durationDays} dite</small>
                       </article>
                     ))}
                   </div>
@@ -366,8 +391,8 @@ export default async function PhysiotherapistPortalPage() {
                 <div className="section-header-row">
                   <div>
                     <span className="mini-badge">Code-only access</span>
-                    <h2>Pacientët aktivë</h2>
-                    <p>Pacienti hyn vetëm me kod unik ose QR. Një kod i takon vetëm një pacienti.</p>
+                    <h2>Pacientet aktive</h2>
+                    <p>Pacienti hyn vetem me kod unik ose QR. Nje kod i takon vetem nje pacienti.</p>
                   </div>
                   <span className="badge">{activePatients.length} total</span>
                 </div>
@@ -375,14 +400,14 @@ export default async function PhysiotherapistPortalPage() {
                   <table className="table physio-patient-table">
                     <thead><tr><th>Pacient</th><th>Kodi unik</th><th>QR / Kod</th><th>Diagnoza</th><th>Plan</th><th>Done</th><th>Dhimbje</th><th>AI</th><th>Raport</th></tr></thead>
                     <tbody>
-                      {activePatients.length === 0 && <tr><td colSpan={9}><div className="premium-empty-row">Ende nuk ka pacientë realë. Shto pacientin e parë nga forma sipër.</div></td></tr>}
+                      {activePatients.length === 0 && <tr><td colSpan={9}><div className="premium-empty-row">Ende nuk ka paciente. Shto pacientin e pare nga forma siper.</div></td></tr>}
                       {activePatients.map((patient) => {
                         const stats = getPatientStats(patient.id, logs, aiChecks);
                         const name = `${patient.first_name} ${patient.last_name || ""}`.trim();
                         const encodedCode = codePath(patient.patient_code);
                         return (
                           <tr key={patient.id}>
-                            <td><b>{name}</b><br /><small>Hyrje vetëm me kod</small></td>
+                            <td><b>{name}</b><br /><small>Hyrje vetem me kod</small></td>
                             <td><b className="code-chip">{patient.patient_code}</b></td>
                             <td>
                               <div className="patient-access-actions">
@@ -390,8 +415,8 @@ export default async function PhysiotherapistPortalPage() {
                                 <a className="button secondary compact-button" href={`/p/${encodedCode}`}>Testo</a>
                               </div>
                             </td>
-                            <td>{patient.diagnosis || "—"}</td>
-                            <td>{patient.plans?.[0]?.title || "—"}</td>
+                            <td>{patient.diagnosis || "-"}</td>
+                            <td>{patient.plans?.[0]?.title || "-"}</td>
                             <td>{stats.completed}</td>
                             <td>{stats.painAlert ? <span className="status-danger"><AlertTriangle className="premium-button-icon" aria-hidden="true" />{stats.latestPain}/10</span> : stats.latestPain}</td>
                             <td>{stats.aiAlert ? <span className="status-warning"><AlertTriangle className="premium-button-icon" aria-hidden="true" />{stats.latestAi}</span> : stats.latestAi}</td>
@@ -410,7 +435,7 @@ export default async function PhysiotherapistPortalPage() {
                     <div>
                       <span className="mini-badge">Exercise Library</span>
                       <h2>Biblioteka e ushtrimeve</h2>
-                      <p>Default exercises vijnë nga admini. Private exercises i krijon fizioterapeuti.</p>
+                      <p>Default exercises vijne nga admini. Private exercises i sheh vetem fizioterapeuti qe i ka krijuar.</p>
                     </div>
                     <span className="badge">{exercises.length} ushtrime</span>
                   </div>
@@ -418,18 +443,18 @@ export default async function PhysiotherapistPortalPage() {
                   <h3>Default nga admin</h3>
                   <div className="table-scroll">
                     <table className="table">
-                      <thead><tr><th>Ushtrimi</th><th>Kategoria</th><th>Diagnoza</th><th>AI</th><th>Status</th></tr></thead>
-                      <tbody>{defaultExercises.map((exercise) => <tr key={exercise.id}><td>{exercise.name}</td><td>{exercise.category || "—"}</td><td>{exercise.diagnosis || "—"}</td><td>{exercise.ai_enabled ? "Aktiv" : "Jo"}</td><td>{exercise.status}</td></tr>)}</tbody>
+                      <thead><tr><th>Ushtrimi</th><th>Kategoria</th><th>Diagnoza</th><th>Media</th><th>AI</th><th>Status</th></tr></thead>
+                      <tbody>{defaultExercises.map((exercise) => <tr key={exercise.id}><td>{exercise.name}</td><td>{exercise.category || "-"}</td><td>{exercise.diagnosis || "-"}</td><td><ImageIcon className="premium-button-icon" aria-hidden="true" /> {mediaLabel(exercise.video_url)}</td><td>{exercise.ai_enabled ? "Aktiv" : "Jo"}</td><td>{exercise.status}</td></tr>)}</tbody>
                     </table>
                   </div>
 
                   <h3 style={{ marginTop: 20 }}>Ushtrime private</h3>
                   <div className="table-scroll">
                     <table className="table">
-                      <thead><tr><th>Ushtrimi</th><th>Kategoria</th><th>Diagnoza</th><th>AI</th><th>Status</th></tr></thead>
+                      <thead><tr><th>Ushtrimi</th><th>Kategoria</th><th>Diagnoza</th><th>Media</th><th>AI</th><th>Status</th></tr></thead>
                       <tbody>
-                        {privateExercises.length === 0 && <tr><td colSpan={5}>Ende nuk ka ushtrime private.</td></tr>}
-                        {privateExercises.map((exercise) => <tr key={exercise.id}><td>{exercise.name}</td><td>{exercise.category || "—"}</td><td>{exercise.diagnosis || "—"}</td><td>{exercise.ai_enabled ? "Aktiv" : "Jo"}</td><td>{exercise.status}</td></tr>)}
+                        {privateExercises.length === 0 && <tr><td colSpan={6}>Ende nuk ka ushtrime private.</td></tr>}
+                        {privateExercises.map((exercise) => <tr key={exercise.id}><td>{exercise.name}</td><td>{exercise.category || "-"}</td><td>{exercise.diagnosis || "-"}</td><td><ImageIcon className="premium-button-icon" aria-hidden="true" /> {mediaLabel(exercise.video_url)}</td><td>{exercise.ai_enabled ? "Aktiv" : "Jo"}</td><td>{exercise.status}</td></tr>)}
                       </tbody>
                     </table>
                   </div>
@@ -438,51 +463,53 @@ export default async function PhysiotherapistPortalPage() {
                 <form action={createPrivateExerciseAction} className="dashboard-card physio-form-card premium-form-section">
                   <span className="mini-badge">Ushtrim i ri</span>
                   <h2>Shto ushtrim</h2>
-                  <p>Owner e shton si default. Fizioterapeuti normal e shton si private.</p>
+                  <p>Owner e shton si default. Fizioterapeuti normal e shton si private dhe nuk i shfaqet fizioterapeuteve tjere.</p>
                   <label className="label">Emri i ushtrimit</label>
-                  <input className="input" name="name" placeholder="Bird dog" required />
+                  <input className="input" name="name" placeholder="Bird dog" required disabled={persistDisabled} />
                   <label className="label">Kategoria</label>
-                  <input className="input" name="category" placeholder="Stabilizim" />
+                  <input className="input" name="category" placeholder="Stabilizim" disabled={persistDisabled} />
                   <label className="label">Diagnoza</label>
-                  <input className="input" name="diagnosis" placeholder="Low back pain" />
+                  <input className="input" name="diagnosis" placeholder="Low back pain" disabled={persistDisabled} />
+                  <label className="label">Video ose foto URL</label>
+                  <input className="input" name="mediaUrl" placeholder="https://... ose /image.svg" disabled={persistDisabled} />
                   <label className="label">Instruksioni klinik</label>
-                  <textarea className="input" name="instructions" rows={5} placeholder="Mbaje trungun stabil dhe mos e shpejto lëvizjen." />
-                  <label className="label checkbox-label"><input type="checkbox" name="aiEnabled" /> AI check aktiv</label>
-                  <button className="button" type="submit"><PlusCircle className="premium-button-icon" aria-hidden="true" />Ruaj ushtrimin</button>
+                  <textarea className="input" name="instructions" rows={5} placeholder="Mbaje trungun stabil dhe mos e shpejto levizjen." disabled={persistDisabled} />
+                  <label className="label checkbox-label"><input type="checkbox" name="aiEnabled" disabled={persistDisabled} /> AI check aktiv</label>
+                  <button className="button" type="submit" disabled={persistDisabled}><PlusCircle className="premium-button-icon" aria-hidden="true" />Ruaj ushtrimin</button>
                 </form>
               </section>
 
               <section className="physio-workspace" id="plan-builder">
                 <form action={addExerciseToPlanAction} className="dashboard-card wide physio-form-card premium-form-section">
                   <span className="mini-badge">Plan Builder manual</span>
-                  <h2>Cakto ushtrim në plan</h2>
-                  <p>Zgjidh pacientin dhe ushtrimin. Ruhet direkt në plan_exercises me ownership check.</p>
+                  <h2>Cakto ushtrim ne plan</h2>
+                  <p>Zgjidh pacientin dhe ushtrimin. Backend-i kontrollon qe pacienti dhe ushtrimi i takojne ketij fizioterapeuti.</p>
                   <label className="label">Pacienti</label>
-                  <select className="input" name="patientId" required>
+                  <select className="input" name="patientId" required disabled={persistDisabled}>
                     <option value="">Zgjidh pacientin</option>
-                    {activePatients.map((patient) => <option key={patient.id} value={patient.id}>{patient.first_name} {patient.last_name || ""} · {patient.patient_code}</option>)}
+                    {activePatients.map((patient) => <option key={patient.id} value={patient.id}>{patient.first_name} {patient.last_name || ""} - {patient.patient_code}</option>)}
                   </select>
                   <label className="label">Ushtrimi</label>
-                  <select className="input" name="exerciseId" required>
+                  <select className="input" name="exerciseId" required disabled={persistDisabled}>
                     <option value="">Zgjidh ushtrimin</option>
-                    {exercises.map((exercise) => <option key={exercise.id} value={exercise.id}>{exercise.name} · {exercise.category || "Pa kategori"}</option>)}
+                    {exercises.map((exercise) => <option key={exercise.id} value={exercise.id}>{exercise.name} - {exercise.is_default ? "Default" : "Private"} - {exercise.category || "Pa kategori"}</option>)}
                   </select>
                   <div className="kpis plan-grid">
-                    <div><label className="label">Sete</label><input className="input" name="sets" type="number" defaultValue={2} min={1} /></div>
-                    <div><label className="label">Reps</label><input className="input" name="reps" type="number" defaultValue={10} min={1} /></div>
-                    <div><label className="label">Dita</label><input className="input" name="dayNumber" type="number" defaultValue={1} min={1} max={60} /></div>
-                    <div><label className="label">Status</label><div className="generated-box">Aktiv</div></div>
+                    <div><label className="label">Sete</label><input className="input" name="sets" type="number" defaultValue={2} min={1} disabled={persistDisabled} /></div>
+                    <div><label className="label">Reps</label><input className="input" name="reps" type="number" defaultValue={10} min={1} disabled={persistDisabled} /></div>
+                    <div><label className="label">Dita</label><input className="input" name="dayNumber" type="number" defaultValue={1} min={1} max={60} disabled={persistDisabled} /></div>
+                    <div><label className="label">Frekuenca</label><input className="input" name="frequency" defaultValue="Cdo dite" disabled={persistDisabled} /></div>
                   </div>
                   <label className="label">Instruksione</label>
-                  <textarea className="input" name="instructions" rows={4} placeholder="Kryeje ngadalë dhe me kontroll." />
-                  <button className="button" type="submit"><ClipboardList className="premium-button-icon" aria-hidden="true" />Ruaj në plan</button>
+                  <textarea className="input" name="instructions" rows={4} placeholder="Kryeje ngadale dhe me kontroll." disabled={persistDisabled} />
+                  <button className="button" type="submit" disabled={persistDisabled}><ClipboardList className="premium-button-icon" aria-hidden="true" />Ruaj ne plan</button>
                 </form>
 
                 <div className="dashboard-card green-soft-card">
-                  <span className="mini-badge">PDF Reports</span>
-                  <h2>Raporte progresi</h2>
-                  <p>Te lista e pacientëve kliko “PDF” për raportin e progresit: adherence, dhimbje, AI score dhe përmbledhje klinike.</p>
-                  <p>Faqja hapet si raport print-ready; pastaj klikon “Shkarko / Printo PDF”.</p>
+                  <span className="mini-badge">Izolim i te dhenave</span>
+                  <h2>Cfare sheh fizioterapeuti?</h2>
+                  <p>Pacientet filtrohen me physio_id. Ushtrimet jane default nga admini ose private me owner_physio_id te fizioterapeutit.</p>
+                  <p>Pacienti sheh vetem ushtrimet qe i jane caktuar ne planin e tij.</p>
                 </div>
               </section>
             </>
@@ -491,8 +518,4 @@ export default async function PhysiotherapistPortalPage() {
       </div>
     </main>
   );
-}
-
-function StethoscopeIcon() {
-  return <Activity className="premium-icon" aria-hidden="true" />;
 }
