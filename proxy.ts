@@ -8,7 +8,6 @@ const isClerkConfigured = Boolean(
 const protectedRoutePrefixes = [
   "/physio",
   "/owner-hidden",
-  "/physiotherapist-portal",
   "/physiotherapist-dashboard",
   "/admin-dashboard",
   "/admin-billing",
