@@ -473,6 +473,61 @@ h3,
   color: var(--premium-muted);
 }
 
+.patient-demo-access {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  padding: 14px;
+  border: 1px solid var(--premium-line);
+  border-radius: 16px;
+  background: #f8fbfd;
+}
+
+.patient-demo-access strong,
+.patient-demo-access small {
+  display: block;
+}
+
+.patient-demo-access strong {
+  margin-top: 4px;
+  color: var(--premium-ink);
+  font-size: 24px;
+  letter-spacing: 0.05em;
+}
+
+.patient-demo-access small {
+  color: var(--premium-muted);
+  font-weight: 800;
+}
+
+.exercise-media-preview,
+.exercise-media-link {
+  width: 100%;
+  min-height: 170px;
+  max-height: 260px;
+  border-radius: 18px;
+  border: 1px solid var(--premium-line);
+  background: #fff;
+  object-fit: contain;
+}
+
+.exercise-media-link {
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  color: var(--premium-teal);
+  font-weight: 900;
+}
+
+.premium-form-section .input:disabled,
+.premium-form-section textarea:disabled,
+.premium-form-section select:disabled {
+  background: #f3f6f8;
+  color: var(--premium-muted);
+  cursor: not-allowed;
+}
+
 .status-success,
 .status-warning,
 .status-danger {
@@ -538,6 +593,10 @@ h3,
   }
 
   .premium-patient-row {
+    grid-template-columns: 1fr;
+  }
+
+  .patient-demo-access {
     grid-template-columns: 1fr;
   }
 
