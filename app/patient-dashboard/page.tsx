@@ -91,8 +91,8 @@ export default async function PatientDashboardPage({ searchParams }: PageProps) 
   if (data.error === "not_logged_in") redirect("/patient-portal");
   if (data.error) return <main className="patient-clean"><section className="patient-clean-error"><h1>Nuk mund të hapet plani</h1><p>{data.error}</p><a href="/patient-portal">Kthehu te hyrja</a></section></main>;
 
-  const params = searchParams ? await searchParams : {};
-  const errorCode = typeof params.error === "string" ? params.error : undefined;
+  const params = searchParams ? await searchParams : undefined;
+  const errorCode = typeof params?.error === "string" ? params.error : undefined;
   const actionError = actionErrorMessage(errorCode);
   const { patient, physio, activePlan, planExercises, logs, messages } = data;
   const day = planDay(activePlan);
