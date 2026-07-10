@@ -13,7 +13,8 @@ export function PublicSiteChrome() {
     pathname === "/per-fizioterapeutin" ||
     pathname === "/per-pacientin" ||
     pathname === "/cmimi" ||
-    pathname === "/support";
+    pathname === "/support" ||
+    pathname === "/contact";
 
   if (!isPublic) return null;
   return <div className="public-site-chrome"><SiteHeader /></div>;
