@@ -1,9 +1,9 @@
 import { redirect } from "next/navigation";
 import { BrandMark } from "@/components/BrandMark";
-import { PatientCompleteButton } from "@/components/PatientCompleteButton";
+import { PatientExerciseCompletionForm } from "@/components/PatientExerciseCompletionForm";
 import { getCurrentPatientSession } from "@/lib/patient-session";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
-import { completeExerciseAction, patientLogoutAction } from "./actions";
+import { patientLogoutAction } from "./actions";
 import "./patient-dashboard.css";
 
 const APP_TIMEZONE = "Europe/Belgrade";
@@ -137,23 +137,34 @@ function youtubeEmbed(url?: string | null) {
 }
 
 function ExerciseVideo({ url, title }: { url?: string | null; title: string }) {
-  if (!url) return <div className="patient-simple-no-video">Nuk ka video për këtë ushtrim.</div>;
+  if (!url) return <div className="patient-simple-no-video">Nuk ka video. Ndiq udhëzimin më poshtë.</div>;
   const embed = youtubeEmbed(url);
   if (embed) {
     return (
-      <iframe
-        className="patient-simple-video"
-        src={embed}
-        title={`Video: ${title}`}
-        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-        allowFullScreen
-      />
+      <div className="patient-video-wrap">
+        <span>Shiko videon para se ta fillosh</span>
+        <iframe
+          className="patient-simple-video"
+          src={embed}
+          title={`Video: ${title}`}
+          loading="lazy"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowFullScreen
+        />
+      </div>
     );
   }
   if (/\.(mp4|webm|ogg)(\?|$)/i.test(url)) {
-    return <video className="patient-simple-video" controls playsInline preload="metadata" src={url}>Shfletuesi yt nuk e hap videon.</video>;
+    return (
+      <div className="patient-video-wrap">
+        <span>Shiko videon para se ta fillosh</span>
+        <video className="patient-simple-video" controls playsInline preload="metadata" src={url}>
+          Shfletuesi yt nuk e hap videon.
+        </video>
+      </div>
+    );
   }
-  return <a className="patient-simple-video-link" href={url} target="_blank" rel="noreferrer">▶ Hape videon</a>;
+  return <a className="patient-simple-video-link" href={url} target="_blank" rel="noreferrer">▶ Hape videon e ushtrimit</a>;
 }
 
 export default async function PatientDashboardPage({ searchParams }: PageProps) {
@@ -180,9 +191,7 @@ export default async function PatientDashboardPage({ searchParams }: PageProps) 
   const hasNotStarted = Boolean(activePlan?.start_date && todayKey < activePlan.start_date);
   const ended = Boolean(activePlan?.end_date && todayKey > activePlan.end_date);
   const day = planDay(activePlan);
-  const exercises = hasNotStarted || ended
-    ? []
-    : planExercises.filter((item) => (item.day_number || 1) === day);
+  const exercises = hasNotStarted || ended ? [] : planExercises.filter((item) => (item.day_number || 1) === day);
   const todayLogs = logs.filter((log) => log.completed_on === todayKey);
   const done = exercises.filter((item) => latestLog(todayLogs, item.id)?.completed).length;
   const next = exercises.find((item) => !latestLog(todayLogs, item.id)?.completed);
@@ -226,12 +235,8 @@ export default async function PatientDashboardPage({ searchParams }: PageProps) 
         <p>{description}</p>
       </section>
 
-      {actionError && !ended && (
-        <section className="patient-simple-message danger"><b>Nuk u ruajt</b><p>{actionError}</p></section>
-      )}
-      {completedId && !ended && (
-        <section className="patient-simple-message success"><b>✓ U ruajt</b><p>Ushtrimi u shënua si i kryer.</p></section>
-      )}
+      {actionError && !ended && <section className="patient-simple-message danger"><b>Nuk u ruajt</b><p>{actionError}</p></section>}
+      {completedId && !ended && <section className="patient-simple-message success" role="status"><b>✓ U ruajt</b><p>Vazhdo me hapin e radhës.</p></section>}
 
       {mustStop && !ended && (
         <section className="patient-simple-stop" role="alert">
@@ -258,104 +263,39 @@ export default async function PatientDashboardPage({ searchParams }: PageProps) 
         </section>
       )}
 
-      {!activePlan && (
-        <section className="patient-simple-state-card">
-          <div className="patient-simple-state-icon">⌛</div>
-          <h2>Ende nuk ka plan aktiv</h2>
-          <p>Kur fizioterapeuti ta publikojë planin, ai do të shfaqet automatikisht këtu.</p>
-          <a href="#physio-contact">Kontakto fizioterapeutin</a>
-        </section>
-      )}
+      {!activePlan && <section className="patient-simple-state-card"><div className="patient-simple-state-icon">⌛</div><h2>Ende nuk ka plan aktiv</h2><p>Kur fizioterapeuti ta publikojë planin, ai do të shfaqet automatikisht këtu.</p><a href="#physio-contact">Kontakto fizioterapeutin</a></section>}
+      {hasNotStarted && activePlan && <section className="patient-simple-state-card"><div className="patient-simple-state-icon">📅</div><h2>Fillon më {formatDate(activePlan.start_date)}</h2><p>Mos i fillo ushtrimet para datës së caktuar.</p></section>}
+      {ended && activePlan && <section className="patient-simple-state-card finished"><div className="patient-simple-state-icon">✓</div><h2>I ke përfunduar ditët e planit</h2><p>Mos vazhdo me të njëjtin program pa kontroll të ri.</p><a href="#physio-contact">Kontakto fizioterapeutin</a></section>}
+      {restDay && <section className="patient-simple-state-card rest"><div className="patient-simple-state-icon">☀</div><h2>Sot pusho</h2><p>Nuk ke ushtrime të planifikuara për ditën {day}.</p></section>}
 
-      {hasNotStarted && activePlan && (
-        <section className="patient-simple-state-card">
-          <div className="patient-simple-state-icon">📅</div>
-          <h2>Fillon më {formatDate(activePlan.start_date)}</h2>
-          <p>Mos i fillo ushtrimet para datës së caktuar, përveç nëse të thotë fizioterapeuti.</p>
-        </section>
-      )}
-
-      {ended && activePlan && (
-        <section className="patient-simple-state-card finished">
-          <div className="patient-simple-state-icon">✓</div>
-          <h2>I ke përfunduar ditët e planit</h2>
-          <p>Mos vazhdo me të njëjtin program pa kontroll të ri.</p>
-          <a href="#physio-contact">Kontakto fizioterapeutin</a>
-        </section>
-      )}
-
-      {restDay && (
-        <section className="patient-simple-state-card rest">
-          <div className="patient-simple-state-icon">☀</div>
-          <h2>Sot pusho</h2>
-          <p>Nuk ke ushtrime të planifikuara për ditën {day}. Kthehu nesër ose ndiq udhëzimin e fizioterapeutit.</p>
-        </section>
-      )}
-
-      {!ended && !hasNotStarted && !restDay && !allDone && !mustStop && next && (
-        <a className="patient-simple-next" href={`#exercise-${next.id}`}>Fillo ushtrimin e radhës ↓</a>
-      )}
+      {!ended && !hasNotStarted && !restDay && !allDone && !mustStop && next && <a className="patient-simple-next" href={`#exercise-${next.id}`}>Fillo ushtrimin e radhës ↓</a>}
 
       {!ended && !hasNotStarted && !restDay && (
         <section className="patient-simple-exercises" aria-label="Ushtrimet e sotme">
-          <div className="patient-simple-section-heading">
-            <span>USHtrimet E SOTME</span>
-            <h2>Bëji me radhë</h2>
-            <p>Fillo nga ushtrimi 1 dhe vazhdo deri në fund.</p>
-          </div>
+          <div className="patient-simple-section-heading"><span>USHTRIMET E SOTME</span><h2>Bëji me radhë</h2><p>Fillo nga ushtrimi 1 dhe vazhdo deri në fund.</p></div>
           {exercises.map((exercise, index) => {
             const log = latestLog(todayLogs, exercise.id);
             const isDone = Boolean(log?.completed);
             const name = exercise.exercise_library?.name || "Ushtrim";
+            const nextExerciseId = exercises.slice(index + 1).find((item) => !latestLog(todayLogs, item.id)?.completed)?.id || null;
             return (
-              <article id={`exercise-${exercise.id}`} className={`patient-simple-exercise ${isDone ? "done" : ""}`} key={exercise.id}>
-                <div className="patient-simple-exercise-title">
-                  <span>{isDone ? "✓" : index + 1}</span>
-                  <div><small>{isDone ? "E KRYER" : `HAPI ${index + 1}`}</small><h2>{name}</h2><p>{dosage(exercise)}</p></div>
-                </div>
-
+              <article id={`exercise-${exercise.id}`} className={`patient-simple-exercise ${isDone ? "done" : ""} ${completedId === exercise.id ? "just-completed" : ""}`} key={exercise.id}>
+                <div className="patient-simple-exercise-title"><span>{isDone ? "✓" : index + 1}</span><div><small>{isDone ? "E KRYER" : `HAPI ${index + 1}`}</small><h2>{name}</h2><p>{dosage(exercise)}</p></div></div>
                 <ExerciseVideo url={exercise.exercise_library?.video_url} title={name} />
-
-                <div className="patient-simple-instructions">
-                  <b>Si ta bësh</b>
-                  <p>{exercise.instructions || exercise.exercise_library?.instructions_sq || "Bëje ngadalë. Mos e shty trupin me zor."}</p>
-                </div>
-
-                {isDone ? (
-                  <div className="patient-simple-completed">✓ Ky ushtrim u krye sot</div>
-                ) : (
-                  <form action={completeExerciseAction} className="patient-simple-form">
-                    <input type="hidden" name="planExerciseId" value={exercise.id} />
-                    <label htmlFor={`pain-${exercise.id}`}>Pas ushtrimit, sa dhimbje pate?</label>
-                    <select id={`pain-${exercise.id}`} name="painScore" defaultValue="0">
-                      {Array.from({ length: 11 }, (_, score) => <option key={score} value={score}>{score} / 10</option>)}
-                    </select>
-                    <textarea name="comment" maxLength={500} rows={2} placeholder="Shkruaj vetëm nëse ke diçka për fizioterapeutin (opsionale)" />
-                    <PatientCompleteButton />
-                    <small>Me këtë buton ushtrimi ruhet si i kryer.</small>
-                  </form>
-                )}
+                <div className="patient-simple-instructions"><b>Si ta bësh</b><p>{exercise.instructions || exercise.exercise_library?.instructions_sq || "Bëje ngadalë. Mos e shty trupin me zor."}</p></div>
+                {isDone
+                  ? <div className="patient-simple-completed">✓ Ky ushtrim u krye sot</div>
+                  : <PatientExerciseCompletionForm exerciseId={exercise.id} nextExerciseId={nextExerciseId} />}
               </article>
             );
           })}
         </section>
       )}
 
-      {!ended && allDone && (
-        <section className="patient-simple-day-done">
-          <div>✓</div><h2>I kreve të gjitha për sot</h2><p>Mund ta mbyllësh faqen. Progresi është ruajtur.</p>
-        </section>
-      )}
+      {!ended && allDone && <section className="patient-simple-day-done" id="today-complete"><div>✓</div><h2>I kreve të gjitha për sot</h2><p>Mund ta mbyllësh faqen. Progresi është ruajtur.</p></section>}
 
-      <section className="patient-simple-contact" id="physio-contact">
-        <span>Fizioterapeuti yt</span>
-        <h2>{physioName}</h2>
-        <p>{messages?.[0]?.message || "Kur ke pyetje, dhimbje të fortë ose përfundon programin, kontakto fizioterapeutin."}</p>
-      </section>
-
-      <section className="patient-simple-safety">
-        <b>Mbaje mend:</b> Dhimbje 7/10 ose më shumë = ndalo ushtrimet dhe kontakto fizioterapeutin.
-      </section>
+      <section className="patient-simple-contact" id="physio-contact"><span>Fizioterapeuti yt</span><h2>{physioName}</h2><p>{messages?.[0]?.message || "Kur ke pyetje, dhimbje të fortë ose përfundon programin, kontakto fizioterapeutin."}</p></section>
+      <section className="patient-simple-safety"><b>Mbaje mend:</b> Dhimbje 7/10 ose më shumë = ndalo ushtrimet dhe kontakto fizioterapeutin.</section>
     </main>
   );
 }
