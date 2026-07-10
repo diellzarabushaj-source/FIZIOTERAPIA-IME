@@ -18,6 +18,8 @@
     "check:recovery": "node scripts/data-recovery-contract-check.mjs",
     "check:all": "npm run preflight:routes && npm run check:security && npm run check:env:contract && npm run check:recovery && npm run test:backend && npm run lint && npm run typecheck",
     "smoke:production": "node scripts/smoke-test-production.mjs",
+    "qa:production:security": "node scripts/qa-production-security.mjs",
+    "qa:production": "npm run smoke:production && npm run qa:production:security",
     "smoke:report": "node scripts/render-smoke-report.mjs",
     "smoke:mobile-api": "node scripts/smoke-test-mobile-api.mjs",
     "smoke:sanity-blog": "node scripts/smoke-test-sanity-blog.mjs",
