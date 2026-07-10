@@ -3,7 +3,7 @@
 -- Safe to run repeatedly: deterministic UUIDs + upserts are used.
 --
 -- Physio test login (create/sign in with this email in Clerk):
---   demo.physio@fizioterapiaime.test
+--   xhavitrabushaj63@gmail.com
 -- Patient test access:
 --   username: arta.demo
 --   code: DEMO-2026
@@ -22,9 +22,9 @@ insert into profiles (
 values (
   '11111111-1111-4111-8111-111111111111'::uuid,
   null,
-  'demo.physio@fizioterapiaime.test',
+  'xhavitrabushaj63@gmail.com',
   'physio',
-  'Drin Demo',
+  'Xhavit Rabushaj',
   'Fizioterapia Ime · Demo Clinic',
   'active'
 )
@@ -37,7 +37,7 @@ on conflict (email) do update set
 -- Remove older demo subscription rows, so the newest row is always active.
 delete from subscriptions
 where physio_id = (
-  select id from profiles where email = 'demo.physio@fizioterapiaime.test'
+  select id from profiles where email = 'xhavitrabushaj63@gmail.com'
 )
 and invoice_reference = 'DEMO-SUBSCRIPTION-2026';
 
@@ -67,7 +67,7 @@ select
   'DEMO-SUBSCRIPTION-2026',
   'Demo subscription for testing. Not a real payment.'
 from profiles
-where email = 'demo.physio@fizioterapiaime.test';
+where email = 'xhavitrabushaj63@gmail.com';
 
 insert into patients (
   id,
@@ -93,7 +93,7 @@ select
   'arta.demo',
   'active'
 from profiles
-where email = 'demo.physio@fizioterapiaime.test'
+where email = 'xhavitrabushaj63@gmail.com'
 on conflict (patient_code) do update set
   physio_id = excluded.physio_id,
   first_name = excluded.first_name,
@@ -146,6 +146,6 @@ from profiles pr
 join subscriptions s on s.physio_id = pr.id
 join patients p on p.physio_id = pr.id
 left join plans pl on pl.patient_id = p.id and pl.status = 'active'
-where pr.email = 'demo.physio@fizioterapiaime.test'
+where pr.email = 'xhavitrabushaj63@gmail.com'
 order by s.created_at desc
 limit 1;
