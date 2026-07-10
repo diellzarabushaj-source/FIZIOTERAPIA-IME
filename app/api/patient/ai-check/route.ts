@@ -4,20 +4,19 @@ import { getCurrentPatientSession } from "@/lib/patient-session";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import { MAX_AI_FEEDBACK_LENGTH, requireAssignedPlanExercise } from "@/lib/backend-logic";
 
-const allowedAlertTypes = new Set(["good", "needs_attention", "contact_physio"]);
-type AiPayload = { planExerciseId?: string; score?: number; feedback?: string; alertType?: string; landmarksDetected?: number };
+type AiPayload = { planExerciseId?: string; score?: number; feedback?: string; landmarksDetected?: number };
 
 function parseScore(value: unknown) {
   const score = Number(value);
   return Number.isFinite(score) && score >= 0 && score <= 100 ? Math.round(score) : null;
 }
+
 function normalizeFeedback(value: unknown) {
   const text = String(value || "AI check u ruajt.").trim().slice(0, MAX_AI_FEEDBACK_LENGTH);
   return text || "AI check u ruajt.";
 }
-function normalizeAlertType(value: unknown, score: number) {
-  const alertType = String(value || "").trim();
-  if (allowedAlertTypes.has(alertType)) return alertType;
+
+function deriveAlertType(score: number) {
   return score < 60 ? "contact_physio" : score < 80 ? "needs_attention" : "good";
 }
 
@@ -44,7 +43,7 @@ export async function POST(request: Request) {
   }
 
   const feedback = normalizeFeedback(body.feedback);
-  const alertType = normalizeAlertType(body.alertType, score);
+  const alertType = deriveAlertType(score);
   const { data, error } = await supabase.from("ai_checks").insert({
     patient_id: patient.id,
     plan_exercise_id: planExerciseId,
