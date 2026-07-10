@@ -21,8 +21,9 @@ type ProfileRow = {
 
 export async function getActorContext(): Promise<ActorContext | null> {
   const user = await currentUser();
-  const email = user?.primaryEmailAddress?.emailAddress?.trim().toLowerCase();
-  if (!user?.id || !email) return null;
+  const primaryEmail = user?.primaryEmailAddress;
+  const email = primaryEmail?.emailAddress?.trim().toLowerCase();
+  if (!user?.id || !email || primaryEmail?.verification?.status !== "verified") return null;
 
   const supabase = getSupabaseAdmin();
   if (!supabase) return null;
@@ -38,12 +39,12 @@ export async function getActorContext(): Promise<ActorContext | null> {
   if (!canEnterWorkspace(profile.role, status)) return null;
 
   if (!profile.clerk_user_id) {
-    const { error: linkError } = await supabase
-      .from("profiles")
-      .update({ clerk_user_id: user.id })
-      .eq("id", profile.id)
-      .is("clerk_user_id", null);
-    if (linkError) return null;
+    const { data: linked, error: linkError } = await supabase.rpc("link_profile_clerk_identity", {
+      p_profile_id: profile.id,
+      p_email: email,
+      p_clerk_user_id: user.id,
+    });
+    if (linkError || linked !== true) return null;
   } else if (profile.clerk_user_id !== user.id) {
     return null;
   }
