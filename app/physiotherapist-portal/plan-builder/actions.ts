@@ -31,15 +31,24 @@ async function requireWorkspaceWithAccess() {
       .maybeSingle();
 
     if (!hasActivePhysioAccess(actor.role, subscription)) {
-      redirect("/physiotherapist-portal?access=subscription-required#billing");
+      redirect("/physiotherapist-portal/billing?access=subscription-required");
     }
   }
+
   return { actor, supabase };
 }
 
 function requireOk<T>(result: { ok: true; data: T } | { ok: false; error: { message: string } }): T {
   if (result.ok === false) throw new Error(result.error.message);
   return result.data;
+}
+
+function revalidatePlanWorkspace(patientId?: string) {
+  revalidatePath("/physiotherapist-portal/plan-builder");
+  revalidatePath("/physiotherapist-portal/programs");
+  revalidatePath("/physiotherapist-portal/overview");
+  revalidatePath("/patient-dashboard");
+  if (patientId) revalidatePath("/physiotherapist-portal/patients/" + patientId + "/program");
 }
 
 export async function createDraftPlanAction(formData: FormData) {
@@ -50,21 +59,31 @@ export async function createDraftPlanAction(formData: FormData) {
     durationDays: formData.get("durationDays"),
   }));
 
-  redirect(`/physiotherapist-portal/plan-builder?patientId=${encodeURIComponent(plan.patient_id)}&planId=${encodeURIComponent(plan.id)}`);
+  revalidatePlanWorkspace(plan.patient_id);
+  redirect(
+    "/physiotherapist-portal/plan-builder?patientId=" +
+    encodeURIComponent(plan.patient_id) +
+    "&planId=" +
+    encodeURIComponent(plan.id),
+  );
 }
 
 export async function addLibraryExerciseAction(formData: FormData) {
   const { actor } = await requireWorkspaceWithAccess();
+  const plan = requireOk(await getPlanForActor(actor, cleanText(formData.get("planId"), 80)));
+
   requireOk(await addExerciseToPlanForActor(actor, {
-    planId: formData.get("planId"),
+    planId: plan.id,
     exerciseId: formData.get("exerciseId"),
     sets: formData.get("sets"),
     reps: formData.get("reps"),
     frequency: formData.get("frequency"),
     dayNumber: formData.get("dayNumber"),
+    scheduleDays: formData.get("scheduleDays"),
     instructions: formData.get("instructions"),
   }));
-  revalidatePath("/physiotherapist-portal/plan-builder");
+
+  revalidatePlanWorkspace(plan.patient_id);
 }
 
 export async function addCustomExerciseAction(formData: FormData) {
@@ -72,14 +91,13 @@ export async function addCustomExerciseAction(formData: FormData) {
   const planId = cleanText(formData.get("planId"), 80);
   if (!planId) throw new Error("Plani kërkohet.");
 
-  requireOk(await getPlanForActor(actor, planId));
-
+  const plan = requireOk(await getPlanForActor(actor, planId));
   const exercise = requireOk(await createPrivateExerciseForActor(actor, {
     name: formData.get("name"),
     category: formData.get("category"),
     diagnosis: formData.get("diagnosis"),
     instructions: formData.get("instructions"),
-    videoUrl: formData.get("videoUrl"),
+    videoUrl: formData.get("mediaUrl") || formData.get("videoUrl"),
   }));
 
   const added = await addExerciseToPlanForActor(actor, {
@@ -89,44 +107,59 @@ export async function addCustomExerciseAction(formData: FormData) {
     reps: formData.get("reps"),
     frequency: formData.get("frequency"),
     dayNumber: formData.get("dayNumber"),
+    scheduleDays: formData.get("scheduleDays"),
     instructions: formData.get("instructions"),
   });
 
   if (added.ok === false) {
-    await supabase.from("exercise_library").delete().eq("id", exercise.id).eq("owner_physio_id", actor.profileId);
+    await supabase
+      .from("exercise_library")
+      .delete()
+      .eq("id", exercise.id)
+      .eq("owner_physio_id", actor.profileId);
     throw new Error(added.error.message);
   }
 
-  revalidatePath("/physiotherapist-portal/plan-builder");
+  revalidatePath("/physiotherapist-portal/exercises");
+  revalidatePlanWorkspace(plan.patient_id);
 }
 
 export async function updatePlanExerciseAction(formData: FormData) {
   const { actor } = await requireWorkspaceWithAccess();
-  requireOk(await updatePlanExerciseForActor(actor, {
-    planExerciseId: formData.get("planExerciseId"),
+  const planExerciseId = cleanText(formData.get("planExerciseId"), 80);
+  if (!planExerciseId) throw new Error("Ushtrimi në plan mungon.");
+
+  const updated = requireOk(await updatePlanExerciseForActor(actor, {
+    planExerciseId,
     sets: formData.get("sets"),
     reps: formData.get("reps"),
     frequency: formData.get("frequency"),
     dayNumber: formData.get("dayNumber"),
+    scheduleDays: formData.get("scheduleDays"),
     instructions: formData.get("instructions"),
   }));
-  revalidatePath("/physiotherapist-portal/plan-builder");
+
+  const plan = requireOk(await getPlanForActor(actor, updated.plan_id));
+  revalidatePlanWorkspace(plan.patient_id);
 }
 
 export async function removePlanExerciseAction(formData: FormData) {
   const { actor } = await requireWorkspaceWithAccess();
   const planExerciseId = cleanText(formData.get("planExerciseId"), 80);
   if (!planExerciseId) throw new Error("Ushtrimi në plan mungon.");
-  requireOk(await removePlanExerciseForActor(actor, planExerciseId));
-  revalidatePath("/physiotherapist-portal/plan-builder");
+
+  const removed = requireOk(await removePlanExerciseForActor(actor, planExerciseId));
+  const plan = requireOk(await getPlanForActor(actor, removed.planId));
+  revalidatePlanWorkspace(plan.patient_id);
 }
 
 export async function markPendingReviewAction(formData: FormData) {
   const { actor } = await requireWorkspaceWithAccess();
   const planId = cleanText(formData.get("planId"), 80);
   if (!planId) throw new Error("Plani mungon.");
-  requireOk(await transitionPlanForActor(actor, planId, "pending_review"));
-  revalidatePath("/physiotherapist-portal/plan-builder");
+
+  const plan = requireOk(await transitionPlanForActor(actor, planId, "pending_review"));
+  revalidatePlanWorkspace(plan.patient_id);
 }
 
 export async function approveAndSendPlanAction(formData: FormData) {
@@ -140,7 +173,12 @@ export async function approveAndSendPlanAction(formData: FormData) {
   if (plan.status === "approved") plan = requireOk(await transitionPlanForActor(actor, planId, "active"));
   if (plan.status !== "active") throw new Error("Plani nuk mund të aktivizohet nga statusi aktual.");
 
-  revalidatePath("/physiotherapist-portal");
-  revalidatePath("/patient-dashboard");
-  redirect(`/physiotherapist-portal/plan-builder?patientId=${encodeURIComponent(plan.patient_id)}&planId=${encodeURIComponent(plan.id)}&sent=1`);
+  revalidatePlanWorkspace(plan.patient_id);
+  redirect(
+    "/physiotherapist-portal/plan-builder?patientId=" +
+    encodeURIComponent(plan.patient_id) +
+    "&planId=" +
+    encodeURIComponent(plan.id) +
+    "&sent=1",
+  );
 }
