@@ -22,6 +22,7 @@ import "./ui-friendly.css";
 import "./patient-login-refresh.css";
 import "./physio-dashboard-refresh.css";
 import "./admin-dashboard-refresh.css";
+import "./plan-builder.css";
 
 const siteUrl = process.env.NEXT_PUBLIC_APP_URL || "https://fizioterapia-ime.vercel.app";
 
@@ -29,14 +30,8 @@ export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: "Fizioterapia Ime – Platformë digjitale për fizioterapi",
   description: "Website dhe platformë digjitale për plane fizioterapie, udhëzime të qarta për pacientë dhe mbështetje për fizioterapeutë.",
-  alternates: {
-    canonical: "/",
-  },
-  icons: {
-    icon: "/brand-mark.svg",
-    shortcut: "/brand-mark.svg",
-    apple: "/app-icon.svg",
-  },
+  alternates: { canonical: "/" },
+  icons: { icon: "/brand-mark.svg", shortcut: "/brand-mark.svg", apple: "/app-icon.svg" },
   openGraph: {
     type: "website",
     url: "/",
@@ -55,18 +50,6 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   const clerkConfigured = Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY);
-  const content = (
-    <>
-      {children}
-      <SiteFooter />
-    </>
-  );
-
-  return (
-    <html lang="sq">
-      <body>
-        {clerkConfigured ? <ClerkProvider>{content}</ClerkProvider> : content}
-      </body>
-    </html>
-  );
+  const content = <>{children}<SiteFooter /></>;
+  return <html lang="sq"><body>{clerkConfigured ? <ClerkProvider>{content}</ClerkProvider> : content}</body></html>;
 }
