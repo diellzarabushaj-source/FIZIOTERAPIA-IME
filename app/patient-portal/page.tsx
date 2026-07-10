@@ -58,6 +58,7 @@ export default async function PatientPortalPage({ searchParams }: { searchParams
           {error === "invalid" && <div className="fi-alert danger">Kodi nuk është i saktë. Kontrolloje dhe provo përsëri.</div>}
           {error === "missing" && <div className="fi-alert danger">Shkruaj kodin.</div>}
           {error === "rate-limited" && <div className="fi-alert danger">Ke provuar shumë herë. Prit pak dhe provo përsëri.</div>}
+          {error === "system" && <div className="fi-alert danger">Hyrja nuk është gati për momentin. Provo përsëri pak më vonë.</div>}
 
           <button className="button patient-entry-submit" type="submit">Hyr në planin tim</button>
           <small className="patient-entry-helper">Nuk e ke kodin? Kontakto fizioterapeutin.</small>
