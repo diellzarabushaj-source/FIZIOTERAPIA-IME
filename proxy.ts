@@ -10,7 +10,6 @@ const protectedRoutePrefixes = [
   "/owner-hidden",
   "/physiotherapist-portal",
   "/physiotherapist-dashboard",
-  "/admin-hidden",
   "/admin-dashboard",
   "/admin-billing",
   "/admin-feedback",
@@ -29,9 +28,18 @@ function matchesPath(pathname: string, prefixes: string[]) {
 }
 
 const protectedProxy = clerkMiddleware(async (auth, req) => {
-  if (matchesPath(req.nextUrl.pathname, protectedRoutePrefixes)) {
-    await auth.protect();
+  if (!matchesPath(req.nextUrl.pathname, protectedRoutePrefixes)) {
+    return NextResponse.next();
   }
+
+  const { userId } = await auth();
+  if (userId) return NextResponse.next();
+
+  const signInUrl = req.nextUrl.clone();
+  signInUrl.pathname = "/sign-in";
+  signInUrl.search = "";
+  signInUrl.searchParams.set("redirect_url", `${req.nextUrl.pathname}${req.nextUrl.search}`);
+  return NextResponse.redirect(signInUrl);
 });
 
 export const proxy: NextProxy = (request, event) => {
