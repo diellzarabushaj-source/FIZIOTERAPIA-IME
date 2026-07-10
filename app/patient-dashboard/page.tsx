@@ -5,6 +5,7 @@ import { getSupabaseAdmin, normalizePatientCode } from "@/lib/supabase-admin";
 import { completeExerciseAction, patientLogoutAction } from "./actions";
 
 const CODE_COOKIE = "fizioplan_patient_code";
+const APP_TIMEZONE = "Europe/Belgrade";
 
 type Patient = { id: string; physio_id: string | null; first_name: string; diagnosis: string | null; patient_code: string };
 type Plan = { id: string; title: string; start_date: string | null; end_date: string | null };
@@ -33,12 +34,15 @@ async function getDashboardData() {
     ? await supabase.from("plan_exercises").select("id,sets,reps,frequency,day_number,instructions,exercise_library(name,video_url,instructions_sq)").eq("plan_id", activePlan.id).order("day_number", { ascending: true }).returns<PlanExercise[]>()
     : { data: [] as PlanExercise[] };
 
-  const { data: logs } = await supabase.from("exercise_logs").select("plan_exercise_id,completed,pain_score,completed_at").eq("patient_id", patient.id).order("completed_at", { ascending: false }).limit(50).returns<ExerciseLog[]>();
+  const { data: logs } = await supabase.from("exercise_logs").select("plan_exercise_id,completed,pain_score,completed_at").eq("patient_id", patient.id).order("completed_at", { ascending: false }).limit(100).returns<ExerciseLog[]>();
   const { data: messages } = await supabase.from("physio_messages").select("id,message,created_at").eq("patient_id", patient.id).order("created_at", { ascending: false }).limit(3).returns<Message[]>();
 
   return { patient, physio, activePlan, planExercises: planExercises || [], logs: logs || [], messages: messages || [], error: null };
 }
 
+function dateKey(value: Date | string) {
+  return new Intl.DateTimeFormat("en-CA", { timeZone: APP_TIMEZONE, year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date(value));
+}
 function latestLog(logs: ExerciseLog[], exerciseId: string) { return logs.find((log) => log.plan_exercise_id === exerciseId); }
 function planDay(plan: Plan | null) { if (!plan?.start_date) return 1; const start = new Date(`${plan.start_date}T00:00:00`); return Math.max(1, Math.floor((Date.now() - start.getTime()) / 86_400_000) + 1); }
 function dosage(exercise: PlanExercise) { if (exercise.sets && exercise.reps) return `${exercise.sets} sete · ${exercise.reps} përsëritje`; return exercise.frequency || "Sipas udhëzimit"; }
@@ -51,10 +55,13 @@ export default async function PatientDashboardPage() {
 
   const { patient, physio, activePlan, planExercises, logs, messages } = data;
   const day = planDay(activePlan);
-  const available = planExercises.filter((item) => (item.day_number || 1) <= day);
-  const exercises = available.length ? available : planExercises;
-  const done = exercises.filter((item) => latestLog(logs, item.id)?.completed).length;
-  const next = exercises.find((item) => !latestLog(logs, item.id)?.completed);
+  const exactDayExercises = planExercises.filter((item) => (item.day_number || 1) === day);
+  const previousOrCurrentExercises = planExercises.filter((item) => (item.day_number || 1) <= day);
+  const exercises = exactDayExercises.length ? exactDayExercises : previousOrCurrentExercises.length ? previousOrCurrentExercises : planExercises;
+  const todayKey = dateKey(new Date());
+  const todayLogs = logs.filter((log) => log.completed_at && dateKey(log.completed_at) === todayKey);
+  const done = exercises.filter((item) => latestLog(todayLogs, item.id)?.completed).length;
+  const next = exercises.find((item) => !latestLog(todayLogs, item.id)?.completed);
   const lastPain = logs.find((item) => typeof item.pain_score === "number")?.pain_score;
   const stop = typeof lastPain === "number" && lastPain >= 7;
   const progress = exercises.length ? Math.round((done / exercises.length) * 100) : 0;
@@ -85,7 +92,7 @@ export default async function PatientDashboardPage() {
             {exercises.length === 0 && <div className="patient-clean-empty">Ende nuk ka ushtrime në plan.</div>}
             <div className="patient-clean-exercise-list">
               {exercises.map((exercise, index) => {
-                const log = latestLog(logs, exercise.id);
+                const log = latestLog(todayLogs, exercise.id);
                 const isDone = Boolean(log?.completed);
                 return (
                   <article className={`patient-clean-exercise ${isDone ? "done" : ""}`} key={exercise.id}>
