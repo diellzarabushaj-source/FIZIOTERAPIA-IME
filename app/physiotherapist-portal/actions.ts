@@ -93,13 +93,14 @@ export async function createPatientAction(formData: FormData) {
       }));
     }
   } catch (error) {
-    await supabase.from("patients").delete().eq("id", patient.id).eq("physio_id", patient.physio_id);
+    await supabase.from("plans").update({ status: "archived" }).eq("patient_id", patient.id).eq("status", "draft");
+    await supabase.from("patients").update({ status: "inactive" }).eq("id", patient.id).eq("physio_id", patient.physio_id);
     await writeAuditEvent({
       actor,
       action: "patient.creation_rolled_back",
       entityType: "patient",
       entityId: patient.id,
-      after: { reason: error instanceof Error ? error.message : "Unknown error" },
+      after: { reason: error instanceof Error ? error.message : "Unknown error", status: "inactive" },
     });
     throw error;
   }
