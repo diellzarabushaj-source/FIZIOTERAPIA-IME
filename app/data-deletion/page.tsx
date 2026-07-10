@@ -13,6 +13,10 @@ export const metadata: Metadata = {
 
 export default async function DataDeletionPage() {
   const page = await getLegalPageBySlug("data-deletion");
+  const sections = page.sections.map((section) => ({
+    ...section,
+    body: section.body.replaceAll("diellzarabushaj@gmail.com", "altin.physio@gmail.com"),
+  }));
 
-  return <LegalPage {...page} afterContent={<DataDeletionRequestForm />} />;
+  return <LegalPage {...page} sections={sections} afterContent={<DataDeletionRequestForm />} />;
 }
