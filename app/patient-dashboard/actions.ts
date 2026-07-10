@@ -35,7 +35,7 @@ export async function completeExerciseAction(formData: FormData) {
     comment: formData.get("comment"),
   });
 
-  if (!result.ok) {
+  if (result.ok === false) {
     redirect(`/patient-dashboard?error=${encodeURIComponent(result.error.code)}`);
   }
 
