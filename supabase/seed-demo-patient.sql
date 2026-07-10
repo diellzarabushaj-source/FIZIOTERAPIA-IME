@@ -1,5 +1,5 @@
--- Demo patient seed for App Store / Play Store review and QA.
--- Run this in Supabase SQL editor only when you want a reviewer/demo patient in production.
+-- Demo patient seed for QA and app review.
+-- Run this in Supabase SQL editor only when you want a reviewer/demo patient.
 -- It is idempotent for patient_username = 'demo-patient-4821'.
 
 DO $$
@@ -41,7 +41,7 @@ BEGIN
     'demo-patient-4821',
     'ARB-4821',
     'active',
-    'Demo patient for App Store / Play Store review. No real patient data.'
+    'Demo patient for QA and store review. No real patient data.'
   )
   ON CONFLICT (patient_username) DO UPDATE SET
     physio_id = EXCLUDED.physio_id,
@@ -70,19 +70,25 @@ BEGIN
     end_date,
     status
   )
-  VALUES (
+  SELECT
     v_patient_id,
     v_physio_id,
-    'Demo program rehabilitimi 14 ditë',
+    'Demo program rehabilitimi 14 dite',
     current_date,
     current_date + 13,
     'active'
-  )
-  ON CONFLICT DO NOTHING;
+  WHERE NOT EXISTS (
+    SELECT 1
+    FROM public.plans
+    WHERE patient_id = v_patient_id
+      AND title = 'Demo program rehabilitimi 14 dite'
+      AND status = 'active'
+  );
 
   SELECT id INTO v_plan_id
   FROM public.plans
   WHERE patient_id = v_patient_id
+    AND title = 'Demo program rehabilitimi 14 dite'
   ORDER BY created_at DESC
   LIMIT 1;
 
@@ -91,34 +97,40 @@ BEGIN
     FROM public.exercise_library
     WHERE is_default = true
       AND status = 'published'
-      AND name IN ('Glute bridge', 'Cat cow', 'Pelvic tilt', 'Piriformis stretch')
+      AND name IN ('Bird dog', 'Dead bug', 'Clamshell', 'Heel raises')
     ORDER BY CASE name
-      WHEN 'Glute bridge' THEN 1
-      WHEN 'Cat cow' THEN 2
-      WHEN 'Pelvic tilt' THEN 3
-      WHEN 'Piriformis stretch' THEN 4
+      WHEN 'Bird dog' THEN 1
+      WHEN 'Dead bug' THEN 2
+      WHEN 'Clamshell' THEN 3
+      WHEN 'Heel raises' THEN 4
       ELSE 5
     END
   LOOP
-    INSERT INTO public.plan_exercises (
-      plan_id,
-      exercise_id,
-      sets,
-      reps,
-      frequency,
-      day_number,
-      instructions
-    )
-    VALUES (
-      v_plan_id,
-      v_exercise_id,
-      2,
-      10,
-      'Çdo ditë',
-      1,
-      'Demo: kryeje ushtrimin ngadalë, me kontroll dhe ndalo nëse dhimbja rritet.'
-    )
-    ON CONFLICT DO NOTHING;
+    IF NOT EXISTS (
+      SELECT 1
+      FROM public.plan_exercises
+      WHERE plan_id = v_plan_id
+        AND exercise_id = v_exercise_id
+    ) THEN
+      INSERT INTO public.plan_exercises (
+        plan_id,
+        exercise_id,
+        sets,
+        reps,
+        frequency,
+        day_number,
+        instructions
+      )
+      VALUES (
+        v_plan_id,
+        v_exercise_id,
+        2,
+        10,
+        'Cdo dite',
+        1,
+        'Demo: kryeje ushtrimin ngadale, me kontroll dhe ndalo nese dhimbja rritet.'
+      );
+    END IF;
   END LOOP;
 
   SELECT pe.id INTO v_plan_exercise_id
@@ -130,30 +142,44 @@ BEGIN
   LIMIT 1;
 
   IF v_plan_exercise_id IS NOT NULL THEN
-    INSERT INTO public.exercise_logs (
-      patient_id,
-      plan_exercise_id,
-      completed,
-      pain_score,
-      comment,
-      completed_at
-    )
-    VALUES
-      (v_patient_id, v_plan_exercise_id, true, 3, 'Demo log: ushtrimi u krye pa dhimbje të fortë.', now() - interval '2 days'),
-      (v_patient_id, v_plan_exercise_id, true, 4, 'Demo log: pak tension, por brenda kufijve.', now() - interval '1 day')
-    ON CONFLICT DO NOTHING;
+    IF NOT EXISTS (
+      SELECT 1
+      FROM public.exercise_logs
+      WHERE patient_id = v_patient_id
+        AND plan_exercise_id = v_plan_exercise_id
+        AND comment LIKE 'Demo log:%'
+    ) THEN
+      INSERT INTO public.exercise_logs (
+        patient_id,
+        plan_exercise_id,
+        completed,
+        pain_score,
+        comment,
+        completed_at
+      )
+      VALUES
+        (v_patient_id, v_plan_exercise_id, true, 3, 'Demo log: ushtrimi u krye pa dhimbje te forte.', now() - interval '2 days'),
+        (v_patient_id, v_plan_exercise_id, true, 4, 'Demo log: pak tension, por brenda kufijve.', now() - interval '1 day');
+    END IF;
 
-    INSERT INTO public.ai_checks (
-      patient_id,
-      plan_exercise_id,
-      score,
-      feedback,
-      alert_type,
-      created_at
-    )
-    VALUES
-      (v_patient_id, v_plan_exercise_id, 82, 'Demo AI check: lëvizje e kontrolluar, vazhdo me ritëm të ngadalshëm.', 'good', now() - interval '1 day')
-    ON CONFLICT DO NOTHING;
+    IF NOT EXISTS (
+      SELECT 1
+      FROM public.ai_checks
+      WHERE patient_id = v_patient_id
+        AND plan_exercise_id = v_plan_exercise_id
+        AND feedback LIKE 'Demo AI check:%'
+    ) THEN
+      INSERT INTO public.ai_checks (
+        patient_id,
+        plan_exercise_id,
+        score,
+        feedback,
+        alert_type,
+        created_at
+      )
+      VALUES
+        (v_patient_id, v_plan_exercise_id, 82, 'Demo AI check: levizje e kontrolluar, vazhdo me ritem te ngadalshem.', 'good', now() - interval '1 day');
+    END IF;
   END IF;
 
   RAISE NOTICE 'Demo patient ready. Username: demo-patient-4821 | Code: ARB-4821';
