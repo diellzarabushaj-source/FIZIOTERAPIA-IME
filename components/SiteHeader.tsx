@@ -8,7 +8,7 @@ const links = [
   { href: "/clinic-use", label: "Si përdoret", key: "clinic" },
   { href: "/per-pacientin", label: "Për pacientin", key: "patient" },
   { href: "/per-fizioterapeutin", label: "Për fizioterapeutin", key: "physio" },
-  { href: "/#pricing", label: "Çmimi", key: "pricing" },
+  { href: "/cmimi", label: "Çmimi", key: "pricing" },
   { href: "/blog", label: "Blog", key: "blog" },
 ];
 
@@ -23,6 +23,7 @@ export function SiteHeader() {
           {links.map((link) => {
             const active =
               (link.key === "blog" && pathname.startsWith("/blog")) ||
+              (link.key === "pricing" && pathname === "/cmimi") ||
               (link.key === "patient" && pathname === "/per-pacientin") ||
               (link.key === "physio" && pathname === "/per-fizioterapeutin") ||
               (link.key === "clinic" && (pathname === "/clinic-use" || pathname === "/si-perdoret-ne-klinike"));
