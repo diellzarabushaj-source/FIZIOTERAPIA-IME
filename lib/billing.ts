@@ -21,7 +21,7 @@ export function hasActiveSubscription(role?: string | null, subscription?: Subsc
   const paidUntil = subscription.current_period_end ? new Date(subscription.current_period_end).getTime() : 0;
   const now = Date.now();
 
-  return status === "active" && paidUntil >= now;
+  return status === "active" && Number.isFinite(paidUntil) && paidUntil >= now;
 }
 
 /**
@@ -47,7 +47,9 @@ export function canCreateAnotherPatient({
 
 export function getBillingStatusLabel(subscription?: SubscriptionLike | null) {
   if (!subscription) return `Falas deri në ${FREE_PATIENT_LIMIT} pacientë`;
-  if (subscription.status === "active") return "Aktive";
+  if (subscription.status === "active") {
+    return hasActiveSubscription("physio", subscription) ? "Aktive" : "E skaduar";
+  }
   if (subscription.status === "pending") return "Në pritje";
   if (subscription.status === "suspended") return "E bllokuar";
   return `Falas deri në ${FREE_PATIENT_LIMIT} pacientë`;
