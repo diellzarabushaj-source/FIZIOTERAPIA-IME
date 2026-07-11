@@ -1,4 +1,4 @@
-import type { ClinicalExercise, ConditionRule, ExerciseFlagRule } from "./types";
+import type { ClinicalExercise, ConditionRule, ExerciseFlagRule } from "./types.ts";
 
 const image = "/exercise-media/placeholder.svg";
 
@@ -18,16 +18,16 @@ export const demoExercises: ClinicalExercise[] = [
 export const demoConditionRules: ConditionRule[] = [
   { conditionSlug:"acl-reconstruction", exerciseSlug:"quadriceps-setting", baseScore:95, rationale:"Aktivizim i hershëm i quadricepsit kur lejohet nga protokolli." },
   { conditionSlug:"acl-reconstruction", exerciseSlug:"heel-slide", baseScore:90, rationale:"Rikthim gradual i fleksionit brenda kufizimeve postoperative." },
-  { conditionSlug:"acl-reconstruction", exerciseSlug:"straight-leg-raise", baseScore:78, rationale:"Vetëm kur kontrolli i ekstenzionit është adekuat." },
-  { conditionSlug:"acl-reconstruction", exerciseSlug:"glute-bridge", baseScore:65, rationale:"Forcim ndihmës sipas fazës dhe tolerancës." },
-  { conditionSlug:"non-specific-low-back-pain", exerciseSlug:"pelvic-tilt", baseScore:86, rationale:"Kontroll lumbopelvik i toleruar." },
-  { conditionSlug:"non-specific-low-back-pain", exerciseSlug:"cat-camel", baseScore:82, rationale:"Mobilitet i kontrolluar në amplitudë të rehatshme." },
-  { conditionSlug:"non-specific-low-back-pain", exerciseSlug:"glute-bridge", baseScore:80, rationale:"Forcim aktiv i individualizuar." },
-  { conditionSlug:"rotator-cuff-related-shoulder-pain", exerciseSlug:"scapular-setting", baseScore:84, rationale:"Kontroll skapular sipas irritabilitetit." },
-  { conditionSlug:"rotator-cuff-related-shoulder-pain", exerciseSlug:"wall-slide", baseScore:78, rationale:"Mobilitet në amplitudë të toleruar." }
+  { conditionSlug:"acl-reconstruction", exerciseSlug:"straight-leg-raise", baseScore:82, rationale:"Forcim i kontrolluar vetëm kur nuk ka extension lag." },
+  { conditionSlug:"non-specific-low-back-pain", exerciseSlug:"pelvic-tilt", baseScore:90, rationale:"Kontroll i butë lumbopelvik." },
+  { conditionSlug:"non-specific-low-back-pain", exerciseSlug:"cat-camel", baseScore:84, rationale:"Mobilitet i kontrolluar i shtyllës." },
+  { conditionSlug:"non-specific-low-back-pain", exerciseSlug:"glute-bridge", baseScore:78, rationale:"Forcim progresiv i zinxhirit posterior." },
+  { conditionSlug:"rotator-cuff-related-pain", exerciseSlug:"scapular-setting", baseScore:90, rationale:"Kontroll skapular me ngarkesë të ulët." },
+  { conditionSlug:"rotator-cuff-related-pain", exerciseSlug:"wall-slide", baseScore:82, rationale:"Mobilitet i asistuar i shpatullës." }
 ];
 
 export const demoFlagRules: ExerciseFlagRule[] = [
-  { exerciseSlug:"calf-raise-supported", flagSlug:"no-weight-bearing", action:"block", scoreModifier:-100, rationale:"Kërkon ngarkesë në gjymtyrë." },
-  { exerciseSlug:"straight-leg-raise", flagSlug:"extension-lag", action:"block", scoreModifier:-100, rationale:"Nuk propozohet me extension lag pa rishikim profesional." }
+  { flagSlug:"extension-lag", exerciseSlug:"straight-leg-raise", action:"block", scoreModifier:-100, rationale:"Mos e përdor straight-leg raise kur ka extension lag pa miratim klinik." },
+  { flagSlug:"weight-bearing-restricted", exerciseSlug:"calf-raise-supported", action:"block", scoreModifier:-100, rationale:"Ushtrimi kërkon ngarkesë në këmbë." },
+  { flagSlug:"painful-arc", exerciseSlug:"wall-slide", action:"caution", scoreModifier:-25, rationale:"Përdor amplitudë të kufizuar pa painful arc." }
 ];
