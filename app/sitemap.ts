@@ -1,29 +1,25 @@
 import type { MetadataRoute } from "next";
+import { getBlogPosts } from "@/lib/sanity/queries";
+import { absoluteUrl, PUBLIC_INDEXABLE_ROUTES } from "@/lib/seo/site";
 
-const siteUrl = process.env.NEXT_PUBLIC_APP_URL || "https://fizioterapia-ime.vercel.app";
+export const revalidate = 3600;
 
-const publicRoutes = [
-  "/",
-  "/blog",
-  "/faq",
-  "/support",
-  "/clinic-use",
-  "/patient-handout",
-  "/privacy",
-  "/terms",
-  "/medical-disclaimer",
-  "/camera-consent",
-  "/data-deletion",
-];
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const posts = await getBlogPosts();
 
-export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = siteUrl.replace(/\/$/, "");
-  const now = new Date();
-
-  return publicRoutes.map((route) => ({
-    url: `${baseUrl}${route}`,
-    lastModified: now,
-    changeFrequency: route === "/" ? "weekly" : "monthly",
-    priority: route === "/" ? 1 : 0.7,
+  const staticEntries: MetadataRoute.Sitemap = PUBLIC_INDEXABLE_ROUTES.map((route) => ({
+    url: absoluteUrl(route),
+    changeFrequency: route === "/" ? "weekly" : route === "/blog" ? "daily" : "monthly",
+    priority: route === "/" ? 1 : route === "/blog" ? 0.9 : 0.7,
   }));
+
+  const blogEntries: MetadataRoute.Sitemap = posts.map((post) => ({
+    url: absoluteUrl(`/blog/${post.slug}`),
+    lastModified: post.date ? new Date(post.date) : undefined,
+    changeFrequency: "monthly",
+    priority: 0.8,
+    images: post.mainImage?.url ? [post.mainImage.url] : undefined,
+  }));
+
+  return [...staticEntries, ...blogEntries];
 }
