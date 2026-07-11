@@ -9,7 +9,6 @@ import {
   ClipboardList,
   CreditCard,
   Dumbbell,
-  Handshake,
   LayoutDashboard,
   Menu,
   MoreHorizontal,
@@ -24,7 +23,6 @@ const items = [
   { href: "/physiotherapist-portal/sessions", label: "Seancat", icon: CalendarDays },
   { href: "/physiotherapist-portal/programs", label: "Programet", icon: ClipboardList },
   { href: "/physiotherapist-portal/exercises", label: "Ushtrimet", icon: Dumbbell },
-  { href: "/physiotherapist-portal/collaboration", label: "Bashkëpunimi", icon: Handshake },
   { href: "/physiotherapist-portal/billing", label: "Pagesat", icon: CreditCard },
 ] as const;
 
