@@ -20,7 +20,9 @@ export async function DashboardShell({ children }: { children: React.ReactNode }
 
   return (
     <div className="pd-shell">
-      <aside className="pd-sidebar">
+      <a className="pd-skip-link" href="#clinical-main-content">Kalo te përmbajtja</a>
+
+      <aside className="pd-sidebar" aria-label="Navigimi klinik">
         <div className="pd-brand">
           <span className="pd-brand-mark" aria-hidden="true"><Activity size={20} /></span>
           <span>
@@ -36,7 +38,7 @@ export async function DashboardShell({ children }: { children: React.ReactNode }
             {displayName.slice(0, 1).toUpperCase()}
           </div>
           <div>
-            <p>{displayName}</p>
+            <p title={displayName}>{displayName}</p>
             <small>{roleLabel}</small>
           </div>
         </div>
@@ -49,11 +51,11 @@ export async function DashboardShell({ children }: { children: React.ReactNode }
             <small>Pacientë, programe dhe progres në një vend</small>
           </div>
           <div className="pd-topbar-actions">
-            <span className="pd-secure-status"><ShieldCheck size={16} /> Qasje e sigurt</span>
+            <span className="pd-secure-status"><ShieldCheck size={16} aria-hidden="true" /> Qasje e sigurt</span>
             <AuthControls />
           </div>
         </header>
-        <main className="pd-content">{children}</main>
+        <main id="clinical-main-content" className="pd-content" tabIndex={-1}>{children}</main>
       </div>
     </div>
   );
