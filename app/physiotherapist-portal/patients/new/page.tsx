@@ -17,17 +17,16 @@ export default async function NewPatientPage() {
           <span className={styles.eyebrow}>Kartelë klinike</span>
           <h1>Shto pacientin tënd</h1>
           <p>
-            Pacienti lidhet fillimisht vetëm me profilin tënd. Më vonë mund ta transferosh përmes Bashkëpunimit,
-            vetëm me pëlqimin e pacientit dhe pranimin e fizioterapeutit tjetër.
+            Pacienti lidhet vetëm me profilin tënd. Ti menaxhon kartelën, planin, seancat dhe progresin e tij.
           </p>
         </div>
       </header>
 
       <section className={styles.checkNotice} role="note" aria-label="Rregulli i caktimit të pacientit">
-        <strong>Fizioterapeuti përgjegjës në krijim: ti</strong>
+        <strong>Fizioterapeuti përgjegjës: ti</strong>
         <span>
-          Kartela, kodi, plani, seancat dhe alarmet shfaqen vetëm në workspace-in tënd derisa një handoff i sigurt
-          të pranohet nga fizioterapeuti tjetër.
+          Pacienti nuk mund të transferohet ose t’i caktohet një fizioterapeuti tjetër. Çdo fizioterapeut sheh dhe
+          menaxhon vetëm pacientët që ka krijuar vetë.
         </span>
       </section>
 
