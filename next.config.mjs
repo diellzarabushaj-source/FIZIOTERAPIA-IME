@@ -28,7 +28,7 @@ const securityHeaders = [
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' data: blob: https:",
       "font-src 'self' data:",
-      "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://*.clerk.accounts.dev https://api.resend.com https://*.sanity.io",
+      "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://*.clerk.accounts.dev https://api.resend.com https://*.sanity.io https://*.ingest.sentry.io https://*.ingest.us.sentry.io",
       "media-src 'self' blob: https:",
       "worker-src 'self' blob:",
       "frame-src 'self' https://*.clerk.accounts.dev",
