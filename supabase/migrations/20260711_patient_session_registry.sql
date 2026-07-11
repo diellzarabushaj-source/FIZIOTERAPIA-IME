@@ -27,6 +27,56 @@ alter table public.patient_auth_sessions enable row level security;
 revoke all on public.patient_auth_sessions from public, anon, authenticated;
 grant select, insert, update, delete on public.patient_auth_sessions to service_role;
 
+create or replace function public.rotate_patient_access_code(
+  p_patient_id uuid,
+  p_expected_code text,
+  p_new_code text
+)
+returns table(patient_id uuid, patient_code text, revoked_sessions bigint)
+language plpgsql
+security definer
+set search_path = public, pg_catalog
+as $$
+declare
+  v_patient_id uuid;
+  v_patient_code text;
+  v_revoked_sessions bigint := 0;
+begin
+  if auth.role() <> 'service_role' then
+    raise exception 'service_role required' using errcode = '42501';
+  end if;
+
+  if p_patient_id is null or nullif(btrim(p_expected_code), '') is null or nullif(btrim(p_new_code), '') is null then
+    raise exception 'patient id, expected code and new code are required' using errcode = '22023';
+  end if;
+
+  update public.patients
+  set patient_code = btrim(p_new_code),
+      updated_at = now()
+  where id = p_patient_id
+    and patient_code = btrim(p_expected_code)
+    and status = 'active'
+  returning id, patient_code into v_patient_id, v_patient_code;
+
+  if v_patient_id is null then
+    return;
+  end if;
+
+  update public.patient_auth_sessions
+  set revoked_at = now(),
+      revoked_reason = 'access_code_rotated'
+  where patient_id = v_patient_id
+    and revoked_at is null;
+
+  get diagnostics v_revoked_sessions = row_count;
+
+  return query select v_patient_id, v_patient_code, v_revoked_sessions;
+end;
+$$;
+
+revoke all on function public.rotate_patient_access_code(uuid,text,text) from public, anon, authenticated;
+grant execute on function public.rotate_patient_access_code(uuid,text,text) to service_role;
+
 insert into public.app_schema_state (singleton, schema_version, applied_at)
 values (true, '20260711.3', now())
 on conflict (singleton) do update set
@@ -97,7 +147,8 @@ begin
     'check_patient_login_attempt',
     'create_or_get_patient',
     'record_patient_exercise_completion',
-    'record_patient_login_result'
+    'record_patient_login_result',
+    'rotate_patient_access_code'
   ]::text[]) as required_name
   where not exists (
     select 1
