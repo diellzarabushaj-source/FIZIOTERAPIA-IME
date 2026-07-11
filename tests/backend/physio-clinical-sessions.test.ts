@@ -42,9 +42,14 @@ test("completing a scheduled session updates its record instead of inserting ano
 
 test("patient record separates scheduling from clinical documentation and disables writes in legacy mode", async () => {
   const page = await source("app/physiotherapist-portal/patients/[patientId]/page.tsx");
+  const form = await source("app/physiotherapist-portal/patients/[patientId]/ScheduleSessionForm.tsx");
   const summary = await source("lib/backend/patient-session-summary.ts");
 
-  assert.match(page, /<ScheduleSessionForm patientId=\{patientId\} \/>/);
+  assert.match(page, /getClinicDateTimeInput/);
+  assert.match(page, /minimumScheduledAt=\{schedulingMinimum\}/);
+  assert.match(page, /initialScheduledAt=\{initialScheduledAt\}/);
+  assert.match(form, /minimumScheduledAt: string/);
+  assert.match(form, /initialScheduledAt: string/);
   assert.match(page, /id="schedule-session"/);
   assert.match(page, /id="session-form"/);
   assert.match(page, /scheduledSessionId=\{selectedScheduledSessionId\}/);
