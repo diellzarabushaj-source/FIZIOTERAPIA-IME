@@ -37,15 +37,55 @@ const securityHeaders = [
   },
 ];
 
+const privateNoIndexRoutes = [
+  "/admin-dashboard/:path*",
+  "/admin-billing/:path*",
+  "/admin-feedback/:path*",
+  "/admin-hidden/:path*",
+  "/owner-hidden/:path*",
+  "/physiotherapist-dashboard/:path*",
+  "/physiotherapist-portal/:path*",
+  "/patient-dashboard/:path*",
+  "/patient-portal/:path*",
+  "/patient-access/:path*",
+  "/patient-progress/:path*",
+  "/patient-reminders/:path*",
+  "/patient-session/:path*",
+  "/reports/:path*",
+  "/sign-in/:path*",
+  "/sign-up/:path*",
+  "/ai-check/:path*",
+  "/app-preview/:path*",
+  "/launch-checklist/:path*",
+  "/qa-checklist/:path*",
+  "/final-handoff/:path*",
+  "/mobile-submission/:path*",
+  "/pilot-:path*",
+];
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   poweredByHeader: false,
   reactStrictMode: true,
+  compress: true,
   experimental: {
     serverActions: { bodySizeLimit: "6mb" },
   },
   async headers() {
-    return [{ source: "/(.*)", headers: securityHeaders }];
+    return [
+      { source: "/(.*)", headers: securityHeaders },
+      ...privateNoIndexRoutes.map((source) => ({
+        source,
+        headers: [
+          { key: "X-Robots-Tag", value: "noindex, nofollow, noarchive, nosnippet" },
+          { key: "Cache-Control", value: "private, no-store, max-age=0" },
+        ],
+      })),
+      {
+        source: "/:path*.(svg|png|jpg|jpeg|webp|avif|ico)",
+        headers: [{ key: "Cache-Control", value: "public, max-age=31536000, immutable" }],
+      },
+    ];
   },
 };
 
