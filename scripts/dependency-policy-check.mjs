@@ -22,8 +22,8 @@ if (packageJson.packageManager !== "npm@10.9.2") {
   problems.push(`packageManager must be npm@10.9.2, received ${JSON.stringify(packageJson.packageManager)}`);
 }
 
-if (packageJson.engines?.node !== ">=22 <23") {
-  problems.push(`engines.node must be ">=22 <23", received ${JSON.stringify(packageJson.engines?.node)}`);
+if (packageJson.engines?.node !== "24.x") {
+  problems.push(`engines.node must be "24.x", received ${JSON.stringify(packageJson.engines?.node)}`);
 }
 
 if (packageJson.engines?.npm !== ">=10 <11") {
