@@ -63,7 +63,7 @@ function PatientMatchRow({ patient, exact = false }: { patient: PatientMatch; ex
   );
 }
 
-export function NewPatientForm() {
+export function NewPatientForm({ maximumBirthDate }: { maximumBirthDate: string }) {
   const [state, action] = useActionState(createSmartPatientAction, initialState);
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -115,7 +115,7 @@ export function NewPatientForm() {
     };
   }, [canCheck, firstName, lastName, dateOfBirth, phone]);
 
-  const visibleMatches = canCheck ? matches : { exact: null, similar: [] };
+  const visibleMatches: MatchResponse = canCheck ? matches : { exact: null, similar: [] };
   const visibleChecking = canCheck && checking;
   const visibleCheckMessage = canCheck ? checkMessage : "";
 
@@ -204,7 +204,7 @@ export function NewPatientForm() {
             name="dateOfBirth"
             type="date"
             required
-            max={new Date().toISOString().slice(0, 10)}
+            max={maximumBirthDate}
             value={dateOfBirth}
             onChange={(event) => setDateOfBirth(event.target.value)}
             aria-invalid={Boolean(state.fieldErrors?.dateOfBirth)}
