@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { BrandMark } from "@/components/BrandMark";
 
 export default function AdminHiddenPage() {
@@ -6,8 +7,8 @@ export default function AdminHiddenPage() {
       <nav className="top-nav">
         <BrandMark />
         <div className="nav-actions">
-          <a href="/">Home</a>
-          <a href="/support">Support</a>
+          <Link href="/">Home</Link>
+          <Link href="/support">Support</Link>
         </div>
       </nav>
 
@@ -18,8 +19,8 @@ export default function AdminHiddenPage() {
           Nëse nuk je admin/owner i Fizioterapia Ime, kjo pjesë nuk është e hapur për përdorim publik, pacientë ose fizioterapeutë.
         </p>
         <div className="portal-actions">
-          <a className="button" href="/">Kthehu në Home</a>
-          <a className="button secondary" href="/support">Kontakto support</a>
+          <Link className="button" href="/">Kthehu në Home</Link>
+          <Link className="button secondary" href="/support">Kontakto support</Link>
         </div>
       </section>
     </main>
