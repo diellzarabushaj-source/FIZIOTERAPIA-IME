@@ -7,6 +7,7 @@ export const PATIENT_CODE_COOKIE = "fizioplan_patient_code";
 export const PATIENT_USERNAME_COOKIE = "fizioplan_patient_username";
 export const PATIENT_SESSION_COOKIE = "fizioplan_patient_session";
 export const PATIENT_SESSION_MAX_AGE_SECONDS = 60 * 60 * 24 * 7;
+export const PATIENT_SESSION_SECRET_MIN_LENGTH = 43;
 
 export const MAX_PATIENT_COMMENT_LENGTH = 500;
 export const MAX_AI_FEEDBACK_LENGTH = 600;
@@ -27,13 +28,19 @@ export function isAdminRole(role?: string | null) {
   return role === "owner" || role === "admin";
 }
 
-export function getPatientSessionSecret() {
-  const secret = process.env.PATIENT_SESSION_SECRET;
-  if (secret) return secret;
-  if (process.env.NODE_ENV === "production") {
-    throw new Error("PATIENT_SESSION_SECRET is required in production.");
+export function patientSessionSigningConfigured(env: NodeJS.ProcessEnv = process.env) {
+  const secret = env.PATIENT_SESSION_SECRET?.trim() || "";
+  if (env.NODE_ENV !== "production") return true;
+  return secret.length >= PATIENT_SESSION_SECRET_MIN_LENGTH;
+}
+
+export function getPatientSessionSecret(env: NodeJS.ProcessEnv = process.env) {
+  const secret = env.PATIENT_SESSION_SECRET?.trim() || "";
+  if (secret.length >= PATIENT_SESSION_SECRET_MIN_LENGTH) return secret;
+  if (env.NODE_ENV === "production") {
+    throw new Error(`PATIENT_SESSION_SECRET must contain at least ${PATIENT_SESSION_SECRET_MIN_LENGTH} characters in production.`);
   }
-  return "dev-only-patient-session-secret-change-me";
+  return secret || "dev-only-patient-session-secret-change-me";
 }
 
 function sessionMac(code: string, expiresAt: number) {
@@ -51,7 +58,7 @@ export function signPatientCode(
 }
 
 export function verifyPatientCodeSignature(code: string, signature?: string | null) {
-  if (!code || !signature) return false;
+  if (!code || !signature || !patientSessionSigningConfigured()) return false;
   const [expiresRaw, mac] = signature.split(".");
   const expiresAt = Number(expiresRaw);
   if (!Number.isInteger(expiresAt) || expiresAt <= Math.floor(Date.now() / 1000) || !mac) return false;
