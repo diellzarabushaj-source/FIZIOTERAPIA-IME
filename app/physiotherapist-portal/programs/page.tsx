@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import {
   CheckCircle2,
   ClipboardCheck,
@@ -54,6 +55,12 @@ function positivePage(value: string): number {
 
 function validStatus(value: string): string {
   return allowedStatuses.includes(value as (typeof allowedStatuses)[number]) ? value : "";
+}
+
+function validPatientId(value: string): string {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value)
+    ? value
+    : "";
 }
 
 function formatDate(value: string | null): string {
@@ -118,7 +125,7 @@ export default async function ProgramsPage({ searchParams }: { searchParams: Sea
   if (!supabase) throw new Error("Supabase nuk është konfiguruar.");
 
   const params = await searchParams;
-  const patientId = one(params.patientId).trim();
+  const patientId = validPatientId(one(params.patientId).trim());
   const status = validStatus(one(params.status));
   const page = positivePage(one(params.page));
   const from = (page - 1) * PAGE_SIZE;
@@ -185,6 +192,12 @@ export default async function ProgramsPage({ searchParams }: { searchParams: Sea
     throw new Error("Programet nuk mund të ngarkohen.");
   }
 
+  const totalPlans = planResult.count ?? 0;
+  const totalPages = Math.max(1, Math.ceil(totalPlans / PAGE_SIZE));
+  if (totalPlans > 0 && page > totalPages) {
+    redirect(programsHref({ patientId, status, page: totalPages }));
+  }
+
   const plans = planResult.data || [];
   const patientOptions = patientResult.data || [];
   const planPatientIds = [...new Set(plans.map((plan) => plan.patient_id))];
@@ -204,12 +217,9 @@ export default async function ProgramsPage({ searchParams }: { searchParams: Sea
   const optionMap = new Map(patientOptions.map((patient) => [patient.id, patient]));
   const patientMap = new Map(planPatients.map((patient) => [patient.id, patient]));
   const selectedPatient = patientId ? optionMap.get(patientId) : null;
-  const totalPlans = planResult.count ?? 0;
-  const totalPages = Math.max(1, Math.ceil(totalPlans / PAGE_SIZE));
-  const safePage = Math.min(page, totalPages);
   const createHref = `/physiotherapist-portal/plan-builder${patientId ? `?patientId=${encodeURIComponent(patientId)}` : ""}`;
-  const hasPrevious = safePage > 1;
-  const hasNext = safePage < totalPages;
+  const hasPrevious = page > 1;
+  const hasNext = page < totalPages;
 
   return (
     <>
@@ -327,13 +337,13 @@ export default async function ProgramsPage({ searchParams }: { searchParams: Sea
         {totalPages > 1 && (
           <nav className={styles.pagination} aria-label="Faqet e programeve">
             {hasPrevious ? (
-              <Link href={programsHref({ patientId, status, page: safePage - 1 })}>Faqja e kaluar</Link>
+              <Link href={programsHref({ patientId, status, page: page - 1 })}>Faqja e kaluar</Link>
             ) : (
               <span aria-disabled="true">Faqja e kaluar</span>
             )}
-            <strong>Faqja {safePage} nga {totalPages}</strong>
+            <strong>Faqja {page} nga {totalPages}</strong>
             {hasNext ? (
-              <Link href={programsHref({ patientId, status, page: safePage + 1 })}>Faqja tjetër</Link>
+              <Link href={programsHref({ patientId, status, page: page + 1 })}>Faqja tjetër</Link>
             ) : (
               <span aria-disabled="true">Faqja tjetër</span>
             )}
