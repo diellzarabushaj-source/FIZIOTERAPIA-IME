@@ -12,6 +12,7 @@ Purpose: local implementation and developer testing.
 - Dedicated non-production Supabase project
 - Synthetic patients only
 - Email sending disabled or routed to developer-owned addresses
+- PATIENT_SESSION_REGISTRY_ENABLED may remain 0 until the auth-session migration is applied locally
 
 ## Staging
 
@@ -36,6 +37,8 @@ Staging must test:
 7. admin activation and suspension
 8. notifications and email logging
 9. `/api/readiness` returns HTTP 200 and matching schema versions
+10. patient logout revokes the current auth session
+11. rotating a patient code revokes every registered auth session
 
 ## Production
 
@@ -46,6 +49,7 @@ Purpose: real users and clinical records.
 - Clerk live keys
 - Production-only Supabase project
 - Unique patient session secret
+- PATIENT_SESSION_REGISTRY_ENABLED=1
 - Unique health monitor secret of at least 32 characters
 - Verified email sender
 - Restricted owner/admin accounts
@@ -58,6 +62,7 @@ Production must never use:
 - staging Supabase credentials
 - synthetic demo passwords as real patient credentials
 - development session secrets
+- PATIENT_SESSION_REGISTRY_ENABLED=0
 - the same health monitor secret as staging
 
 ## Vercel mapping
@@ -77,15 +82,18 @@ Environment variables must be assigned to the correct Vercel scope. A value shou
 5. Apply to production.
 6. Verify schema, RLS, functions and security advisors.
 7. Confirm `/api/readiness` returns `ready` with the expected schema version.
+8. Set `PATIENT_SESSION_REGISTRY_ENABLED=1` only after schema version `20260711.3` is applied and readiness passes.
 
 Do not test destructive migrations directly on production.
 
-The application schema version is declared in `lib/backend/schema-readiness.ts` and must match the version inserted by `supabase/migrations/20260711_database_schema_readiness.sql`. When a future migration changes a required table or RPC, bump both values together and update the readiness RPC checklist.
+The application schema version is declared in `lib/backend/schema-readiness.ts` and must match the version inserted by the current schema migration. When a future migration changes a required table, column or RPC, bump both values together and update the readiness RPC checklist.
+
+`public.patient_sessions` stores clinical treatment sessions. `public.patient_auth_sessions` stores revocable login sessions. These tables must never be merged or reused for each other's purpose.
 
 ## Health versus readiness
 
 - `/api/health` confirms the application process, required environment and basic database connectivity are alive.
-- `/api/readiness` confirms the production database has the exact expected schema version and all critical tables and RPC functions.
+- `/api/readiness` confirms the production database has the exact expected schema version and all critical tables, columns and RPC functions.
 - Detailed diagnostics are returned only when the request contains the configured `x-monitor-secret` value.
 - A Vercel deployment marked `READY` is not considered clinically ready until `/api/readiness` returns HTTP 200.
 
@@ -99,4 +107,5 @@ Before a production release, record:
 - migration versions applied
 - successful production health result
 - successful production schema readiness result
+- confirmation that revocable patient sessions are enabled
 - rollback decision and responsible owner
