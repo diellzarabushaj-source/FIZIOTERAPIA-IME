@@ -23,7 +23,7 @@ test("global search masks patient codes and disables caching", async () => {
   assert.match(route, /function maskPatientCode/);
   assert.match(route, /maskPatientCode\(patient\.patient_code\)/);
   assert.match(route, /Cache-Control": "private, no-store, max-age=0"/);
-  assert.match(route, /replace\(\/\[,\%\(\)\]\//);
+  assert.ok(route.includes('replace(/[,%()]/g, " ")'));
 });
 
 test("global search is keyboard accessible", async () => {
