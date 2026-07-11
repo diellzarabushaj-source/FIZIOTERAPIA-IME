@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { useFormStatus } from "react-dom";
 
 export function SessionActionButton({
@@ -7,7 +8,7 @@ export function SessionActionButton({
   className,
   confirmMessage,
 }: {
-  children: React.ReactNode;
+  children: ReactNode;
   className: string;
   confirmMessage?: string;
 }) {
