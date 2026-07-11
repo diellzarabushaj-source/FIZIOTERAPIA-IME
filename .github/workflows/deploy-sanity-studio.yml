@@ -16,7 +16,7 @@ on:
       - ".github/workflows/deploy-sanity-studio.yml"
 
 permissions:
-  contents: read
+  contents: write
 
 concurrency:
   group: sanity-studio-${{ github.ref }}
@@ -32,30 +32,52 @@ jobs:
       SANITY_STUDIO_PROJECT_ID: a3wcdlcy
       SANITY_STUDIO_DATASET: production
     steps:
-      - name: Checkout repository
+      - name: Checkout source branch
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.head_ref || github.ref_name }}
 
       - name: Setup Node.js 24
         uses: actions/setup-node@v4
         with:
           node-version: 24
 
+      - name: Use repository npm version
+        run: npm install --global npm@10.9.2 --no-audit --no-fund
+
       - name: Install Studio dependencies
-        run: npm install --no-audit --no-fund
-
-      - name: Capture resolved Studio dependencies
         shell: bash
-        run: npm ls --depth=0 --json > sanity-installed-versions.json
+        run: |
+          if [ -f package-lock.json ]; then
+            npm ci --no-audit --no-fund
+          else
+            npm install --no-audit --no-fund
+          fi
 
-      - name: Upload Studio dependency resolution
-        uses: actions/upload-artifact@v4
-        with:
-          name: sanity-studio-dependency-resolution
-          path: |
-            apps/studio/sanity-installed-versions.json
-            apps/studio/package-lock.json
-          if-no-files-found: error
-          retention-days: 7
+      - name: Commit generated Studio lockfile
+        if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+        shell: bash
+        run: |
+          if [ -z "$(git status --porcelain -- package-lock.json)" ]; then
+            echo "Studio package-lock.json is already current."
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add package-lock.json
+          git commit -m "chore: lock Sanity Studio dependencies"
+          git push origin "HEAD:${GITHUB_HEAD_REF:-$GITHUB_REF_NAME}"
+
+      - name: Verify fork pull request lockfile
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository
+        shell: bash
+        run: |
+          if [ -n "$(git status --porcelain -- package-lock.json)" ]; then
+            echo "apps/studio/package-lock.json is missing or stale."
+            exit 1
+          fi
 
       - name: Build Studio
         id: studio-build
