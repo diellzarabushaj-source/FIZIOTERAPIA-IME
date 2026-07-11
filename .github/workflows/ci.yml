@@ -2,35 +2,39 @@ name: Launch CI
 
 on:
   pull_request:
+    branches: [main]
   push:
-    branches:
-      - main
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: launch-ci-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  web:
-    name: Web preflight, lint and build
+  quality:
+    name: Full quality gate
     runs-on: ubuntu-latest
+    timeout-minutes: 20
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Node
+      - name: Setup Node 22
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
+
+      - name: Verify runtime
+        run: |
+          node --version
+          npm --version
 
       - name: Install dependencies
         run: npm install --no-audit --no-fund
 
-      - name: Route preflight
-        run: npm run preflight:routes
-
-      - name: Environment readiness report
-        run: npm run check:env
-
-      - name: Lint
-        run: npm run lint
-
-      - name: Build
-        run: npm run build
+      - name: Run full quality gate
+        run: npm run check:all
