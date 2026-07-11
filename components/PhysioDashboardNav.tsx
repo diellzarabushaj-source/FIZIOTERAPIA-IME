@@ -12,7 +12,6 @@ import {
   LayoutDashboard,
   Menu,
   MoreHorizontal,
-  Plus,
   Users,
   X,
 } from "lucide-react";
@@ -97,15 +96,6 @@ export function PhysioDashboardNav() {
         })}
       </nav>
 
-      <Link className="pd-create-plan" href="/physiotherapist-portal/plan-builder">
-        <Plus size={18} aria-hidden="true" />
-        Krijo plan
-      </Link>
-
-      <Link className="pd-mobile-create" href="/physiotherapist-portal/plan-builder" aria-label="Krijo plan të ri">
-        <Plus size={22} aria-hidden="true" />
-      </Link>
-
       <nav className="pd-mobile-bottom-nav" aria-label="Navigimi kryesor mobile">
         {mobilePrimaryItems.map((item) => {
           const active = itemIsActive(pathname, item.href);
@@ -160,11 +150,6 @@ export function PhysioDashboardNav() {
                 );
               })}
             </nav>
-
-            <Link className="pd-mobile-drawer-create" href="/physiotherapist-portal/plan-builder" onClick={closeMenu}>
-              <Plus size={19} aria-hidden="true" />
-              Krijo plan të ri
-            </Link>
           </aside>
         </div>
       )}
