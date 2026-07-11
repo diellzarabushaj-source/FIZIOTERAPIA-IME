@@ -3,6 +3,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 export const PATIENT_SESSION_REGISTRY_COOKIE = "fizioplan_patient_registry";
 export const PATIENT_SESSION_REGISTRY_MAX_AGE_SECONDS = 60 * 60 * 24 * 7;
+export const PATIENT_AUTH_SESSIONS_TABLE = "patient_auth_sessions";
 
 export function patientSessionRegistryEnabled(env: NodeJS.ProcessEnv = process.env) {
   return env.PATIENT_SESSION_REGISTRY_ENABLED === "1";
@@ -41,7 +42,7 @@ export async function createPatientSession({
   const now = new Date();
   const expiresAt = new Date(now.getTime() + PATIENT_SESSION_REGISTRY_MAX_AGE_SECONDS * 1000);
 
-  const { error } = await supabase.from("patient_sessions").insert({
+  const { error } = await supabase.from(PATIENT_AUTH_SESSIONS_TABLE).insert({
     patient_id: patientId,
     token_hash: hashSessionToken(token),
     created_at: now.toISOString(),
@@ -71,7 +72,7 @@ export async function validatePatientSession({
 
   const now = new Date();
   const { data, error } = await supabase
-    .from("patient_sessions")
+    .from(PATIENT_AUTH_SESSIONS_TABLE)
     .select("id,expires_at,last_used_at,revoked_at")
     .eq("patient_id", patientId)
     .eq("token_hash", hashSessionToken(token))
@@ -84,7 +85,7 @@ export async function validatePatientSession({
   const lastUsedAt = Date.parse(data.last_used_at);
   if (!Number.isFinite(lastUsedAt) || now.getTime() - lastUsedAt >= 15 * 60 * 1000) {
     await supabase
-      .from("patient_sessions")
+      .from(PATIENT_AUTH_SESSIONS_TABLE)
       .update({ last_used_at: now.toISOString() })
       .eq("id", data.id)
       .is("revoked_at", null);
@@ -105,7 +106,7 @@ export async function revokePatientSession({
   if (!token) return false;
 
   const { data, error } = await supabase
-    .from("patient_sessions")
+    .from(PATIENT_AUTH_SESSIONS_TABLE)
     .update({
       revoked_at: new Date().toISOString(),
       revoked_reason: reason.slice(0, 100),
@@ -128,7 +129,7 @@ export async function revokeAllPatientSessions({
   reason: string;
 }) {
   const { data, error } = await supabase
-    .from("patient_sessions")
+    .from(PATIENT_AUTH_SESSIONS_TABLE)
     .update({
       revoked_at: new Date().toISOString(),
       revoked_reason: reason.slice(0, 100),
