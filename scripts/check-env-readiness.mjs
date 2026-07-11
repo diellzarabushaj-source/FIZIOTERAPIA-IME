@@ -12,6 +12,8 @@ const requiredWebEnv = [
   "NEXT_PUBLIC_APP_URL",
 ];
 
+const productionOnlyWebEnv = ["HEALTH_MONITOR_SECRET"];
+
 const recommendedWebEnv = [
   "NEXT_PUBLIC_SUPABASE_ANON_KEY",
   "ADMIN_EMAIL",
@@ -52,6 +54,7 @@ function statusFor(name) {
   const value = valueFor(name);
   if (!value) return "missing";
   if (name === "PATIENT_SESSION_SECRET" && value.length < 43) return "too_short";
+  if (name === "HEALTH_MONITOR_SECRET" && value.length < 32) return "too_short";
   if (["NEXT_PUBLIC_APP_URL", "NEXT_PUBLIC_SUPABASE_URL", "EXPO_PUBLIC_API_BASE_URL"].includes(name) && !validUrlForEnvironment(name, value)) {
     return "invalid_url";
   }
@@ -64,6 +67,7 @@ function rowsFor(group, names, required) {
 
 const rows = [
   ...rowsFor("web", requiredWebEnv, true),
+  ...rowsFor("web", productionOnlyWebEnv, appEnvironment === "production"),
   ...rowsFor("web", recommendedWebEnv, false),
   ...rowsFor("mobile", requiredMobileEnv, appEnvironment === "production"),
 ];
