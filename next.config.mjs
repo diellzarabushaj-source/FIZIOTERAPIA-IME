@@ -45,12 +45,14 @@ const privateNoIndexRoutes = [
   "/owner-hidden/:path*",
   "/physiotherapist-dashboard/:path*",
   "/physiotherapist-portal/:path*",
+  "/patient/:path*",
   "/patient-dashboard/:path*",
   "/patient-portal/:path*",
   "/patient-access/:path*",
   "/patient-progress/:path*",
   "/patient-reminders/:path*",
   "/patient-session/:path*",
+  "/p/:path*",
   "/reports/:path*",
   "/sign-in/:path*",
   "/sign-up/:path*",
@@ -81,10 +83,6 @@ const nextConfig = {
           { key: "Cache-Control", value: "private, no-store, max-age=0" },
         ],
       })),
-      {
-        source: "/:path*.(svg|png|jpg|jpeg|webp|avif|ico)",
-        headers: [{ key: "Cache-Control", value: "public, max-age=31536000, immutable" }],
-      },
     ];
   },
 };
