@@ -31,6 +31,11 @@ export type PatientSessionSummary = {
   upcomingSession: SessionSummaryRecord | null;
 };
 
+function forwardFailure<T>(result: BackendResult<unknown>): BackendResult<T> {
+  if (result.ok === true) return fail("INTERNAL_ERROR", "Rezultati i backend-it ishte i papritur.");
+  return fail(result.error.code, result.error.message, result.error);
+}
+
 function mapLegacySession(row: LegacySessionRecord): SessionSummaryRecord {
   return {
     id: row.id,
@@ -49,7 +54,7 @@ export async function getPatientSessionSummaryForActor(
   patientId: string,
 ): Promise<BackendResult<PatientSessionSummary>> {
   const patientResult = await getPatientForActor(actor, patientId);
-  if (patientResult.ok === false) return patientResult;
+  if (patientResult.ok === false) return forwardFailure(patientResult);
 
   const supabase = getSupabaseAdmin();
   if (!supabase) return fail("DATABASE_ERROR", "Databaza nuk është konfiguruar.");
@@ -87,8 +92,7 @@ export async function getPatientSessionSummaryForActor(
     upcomingSessionQuery.returns<SessionSummaryRecord[]>(),
   ]);
 
-  const modernError =
-    completedCountResult.error || latestCompletedResult.error || upcomingSessionResult.error;
+  const modernError = completedCountResult.error || latestCompletedResult.error || upcomingSessionResult.error;
 
   if (!modernError) {
     return ok({
