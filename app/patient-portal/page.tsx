@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { BrandMark } from "@/components/BrandMark";
 import { getCurrentPatientSession } from "@/lib/patient-session";
@@ -16,10 +17,10 @@ const safetyNotes = [
 ];
 
 const errorMessages: Record<string, string> = {
-  invalid: "Kodi nuk është i saktë. Kontrolloje dhe provo përsëri.",
+  invalid: "Kodi nuk është i saktë ose pacienti nuk është aktiv. Kontrolloje kodin e krijuar në kartelë.",
   missing: "Shkruaj kodin që ta ka dhënë fizioterapeuti.",
   "rate-limited": "Ke provuar shumë herë. Prit pak dhe provo përsëri.",
-  system: "Hyrja nuk është gati për momentin. Provo përsëri pak më vonë.",
+  system: "Hyrja me kod nuk është konfiguruar plotësisht në databazë. Mund ta hapësh demonstrimin më poshtë ndërsa rregullohet konfigurimi.",
 };
 
 export default async function PatientPortalPage({ searchParams }: { searchParams?: Promise<{ error?: string; code?: string }> }) {
@@ -67,7 +68,7 @@ export default async function PatientPortalPage({ searchParams }: { searchParams
               required
             />
             <small id="patient-code-help" className="patient-entry-helper">
-              Mund ta shkruash me shkronja të vogla ose të mëdha; hapësirat hiqen automatikisht.
+              Kopjoje kodin direkt nga kartela e pacientit. Hapësirat hiqen automatikisht.
             </small>
           </div>
 
@@ -75,6 +76,13 @@ export default async function PatientPortalPage({ searchParams }: { searchParams
 
           <button className="button patient-entry-submit" type="submit">Hyr në planin tim</button>
           <small className="patient-entry-helper">Mos e ndaj kodin publikisht. Nuk e ke kodin? Kontakto fizioterapeutin.</small>
+
+          <div className="patient-entry-demo">
+            <span className="fi-badge success">Pa kod testues?</span>
+            <h2>Shiko dashboard-in e pacientit</h2>
+            <p>Hape një demonstrim të plotë me plan, progres, ushtrime dhe kontaktin e fizioterapeutit. Nuk përdor të dhëna reale.</p>
+            <Link className="button secondary" href="/patient-dashboard/demo">Hap Patient Demo</Link>
+          </div>
         </form>
 
         <aside className="patient-entry-preview" aria-label="Si funksionon hyrja e pacientit">
