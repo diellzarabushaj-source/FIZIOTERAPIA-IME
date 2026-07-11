@@ -3,6 +3,7 @@ import { readFile } from "node:fs/promises";
 import test from "node:test";
 
 const root = new URL("../../", import.meta.url);
+const migrationPath = "supabase/migrations/20260711_zz_exercise_library_readiness.sql";
 
 async function source(path: string) {
   return readFile(new URL(path, root), "utf8");
@@ -10,7 +11,7 @@ async function source(path: string) {
 
 test("exercise library migration supplies every column used by the backend", async () => {
   const [migration, service] = await Promise.all([
-    source("supabase/migrations/20260711_exercise_library_readiness.sql"),
+    source(migrationPath),
     source("lib/backend/exercises.ts"),
   ]);
 
@@ -23,14 +24,15 @@ test("exercise library migration supplies every column used by the backend", asy
   assert.match(migration, /exercise_library\.owner_physio_id/);
 });
 
-test("application and latest migration agree on schema version", async () => {
+test("application and final migration agree on schema version", async () => {
   const [readiness, migration] = await Promise.all([
     source("lib/backend/schema-readiness.ts"),
-    source("supabase/migrations/20260711_exercise_library_readiness.sql"),
+    source(migrationPath),
   ]);
 
   assert.match(readiness, /EXPECTED_DATABASE_SCHEMA_VERSION = "20260711\.4"/);
   assert.match(migration, /values \(true, '20260711\.4', now\(\)\)/);
+  assert.ok(migrationPath > "supabase/migrations/20260711_patient_session_registry.sql");
 });
 
 test("baseline schema documents migrations and includes exercise ownership fields", async () => {
