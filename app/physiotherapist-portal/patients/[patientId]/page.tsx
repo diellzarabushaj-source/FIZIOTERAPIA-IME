@@ -28,6 +28,19 @@ function formatSessionDate(value: string): string {
     day: "2-digit",
     month: "short",
     year: "numeric",
+    timeZone: "Europe/Belgrade",
+  }).format(date);
+}
+
+function formatBirthDate(value: string | null) {
+  if (!value) return "—";
+  const date = new Date(`${value}T00:00:00Z`);
+  if (Number.isNaN(date.getTime())) return value;
+  return new Intl.DateTimeFormat("sq-AL", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    timeZone: "UTC",
   }).format(date);
 }
 
@@ -48,29 +61,42 @@ export default async function PatientRecordPage({
   const supabase = getSupabaseAdmin();
   if (!supabase) throw new Error("Supabase nuk është konfiguruar.");
 
-  let sessionQuery = supabase
+  let sessionCountQuery = supabase
+    .from("patient_sessions")
+    .select("id", { count: "exact", head: true })
+    .eq("patient_id", patientId);
+  let latestSessionQuery = supabase
     .from("patient_sessions")
     .select("id,session_date,status,pain_before,pain_after,treatment_summary,clinical_notes,next_steps")
     .eq("patient_id", patientId)
-    .order("session_date", { ascending: false });
-  if (actor.role === "physio") sessionQuery = sessionQuery.eq("physio_id", actor.profileId);
+    .order("session_date", { ascending: false })
+    .limit(1);
 
-  const { data: sessions, error } = await sessionQuery.returns<SessionRow[]>();
-
-  if (error) {
-    console.error("patient_sessions_load_failed", {
-      patientId,
-      physioId: actor.profileId,
-      code: error.code,
-      message: error.message,
-    });
-    throw new Error("Seancat nuk mund të ngarkohen.");
+  if (actor.role === "physio") {
+    sessionCountQuery = sessionCountQuery.eq("physio_id", actor.profileId);
+    latestSessionQuery = latestSessionQuery.eq("physio_id", actor.profileId);
   }
 
-  const sessionCount = sessions?.length || 0;
+  const [sessionCountResult, latestSessionResult] = await Promise.all([
+    sessionCountQuery,
+    latestSessionQuery.returns<SessionRow[]>(),
+  ]);
+
+  if (sessionCountResult.error || latestSessionResult.error) {
+    const loadError = sessionCountResult.error || latestSessionResult.error;
+    console.error("patient_sessions_summary_load_failed", {
+      patientId,
+      physioId: actor.profileId,
+      code: loadError?.code,
+      message: loadError?.message,
+    });
+    throw new Error("Përmbledhja e seancave nuk mund të ngarkohet.");
+  }
+
+  const sessionCount = sessionCountResult.count ?? 0;
   const nextSessionNumber = sessionCount + 1;
-  const latestSession = sessions?.[0] || null;
-  const patientName = (patient.first_name + " " + (patient.last_name || "")).trim();
+  const latestSession = latestSessionResult.data?.[0] || null;
+  const patientName = `${patient.first_name} ${patient.last_name || ""}`.trim();
   const accessRotated = notices.access === "rotated";
 
   return (
@@ -80,7 +106,7 @@ export default async function PatientRecordPage({
           <span className={styles.eyebrow}>Kartela e pacientit</span>
           <h1>{patientName}</h1>
           <div className={styles.meta}>
-            <span>Datëlindja: {patient.date_of_birth || "—"}</span>
+            <span>Datëlindja: {formatBirthDate(patient.date_of_birth)}</span>
             <span>Mosha: {patient.age ?? "—"}</span>
             <span>Seanca: {sessionCount}</span>
             <span className={styles.code}>Kodi {patient.patient_code}</span>
@@ -89,12 +115,17 @@ export default async function PatientRecordPage({
 
         <div className={styles.patientActions}>
           <RotatePatientAccessCodeForm patientId={patientId} />
-          <Link className={styles.secondary} href={"/patient-access/" + encodeURIComponent(patient.patient_code)} target="_blank">
-            <QrCode size={17} />
+          <Link
+            className={styles.secondary}
+            href={`/patient-access/${encodeURIComponent(patient.patient_code)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <QrCode size={17} aria-hidden="true" />
             Printo QR
           </Link>
-          <Link className={styles.primary} href={"/physiotherapist-portal/patients/" + patientId + "/program"}>
-            <ClipboardPlus size={17} />
+          <Link className={styles.primary} href={`/physiotherapist-portal/patients/${patientId}/program`}>
+            <ClipboardPlus size={17} aria-hidden="true" />
             Menaxho planin
           </Link>
         </div>
@@ -142,8 +173,8 @@ export default async function PatientRecordPage({
         <article className={styles.summaryPanel}>
           <span>Historiku klinik</span>
           <strong>{sessionCount} seanca të dokumentuara</strong>
-          <Link href={"/physiotherapist-portal/patients/" + patientId + "/history"}>
-            <History size={14} /> Hap timeline-in e plotë
+          <Link href={`/physiotherapist-portal/patients/${patientId}/history`}>
+            <History size={14} aria-hidden="true" /> Hap timeline-in e plotë
           </Link>
         </article>
       </section>
