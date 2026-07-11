@@ -35,6 +35,15 @@ function revalidatePlanWorkspace(patientId?: string) {
   if (patientId) revalidatePath(`/physiotherapist-portal/patients/${patientId}/program`);
 }
 
+function planBuilderUrl(plan: { id: string; patient_id: string }, notice?: "reviewed" | "approved" | "sent") {
+  const params = new URLSearchParams({
+    patientId: plan.patient_id,
+    planId: plan.id,
+  });
+  if (notice) params.set(notice, "1");
+  return `/physiotherapist-portal/plan-builder?${params.toString()}`;
+}
+
 export async function createDraftPlanAction(formData: FormData) {
   const { actor } = await requireWorkspace();
   const plan = requireOk(await createDraftPlanForActor(actor, {
@@ -44,9 +53,7 @@ export async function createDraftPlanAction(formData: FormData) {
   }));
 
   revalidatePlanWorkspace(plan.patient_id);
-  redirect(
-    `/physiotherapist-portal/plan-builder?patientId=${encodeURIComponent(plan.patient_id)}&planId=${encodeURIComponent(plan.id)}`,
-  );
+  redirect(planBuilderUrl(plan));
 }
 
 export async function addLibraryExerciseAction(formData: FormData) {
@@ -139,8 +146,12 @@ export async function markPendingReviewAction(formData: FormData) {
   const planId = cleanText(formData.get("planId"), 80);
   if (!planId) throw new Error("Plani mungon.");
 
+  const current = requireOk(await getPlanForActor(actor, planId));
+  if (current.status !== "draft") throw new Error("Vetëm drafti mund të dërgohet për kontroll.");
+
   const plan = requireOk(await transitionPlanForActor(actor, planId, "pending_review"));
   revalidatePlanWorkspace(plan.patient_id);
+  redirect(planBuilderUrl(plan, "reviewed"));
 }
 
 export async function approveAndSendPlanAction(formData: FormData) {
@@ -148,14 +159,26 @@ export async function approveAndSendPlanAction(formData: FormData) {
   const planId = cleanText(formData.get("planId"), 80);
   if (!planId) throw new Error("Plani mungon.");
 
-  let plan = requireOk(await getPlanForActor(actor, planId));
-  if (plan.status === "draft") plan = requireOk(await transitionPlanForActor(actor, planId, "pending_review"));
-  if (plan.status === "pending_review") plan = requireOk(await transitionPlanForActor(actor, planId, "approved"));
-  if (plan.status === "approved") plan = requireOk(await transitionPlanForActor(actor, planId, "active"));
-  if (plan.status !== "active") throw new Error("Plani nuk mund të aktivizohet nga statusi aktual.");
+  const current = requireOk(await getPlanForActor(actor, planId));
+  if (current.status === "draft") {
+    throw new Error("Dërgoje draftin për kontroll para aprovimit.");
+  }
 
-  revalidatePlanWorkspace(plan.patient_id);
-  redirect(
-    `/physiotherapist-portal/plan-builder?patientId=${encodeURIComponent(plan.patient_id)}&planId=${encodeURIComponent(plan.id)}&sent=1`,
-  );
+  if (current.status === "pending_review") {
+    const approved = requireOk(await transitionPlanForActor(actor, planId, "approved"));
+    revalidatePlanWorkspace(approved.patient_id);
+    redirect(planBuilderUrl(approved, "approved"));
+  }
+
+  if (current.status === "approved") {
+    const active = requireOk(await transitionPlanForActor(actor, planId, "active"));
+    revalidatePlanWorkspace(active.patient_id);
+    redirect(planBuilderUrl(active, "sent"));
+  }
+
+  if (current.status === "active") {
+    redirect(planBuilderUrl(current, "sent"));
+  }
+
+  throw new Error("Plani nuk mund të aprovohet ose aktivizohet nga statusi aktual.");
 }
