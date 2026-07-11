@@ -24,27 +24,36 @@ export async function authenticatePatientCode({
   const code = normalizePatientCode(String(rawCode || ""));
   if (!code) return { ok: false, reason: "missing" };
 
-  const { data: allowed, error: rateError } = await supabase.rpc("check_patient_login_attempt", {
-    p_code: code,
-    p_ip_address: ipAddress || null,
-  });
+  try {
+    const { data: allowed, error: rateError } = await supabase.rpc("check_patient_login_attempt", {
+      p_code: code,
+      p_ip_address: ipAddress || null,
+    });
 
-  if (rateError) return { ok: false, reason: "misconfigured" };
-  if (!allowed) return { ok: false, reason: "rate-limited" };
+    if (rateError) return { ok: false, reason: "misconfigured" };
+    if (allowed !== true) return { ok: false, reason: "rate-limited" };
 
-  const { data: patient } = await supabase
-    .from("patients")
-    .select("id,patient_username,patient_code,status")
-    .eq("patient_code", code)
-    .eq("status", "active")
-    .maybeSingle<PatientLoginRecord>();
+    const { data: patient, error: patientError } = await supabase
+      .from("patients")
+      .select("id,patient_username,patient_code,status")
+      .eq("patient_code", code)
+      .eq("status", "active")
+      .maybeSingle<PatientLoginRecord>();
 
-  await supabase.rpc("record_patient_login_result", {
-    p_code: code,
-    p_ip_address: ipAddress || null,
-    p_success: Boolean(patient),
-  });
+    if (patientError) return { ok: false, reason: "misconfigured" };
 
-  if (!patient) return { ok: false, reason: "invalid" };
-  return { ok: true, patient };
+    const { error: auditError } = await supabase.rpc("record_patient_login_result", {
+      p_code: code,
+      p_ip_address: ipAddress || null,
+      p_success: Boolean(patient),
+    });
+
+    // Code-based access is security-sensitive. Do not create an unaudited session.
+    if (auditError) return { ok: false, reason: "misconfigured" };
+    if (!patient) return { ok: false, reason: "invalid" };
+
+    return { ok: true, patient };
+  } catch {
+    return { ok: false, reason: "misconfigured" };
+  }
 }
