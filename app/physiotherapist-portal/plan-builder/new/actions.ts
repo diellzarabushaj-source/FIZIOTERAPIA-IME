@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requirePhysioActor } from "@/lib/backend/access";
-import { listExercisesForActor } from "@/lib/backend/exercises";
+import { listExercisesForActor, type ExerciseRecord } from "@/lib/backend/exercises";
 import {
   addExerciseToPlanForActor,
   createDraftPlanForActor,
@@ -36,6 +36,18 @@ function revalidatePlanPages(patientId: string) {
   revalidatePath(`/physiotherapist-portal/patients/${patientId}/program`);
 }
 
+function preferredExercisesByName(library: ExerciseRecord[]) {
+  const exerciseByName = new Map<string, ExerciseRecord>();
+  for (const exercise of library) {
+    const key = normalizeClinicalText(exercise.name);
+    const existing = exerciseByName.get(key);
+    if (!existing || (!existing.is_default && exercise.is_default)) {
+      exerciseByName.set(key, exercise);
+    }
+  }
+  return exerciseByName;
+}
+
 export async function createPlanFromTemplateAction(formData: FormData) {
   const actor = await requirePhysioActor();
   if (actor.role !== "physio") throw new Error("Vetëm fizioterapeuti mund të krijojë plan klinik.");
@@ -48,11 +60,7 @@ export async function createPlanFromTemplateAction(formData: FormData) {
 
   const libraryResult = await listExercisesForActor(actor);
   const library = requireOk(libraryResult);
-  const exerciseByName = new Map(
-    [...library]
-      .sort((left, right) => Number(Boolean(right.is_default)) - Number(Boolean(left.is_default)))
-      .map((exercise) => [normalizeClinicalText(exercise.name), exercise] as const),
-  );
+  const exerciseByName = preferredExercisesByName(library);
   const missingExercises = template.exercises.filter(
     (exercise) => !exerciseByName.has(normalizeClinicalText(exercise.exerciseName)),
   );
