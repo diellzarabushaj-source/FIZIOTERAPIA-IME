@@ -164,12 +164,17 @@ export default async function CollaborationPage({
   const outgoing = handoffs.filter((item) => item.from_physio_id === actor.profileId && item.status === "pending");
   const history = handoffs.filter((item) => item.status !== "pending");
   const handoffFeatureReady = handoffsResult.ok;
-  const schemaNotReady = !handoffsResult.ok && handoffsResult.error.code === "SCHEMA_NOT_READY";
-  const handoffLoadError = !handoffsResult.ok && !schemaNotReady ? handoffsResult.error.message : "";
-  const error = one(params.error)
-    || handoffLoadError
-    || (!directoryResult.ok ? directoryResult.error.message : "")
-    || (!patientsResult.ok ? patientsResult.error.message : "");
+
+  let schemaNotReady = false;
+  let handoffLoadError = "";
+  if (handoffsResult.ok === false) {
+    schemaNotReady = handoffsResult.error.code === "SCHEMA_NOT_READY";
+    if (!schemaNotReady) handoffLoadError = handoffsResult.error.message;
+  }
+
+  const directoryError = directoryResult.ok === false ? directoryResult.error.message : "";
+  const patientsError = patientsResult.ok === false ? patientsResult.error.message : "";
+  const error = one(params.error) || handoffLoadError || directoryError || patientsError;
 
   return (
     <main className={styles.page}>
