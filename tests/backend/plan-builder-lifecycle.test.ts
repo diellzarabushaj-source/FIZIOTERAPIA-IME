@@ -32,9 +32,9 @@ test("plan builder derives patient context from the authorized plan", async () =
 test("active plan opens protected access material instead of logging the clinician in as patient", async () => {
   const page = await source("app/physiotherapist-portal/plan-builder/page.tsx");
 
-  assert.match(page, /href={`\/patient-access\/\$\{encodeURIComponent\(patient\.patient_code\)\}`}/);
+  assert.equal(page.includes('href={`/patient-access/${encodeURIComponent(patient.patient_code)}`}'), true);
+  assert.equal(page.includes('href={`/p/${encodeURIComponent(patient.patient_code)}`}'), false);
   assert.match(page, /rel="noopener noreferrer"/);
-  assert.doesNotMatch(page, /href={`\/p\/\$\{encodeURIComponent\(patient\.patient_code\)\}`}/);
   assert.doesNotMatch(page, /Shiko si pacient/);
 });
 
