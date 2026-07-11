@@ -9,15 +9,18 @@ export function PatientReminderSettings() {
   const [permission, setPermission] = useState<NotificationPermission | "unsupported">("default");
 
   useEffect(() => {
-    const stored = window.localStorage.getItem("fi_patient_reminder");
-    if (stored) {
-      try {
-        const value = JSON.parse(stored);
-        if (value.time) setTime(value.time);
-        if (Array.isArray(value.days)) setDays(value.days);
-      } catch {}
-    }
-    setPermission("Notification" in window ? Notification.permission : "unsupported");
+    const hydrationTimer = window.setTimeout(() => {
+      const stored = window.localStorage.getItem("fi_patient_reminder");
+      if (stored) {
+        try {
+          const value = JSON.parse(stored);
+          if (value.time) setTime(value.time);
+          if (Array.isArray(value.days)) setDays(value.days);
+        } catch {}
+      }
+      setPermission("Notification" in window ? Notification.permission : "unsupported");
+    }, 0);
+    return () => window.clearTimeout(hydrationTimer);
   }, []);
 
   function toggleDay(day: string) {
