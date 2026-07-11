@@ -10,6 +10,7 @@ export type BackendErrorCode =
   | "INVALID_STATUS_TRANSITION"
   | "CONFLICT"
   | "STORAGE_ERROR"
+  | "SCHEMA_NOT_READY"
   | "DATABASE_ERROR"
   | "INTERNAL_ERROR";
 
