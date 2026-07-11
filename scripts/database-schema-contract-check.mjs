@@ -3,7 +3,8 @@ import { readFile } from "node:fs/promises";
 const files = {
   service: "lib/backend/schema-readiness.ts",
   route: "app/api/readiness/route.ts",
-  migration: "supabase/migrations/20260711_database_schema_readiness.sql",
+  baseMigration: "supabase/migrations/20260711_database_schema_readiness.sql",
+  currentMigration: "supabase/migrations/20260711_patient_session_registry.sql",
 };
 
 const content = Object.fromEntries(
@@ -13,15 +14,17 @@ const content = Object.fromEntries(
 );
 
 const serviceVersion = content.service.match(/EXPECTED_DATABASE_SCHEMA_VERSION\s*=\s*"([^"]+)"/)?.[1];
-const migrationVersion = content.migration.match(/values\s*\(true,\s*'([^']+)'/i)?.[1];
+const migrationVersion = content.currentMigration.match(/values\s*\(true,\s*'([^']+)'/i)?.[1];
 
 const rules = [
   ["service declares an expected schema version", Boolean(serviceVersion)],
-  ["migration declares a schema version", Boolean(migrationVersion)],
-  ["service and migration schema versions match", Boolean(serviceVersion && serviceVersion === migrationVersion)],
-  ["migration creates schema state table", content.migration.includes("create table if not exists public.app_schema_state")],
-  ["migration creates readiness RPC", content.migration.includes("function public.deployment_readiness")],
-  ["readiness RPC is service-role only", content.migration.includes("service_role required")],
+  ["current migration declares a schema version", Boolean(migrationVersion)],
+  ["service and current migration schema versions match", Boolean(serviceVersion && serviceVersion === migrationVersion)],
+  ["base migration creates schema state table", content.baseMigration.includes("create table if not exists public.app_schema_state")],
+  ["current migration creates patient session registry", content.currentMigration.includes("create table if not exists public.patient_sessions")],
+  ["current readiness RPC checks patient sessions", content.currentMigration.includes("'patient_sessions'")],
+  ["current migration creates readiness RPC", content.currentMigration.includes("function public.deployment_readiness")],
+  ["readiness RPC is service-role only", content.currentMigration.includes("service_role required")],
   ["route fails closed with HTTP 503", content.route.includes("status: readiness.ready ? 200 : 503")],
   ["route disables caching", content.route.includes('"Cache-Control": "no-store, max-age=0"')],
   ["route protects diagnostics with monitor secret", content.route.includes("HEALTH_MONITOR_SECRET")],
