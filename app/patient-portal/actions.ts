@@ -9,6 +9,7 @@ import {
   PATIENT_SESSION_REGISTRY_COOKIE,
 } from "@/lib/backend/patient-sessions";
 import {
+  patientSessionSigningConfigured,
   PATIENT_CODE_COOKIE,
   PATIENT_SESSION_COOKIE,
   PATIENT_SESSION_MAX_AGE_SECONDS,
@@ -18,6 +19,8 @@ import {
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 
 export async function patientLoginAction(formData: FormData) {
+  if (!patientSessionSigningConfigured()) redirect("/patient-portal?error=system");
+
   const supabase = getSupabaseAdmin();
   if (!supabase) redirect("/patient-portal?error=system");
 
