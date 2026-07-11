@@ -7,6 +7,7 @@ import { writeAuditEvent } from "@/lib/backend/audit";
 import {
   getClinicalSessionForActor,
   scheduleClinicalSessionForActor,
+  type ClinicalSessionRecord,
 } from "@/lib/backend/clinical-sessions";
 import { updatePatientForActor } from "@/lib/backend/patient-profile";
 import { createPatientForActor, getPatientForActor } from "@/lib/backend/patients";
@@ -33,6 +34,17 @@ export type SessionFormState = {
 };
 
 export type ScheduleSessionFormState = SessionFormState;
+
+type SavedSessionRow = {
+  id: string;
+  session_date: string;
+  status: string;
+  pain_before: number | null;
+  pain_after: number | null;
+  treatment_summary: string | null;
+  clinical_notes: string | null;
+  next_steps: string | null;
+};
 
 function parsePain(value: FormDataEntryValue | null, field: "painBefore" | "painAfter") {
   if (value === null || String(value).trim() === "") {
@@ -220,7 +232,7 @@ export async function createPatientSessionAction(
       };
     }
 
-    let scheduledSession = null;
+    let scheduledSession: ClinicalSessionRecord | null = null;
     if (scheduledSessionId) {
       const scheduledResult = await getClinicalSessionForActor(actor, scheduledSessionId);
       if (scheduledResult.ok === false) {
@@ -261,18 +273,24 @@ export async function createPatientSessionAction(
       updated_at: new Date().toISOString(),
     };
 
-    const mutation = scheduledSession
-      ? supabase
-          .from("patient_sessions")
-          .update(payload)
-          .eq("id", scheduledSession.id)
-          .in("status", ["planned", "in_progress"])
-      : supabase.from("patient_sessions").insert(payload);
+    let savedResult;
+    if (scheduledSession) {
+      savedResult = await supabase
+        .from("patient_sessions")
+        .update(payload)
+        .eq("id", scheduledSession.id)
+        .in("status", ["planned", "in_progress"])
+        .select("id,session_date,status,pain_before,pain_after,treatment_summary,clinical_notes,next_steps")
+        .single<SavedSessionRow>();
+    } else {
+      savedResult = await supabase
+        .from("patient_sessions")
+        .insert(payload)
+        .select("id,session_date,status,pain_before,pain_after,treatment_summary,clinical_notes,next_steps")
+        .single<SavedSessionRow>();
+    }
 
-    const { data, error } = await mutation
-      .select("id,session_date,status,pain_before,pain_after,treatment_summary,clinical_notes,next_steps")
-      .single();
-
+    const { data, error } = savedResult;
     if (error || !data) {
       console.error("patient_session_save_failed", {
         patientId,
@@ -293,7 +311,7 @@ export async function createPatientSessionAction(
       action: scheduledSession ? "patient.session_completed" : "patient.session_created",
       entityType: "patient_session",
       entityId: data.id,
-      before: scheduledSession ? { status: scheduledSession.status, session_date: scheduledSession.session_date } : undefined,
+      before: scheduledSession ? { status: scheduledSession.status, session_date: scheduledSession.session_date } : null,
       after: {
         patient_id: patientId,
         session_date: data.session_date,
