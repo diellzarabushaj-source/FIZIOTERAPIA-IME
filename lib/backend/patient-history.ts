@@ -75,26 +75,31 @@ export async function getPatientHistoryForActor(
   const supabase = getSupabaseAdmin();
   if (!supabase) return fail("DATABASE_ERROR", "Databaza nuk është konfiguruar.");
 
+  let sessionsQuery = supabase
+    .from("patient_sessions")
+    .select("id,session_date,status,pain_before,pain_after,treatment_summary,clinical_notes,next_steps,created_at")
+    .eq("patient_id", patientId)
+    .order("session_date", { ascending: false });
+  let plansQuery = supabase
+    .from("plans")
+    .select("id,title,status,start_date,end_date,created_at,updated_at")
+    .eq("patient_id", patientId)
+    .order("created_at", { ascending: false });
+
+  if (actor.role === "physio") {
+    sessionsQuery = sessionsQuery.eq("physio_id", actor.profileId);
+    plansQuery = plansQuery.eq("physio_id", actor.profileId);
+  }
+
   const [sessionsResult, plansResult, auditResult] = await Promise.all([
-    supabase
-      .from("patient_sessions")
-      .select("id,session_date,status,pain_before,pain_after,treatment_summary,clinical_notes,next_steps,created_at")
-      .eq("patient_id", patientId)
-      .eq("physio_id", actor.profileId)
-      .order("session_date", { ascending: false })
-      .returns<SessionRow[]>(),
-    supabase
-      .from("plans")
-      .select("id,title,status,start_date,end_date,created_at,updated_at")
-      .eq("patient_id", patientId)
-      .eq("physio_id", actor.profileId)
-      .order("created_at", { ascending: false })
-      .returns<PlanRow[]>(),
+    sessionsQuery.returns<SessionRow[]>(),
+    plansQuery.returns<PlanRow[]>(),
     supabase
       .from("audit_logs")
       .select("id,action,entity_type,before_data,after_data,created_at")
+      .eq("entity_type", "patient")
       .eq("entity_id", patientId)
-      .in("action", ["patient.created", "patient.reused_existing_record", "patient.profile_updated", "patient.archived", "patient.restored"])
+      .in("action", ["patient.created", "patient.reused_existing_record", "patient.profile_updated", "patient.archived", "patient.restored", "patient.access_code_rotated"])
       .order("created_at", { ascending: false })
       .limit(100)
       .returns<AuditRow[]>(),
@@ -154,6 +159,7 @@ export async function getPatientHistoryForActor(
       "patient.profile_updated": "Të dhënat u përditësuan",
       "patient.archived": "Kartela u arkivua",
       "patient.restored": "Kartela u rikthye",
+      "patient.access_code_rotated": "Kodi i qasjes u ndërrua",
     };
     events.push({
       id: `audit-${audit.id}`,
