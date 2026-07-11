@@ -12,6 +12,10 @@ const newPatientPageSource = await readFile(
   new URL("../../app/physiotherapist-portal/patients/new/page.tsx", import.meta.url),
   "utf8",
 );
+const collaborationPageSource = await readFile(
+  new URL("../../app/physiotherapist-portal/collaboration/page.tsx", import.meta.url),
+  "utf8",
+);
 
 test("patient creation always assigns the logged-in physiotherapist profile", () => {
   assert.match(patientsSource, /p_physio_id:\s*actor\.profileId/);
@@ -22,15 +26,17 @@ test("duplicate checks are isolated to the logged-in physiotherapist", () => {
   assert.match(duplicateRouteSource, /\.eq\("physio_id",\s*actor\.profileId\)/);
 });
 
-test("physiotherapists cannot access patients owned by another physiotherapist", () => {
+test("physiotherapists cannot access patients owned by another physiotherapist before handoff acceptance", () => {
   assert.match(
     accessSource,
     /resourcePhysioId\s*&&\s*resourcePhysioId\s*===\s*actor\.profileId/,
   );
 });
 
-test("the new patient screen is restricted to physio role and explains self-assignment", () => {
+test("the new patient screen explains initial ownership and the secure handoff path", () => {
   assert.match(newPatientPageSource, /actor\.role\s*!==\s*"physio"/);
-  assert.match(newPatientPageSource, /lidhet automatikisht vetëm me profilin tënd/);
-  assert.match(newPatientPageSource, /Nuk mund të caktohet ose transferohet/);
+  assert.match(newPatientPageSource, /lidhet fillimisht vetëm me profilin tënd/);
+  assert.match(newPatientPageSource, /pëlqimin e pacientit dhe pranimin e fizioterapeutit tjetër/);
+  assert.match(collaborationPageSource, /name="consentConfirmed"/);
+  assert.match(collaborationPageSource, /Prano pacientin/);
 });
