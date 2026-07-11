@@ -48,6 +48,19 @@ function matchesPath(pathname: string, prefixes: string[]) {
   return prefixes.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));
 }
 
+function redirectNewPlanCreation(request: Parameters<NextProxy>[0]) {
+  if (
+    request.nextUrl.pathname !== "/physiotherapist-portal/plan-builder" ||
+    request.nextUrl.searchParams.has("planId")
+  ) {
+    return null;
+  }
+
+  const url = request.nextUrl.clone();
+  url.pathname = "/physiotherapist-portal/plan-builder/new";
+  return NextResponse.redirect(url);
+}
+
 const protectedProxy = clerkMiddleware(async (auth, req) => {
   if (!matchesPath(req.nextUrl.pathname, protectedRoutePrefixes)) return NextResponse.next();
 
@@ -71,6 +84,9 @@ export const proxy: NextProxy = (request, event) => {
     url.searchParams.set("reason", "auth-not-configured");
     return NextResponse.redirect(url);
   }
+
+  const newPlanRedirect = redirectNewPlanCreation(request);
+  if (newPlanRedirect) return newPlanRedirect;
 
   return protectedProxy(request, event);
 };
