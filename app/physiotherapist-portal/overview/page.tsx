@@ -1,26 +1,27 @@
 import Link from "next/link";
 import {
+  AlertTriangle,
   ArrowRight,
   CalendarCheck2,
+  CheckCircle2,
   ClipboardList,
-  Dumbbell,
-  Plus,
+  Clock3,
   ShieldAlert,
   UserPlus,
   Users,
 } from "lucide-react";
 import { requirePhysioActor } from "@/lib/backend/access";
-import { getUtcDayRange } from "@/lib/backend/time-zone";
+import { CLINIC_TIME_ZONE, getUtcDayRange } from "@/lib/backend/time-zone";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import styles from "../dashboard.module.css";
 
-type RecentPatient = {
+type PatientSummary = {
   id: string;
   first_name: string;
   last_name: string | null;
-  diagnosis: string | null;
-  patient_code: string;
-  updated_at: string | null;
+  diagnosis?: string | null;
+  patient_code?: string | null;
+  updated_at?: string | null;
 };
 
 type RecentPlan = {
@@ -31,12 +32,81 @@ type RecentPlan = {
   updated_at: string | null;
 };
 
+type TodaySession = {
+  id: string;
+  patient_id: string;
+  session_date: string;
+  status: string;
+  pain_before: number | null;
+  pain_after: number | null;
+};
+
+type ClinicalAlert = {
+  id: string;
+  patient_id: string;
+  severity: "info" | "warning" | "critical";
+  status: "open" | "acknowledged" | "resolved";
+  title: string;
+  message: string | null;
+  payload: Record<string, unknown> | null;
+  created_at: string;
+};
+
 function initials(firstName: string, lastName: string | null): string {
   return (firstName.slice(0, 1) + (lastName?.slice(0, 1) || "")).toUpperCase();
 }
 
+function patientName(patient?: PatientSummary | null): string {
+  if (!patient) return "Pacient";
+  return `${patient.first_name} ${patient.last_name || ""}`.trim();
+}
+
+function maskPatientCode(code?: string | null): string {
+  if (!code) return "Pa kod";
+  if (code.length <= 6) return `${code.slice(0, 2)}••••`;
+  return `${code.slice(0, 3)}••••${code.slice(-4)}`;
+}
+
 function visibleCount(count: number | null, error: unknown) {
   return error ? "—" : count ?? 0;
+}
+
+function formatTime(value: string): string {
+  return new Intl.DateTimeFormat("sq-AL", {
+    timeZone: CLINIC_TIME_ZONE,
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(new Date(value));
+}
+
+function formatRelativeDate(value: string): string {
+  return new Intl.DateTimeFormat("sq-AL", {
+    timeZone: CLINIC_TIME_ZONE,
+    day: "2-digit",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(new Date(value));
+}
+
+function sessionStatusLabel(status: string): string {
+  if (status === "planned") return "E planifikuar";
+  if (status === "in_progress") return "Në zhvillim";
+  if (status === "completed") return "E përfunduar";
+  if (status === "cancelled") return "E anuluar";
+  return status;
+}
+
+function planStatusLabel(status: string): string {
+  if (status === "draft") return "Draft";
+  if (status === "pending_review") return "Në kontroll";
+  if (status === "approved") return "Për aktivizim";
+  return status;
+}
+
+function alertPainScore(alert: ClinicalAlert): number | null {
+  const value = alert.payload?.pain_score;
+  return typeof value === "number" && Number.isFinite(value) ? value : null;
 }
 
 export default async function OverviewPage() {
@@ -46,30 +116,37 @@ export default async function OverviewPage() {
 
   const { start: startOfDay, end: endOfDay } = getUtcDayRange();
 
-  const patientCountQuery = supabase
+  let patientCountQuery = supabase
     .from("patients")
     .select("id", { count: "exact", head: true })
     .eq("status", "active")
     .is("archived_at", null);
-  const sessionCountQuery = supabase
+  let sessionCountQuery = supabase
     .from("patient_sessions")
     .select("id", { count: "exact", head: true })
     .gte("session_date", startOfDay.toISOString())
-    .lt("session_date", endOfDay.toISOString());
-  const activePlanQuery = supabase
+    .lt("session_date", endOfDay.toISOString())
+    .neq("status", "cancelled");
+  let activePlanQuery = supabase
     .from("plans")
     .select("id", { count: "exact", head: true })
     .eq("status", "active");
-  const draftPlanQuery = supabase
+  let draftPlanQuery = supabase
     .from("plans")
     .select("id", { count: "exact", head: true })
     .eq("status", "draft");
-  const highPainQuery = supabase
-    .from("exercise_logs")
-    .select("id,patients!inner(physio_id)", { count: "exact", head: true })
-    .gte("completed_at", startOfDay.toISOString())
-    .lt("completed_at", endOfDay.toISOString())
-    .gte("pain_score", 7);
+  let reviewPlanQuery = supabase
+    .from("plans")
+    .select("id", { count: "exact", head: true })
+    .eq("status", "pending_review");
+  let approvedPlanQuery = supabase
+    .from("plans")
+    .select("id", { count: "exact", head: true })
+    .eq("status", "approved");
+  let alertCountQuery = supabase
+    .from("clinical_alerts")
+    .select("id", { count: "exact", head: true })
+    .in("status", ["open", "acknowledged"]);
   let recentPatientQuery = supabase
     .from("patients")
     .select("id,first_name,last_name,diagnosis,patient_code,updated_at")
@@ -80,18 +157,35 @@ export default async function OverviewPage() {
   let recentPlanQuery = supabase
     .from("plans")
     .select("id,patient_id,title,status,updated_at")
-    .in("status", ["draft", "pending_review"])
+    .in("status", ["draft", "pending_review", "approved"])
     .order("updated_at", { ascending: false })
     .limit(5);
+  let todaySessionQuery = supabase
+    .from("patient_sessions")
+    .select("id,patient_id,session_date,status,pain_before,pain_after")
+    .gte("session_date", startOfDay.toISOString())
+    .lt("session_date", endOfDay.toISOString())
+    .order("session_date", { ascending: true })
+    .limit(12);
+  let attentionQuery = supabase
+    .from("clinical_alerts")
+    .select("id,patient_id,severity,status,title,message,payload,created_at")
+    .in("status", ["open", "acknowledged"])
+    .order("created_at", { ascending: false })
+    .limit(6);
 
   if (actor.role === "physio") {
-    patientCountQuery.eq("physio_id", actor.profileId);
-    sessionCountQuery.eq("physio_id", actor.profileId);
-    activePlanQuery.eq("physio_id", actor.profileId);
-    draftPlanQuery.eq("physio_id", actor.profileId);
-    highPainQuery.eq("patients.physio_id", actor.profileId);
+    patientCountQuery = patientCountQuery.eq("physio_id", actor.profileId);
+    sessionCountQuery = sessionCountQuery.eq("physio_id", actor.profileId);
+    activePlanQuery = activePlanQuery.eq("physio_id", actor.profileId);
+    draftPlanQuery = draftPlanQuery.eq("physio_id", actor.profileId);
+    reviewPlanQuery = reviewPlanQuery.eq("physio_id", actor.profileId);
+    approvedPlanQuery = approvedPlanQuery.eq("physio_id", actor.profileId);
+    alertCountQuery = alertCountQuery.eq("physio_id", actor.profileId);
     recentPatientQuery = recentPatientQuery.eq("physio_id", actor.profileId);
     recentPlanQuery = recentPlanQuery.eq("physio_id", actor.profileId);
+    todaySessionQuery = todaySessionQuery.eq("physio_id", actor.profileId);
+    attentionQuery = attentionQuery.eq("physio_id", actor.profileId);
   }
 
   const [
@@ -99,34 +193,49 @@ export default async function OverviewPage() {
     sessionCountResult,
     activePlanResult,
     draftPlanResult,
-    highPainResult,
+    reviewPlanResult,
+    approvedPlanResult,
+    alertCountResult,
     recentPatientResult,
     recentPlanResult,
+    todaySessionResult,
+    attentionResult,
   ] = await Promise.all([
     patientCountQuery,
     sessionCountQuery,
     activePlanQuery,
     draftPlanQuery,
-    highPainQuery,
-    recentPatientQuery.returns<RecentPatient[]>(),
+    reviewPlanQuery,
+    approvedPlanQuery,
+    alertCountQuery,
+    recentPatientQuery.returns<PatientSummary[]>(),
     recentPlanQuery.returns<RecentPlan[]>(),
+    todaySessionQuery.returns<TodaySession[]>(),
+    attentionQuery.returns<ClinicalAlert[]>(),
   ]);
 
   const recentPatients = recentPatientResult.data || [];
   const recentPlans = recentPlanResult.data || [];
-  const patientIds = [...new Set(recentPlans.map((plan) => plan.patient_id))];
-  let planPatients: Array<{ id: string; first_name: string; last_name: string | null }> = [];
-  let planPatientError = false;
+  const todaySessions = todaySessionResult.data || [];
+  const attentionItems = attentionResult.data || [];
+  const relatedPatientIds = [
+    ...recentPlans.map((plan) => plan.patient_id),
+    ...todaySessions.map((session) => session.patient_id),
+    ...attentionItems.map((alert) => alert.patient_id),
+  ];
+  const patientIds = [...new Set(relatedPatientIds)];
+  let relatedPatients: PatientSummary[] = [];
+  let relatedPatientError: unknown = null;
 
   if (patientIds.length) {
-    let planPatientQuery = supabase
+    let relatedPatientQuery = supabase
       .from("patients")
-      .select("id,first_name,last_name")
+      .select("id,first_name,last_name,diagnosis,patient_code")
       .in("id", patientIds);
-    if (actor.role === "physio") planPatientQuery = planPatientQuery.eq("physio_id", actor.profileId);
-    const { data, error } = await planPatientQuery.returns<typeof planPatients>();
-    planPatients = data || [];
-    planPatientError = Boolean(error);
+    if (actor.role === "physio") relatedPatientQuery = relatedPatientQuery.eq("physio_id", actor.profileId);
+    const result = await relatedPatientQuery.returns<PatientSummary[]>();
+    relatedPatients = result.data || [];
+    relatedPatientError = result.error;
   }
 
   const hasOverviewError = Boolean(
@@ -134,29 +243,36 @@ export default async function OverviewPage() {
       sessionCountResult.error ||
       activePlanResult.error ||
       draftPlanResult.error ||
-      highPainResult.error ||
+      reviewPlanResult.error ||
+      approvedPlanResult.error ||
+      alertCountResult.error ||
       recentPatientResult.error ||
       recentPlanResult.error ||
-      planPatientError,
+      todaySessionResult.error ||
+      attentionResult.error ||
+      relatedPatientError,
   );
-  const planPatientMap = new Map(planPatients.map((patient) => [patient.id, patient]));
-  const highPainCount = highPainResult.error ? 0 : highPainResult.count ?? 0;
+  const patientMap = new Map(relatedPatients.map((patient) => [patient.id, patient]));
+  const waitingPlanCount =
+    (draftPlanResult.error ? 0 : draftPlanResult.count ?? 0) +
+    (reviewPlanResult.error ? 0 : reviewPlanResult.count ?? 0) +
+    (approvedPlanResult.error ? 0 : approvedPlanResult.count ?? 0);
 
   return (
     <>
       <header className={styles.topbar}>
         <div>
           <span className={styles.eyebrow}>Sot në praktikë</span>
-          <h1>Përmbledhje</h1>
-          <p>Shiko çfarë kërkon vëmendje dhe vazhdo direkt te pacienti, plani ose biblioteka.</p>
+          <h1>Përmbledhje klinike</h1>
+          <p>Prioritetet, seancat dhe planet që kërkojnë veprim — pa kërkuar nëpër disa faqe.</p>
         </div>
         <div className={styles.actions}>
           <Link className={styles.secondary} href="/physiotherapist-portal/plan-builder">
-            <ClipboardList size={17} />
+            <ClipboardList size={17} aria-hidden="true" />
             Krijo plan
           </Link>
           <Link className={styles.primary} href="/physiotherapist-portal/patients/new">
-            <UserPlus size={17} />
+            <UserPlus size={17} aria-hidden="true" />
             Shto pacient
           </Link>
         </div>
@@ -172,61 +288,120 @@ export default async function OverviewPage() {
       )}
 
       <section className={styles.grid} aria-label="Treguesit kryesorë">
-        <article className={[styles.card, styles.statCard].join(" ")}>
+        <Link className={[styles.card, styles.statCard, styles.statLink].join(" ")} href="/physiotherapist-portal/patients">
           <div className={styles.statTop}><span>Pacientë aktivë</span><span className={styles.statIcon}><Users size={18} /></span></div>
           <strong>{visibleCount(patientCountResult.count, patientCountResult.error)}</strong>
-          <small>Kartela aktive në praktikën tënde.</small>
-        </article>
-        <article className={[styles.card, styles.statCard].join(" ")}>
+          <small>Hap listën e kartelave aktive.</small>
+        </Link>
+        <Link className={[styles.card, styles.statCard, styles.statLink].join(" ")} href="#today-agenda">
           <div className={styles.statTop}><span>Seanca sot</span><span className={styles.statIcon}><CalendarCheck2 size={18} /></span></div>
           <strong>{visibleCount(sessionCountResult.count, sessionCountResult.error)}</strong>
-          <small>Seanca klinike të regjistruara.</small>
-        </article>
-        <article className={[styles.card, styles.statCard].join(" ")}>
-          <div className={styles.statTop}><span>Plane aktive</span><span className={styles.statIcon}><ClipboardList size={18} /></span></div>
-          <strong>{visibleCount(activePlanResult.count, activePlanResult.error)}</strong>
-          <small>Plane të dukshme te pacientët.</small>
-        </article>
-        <article className={[styles.card, styles.statCard].join(" ")}>
-          <div className={styles.statTop}><span>Draft për përfundim</span><span className={styles.statIcon}><Dumbbell size={18} /></span></div>
-          <strong>{visibleCount(draftPlanResult.count, draftPlanResult.error)}</strong>
-          <small>Plane që presin editim ose aprovim.</small>
-        </article>
+          <small>Shiko agjendën dhe statusin e seancave.</small>
+        </Link>
+        <Link className={[styles.card, styles.statCard, styles.statLink, attentionItems.length ? styles.statLinkDanger : ""].join(" ")} href="#attention-panel">
+          <div className={styles.statTop}><span>Alarme të hapura</span><span className={styles.statIcon}><ShieldAlert size={18} /></span></div>
+          <strong>{visibleCount(alertCountResult.count, alertCountResult.error)}</strong>
+          <small>Raportime që kërkojnë kontroll klinik.</small>
+        </Link>
+        <Link className={[styles.card, styles.statCard, styles.statLink].join(" ")} href="/physiotherapist-portal/programs?status=draft">
+          <div className={styles.statTop}><span>Plane në pritje</span><span className={styles.statIcon}><ClipboardList size={18} /></span></div>
+          <strong>{hasOverviewError ? "—" : waitingPlanCount}</strong>
+          <small>Draft, në kontroll ose gati për aktivizim.</small>
+        </Link>
       </section>
 
-      {highPainCount > 0 && (
-        <section className={styles.section}>
-          <div className={styles.errorMessage} role="alert">
-            <strong><ShieldAlert size={17} /> {highPainCount} raportime me dhimbje 7/10 ose më shumë sot</strong>
-            <span>Kontrollo pacientët para se të vazhdojnë ushtrimet.</span>
-          </div>
-        </section>
-      )}
+      <section className={styles.planPipeline} aria-label="Statuset e planeve">
+        <Link href="/physiotherapist-portal/programs?status=draft">
+          <span>Draft</span>
+          <strong>{visibleCount(draftPlanResult.count, draftPlanResult.error)}</strong>
+        </Link>
+        <Link href="/physiotherapist-portal/programs?status=pending_review">
+          <span>Në kontroll</span>
+          <strong>{visibleCount(reviewPlanResult.count, reviewPlanResult.error)}</strong>
+        </Link>
+        <Link href="/physiotherapist-portal/programs?status=approved">
+          <span>Për aktivizim</span>
+          <strong>{visibleCount(approvedPlanResult.count, approvedPlanResult.error)}</strong>
+        </Link>
+        <Link href="/physiotherapist-portal/programs?status=active">
+          <span>Aktive</span>
+          <strong>{visibleCount(activePlanResult.count, activePlanResult.error)}</strong>
+        </Link>
+      </section>
 
-      <section className={styles.section}>
-        <div className={styles.sectionHeading}>
-          <div>
-            <span className={styles.eyebrow}>Veprime të shpejta</span>
-            <h2>Vazhdo punën</h2>
+      <section className={[styles.section, styles.priorityGrid].join(" ")}>
+        <article className={styles.panel} id="today-agenda">
+          <div className={styles.panelHeader}>
+            <div>
+              <span className={styles.eyebrow}>Sot</span>
+              <h2>Agjenda e seancave</h2>
+            </div>
+            <span className={styles.defaultBadge}>{todaySessions.length} të listuara</span>
           </div>
-        </div>
-        <div className={styles.quickGrid}>
-          <Link className={styles.quickAction} href="/physiotherapist-portal/patients/new">
-            <span className={styles.iconTile}><UserPlus size={18} /></span>
-            <span><strong>Regjistro pacient</strong><small>Kontrolli inteligjent shmang kartelat e dyfishta.</small></span>
-            <ArrowRight size={17} />
-          </Link>
-          <Link className={styles.quickAction} href="/physiotherapist-portal/plan-builder">
-            <span className={styles.iconTile}><ClipboardList size={18} /></span>
-            <span><strong>Krijo plan të personalizuar</strong><small>Cakto ushtrime, dozë, ditë dhe udhëzime.</small></span>
-            <ArrowRight size={17} />
-          </Link>
-          <Link className={styles.quickAction} href="/physiotherapist-portal/exercises#new-exercise">
-            <span className={styles.iconTile}><Plus size={18} /></span>
-            <span><strong>Shto ushtrim tëndin</strong><small>Ruaj foto, video dhe shënime për përdorim të përsëritur.</small></span>
-            <ArrowRight size={17} />
-          </Link>
-        </div>
+          <div className={styles.list}>
+            {todaySessions.map((session) => {
+              const patient = patientMap.get(session.patient_id);
+              return (
+                <div className={styles.agendaRow} key={session.id}>
+                  <time dateTime={session.session_date}>{formatTime(session.session_date)}</time>
+                  <span className={styles.listAvatar}>{patient ? initials(patient.first_name, patient.last_name) : <Clock3 size={17} />}</span>
+                  <div className={styles.listMeta}>
+                    <Link href={`/physiotherapist-portal/patients/${session.patient_id}`}>{patientName(patient)}</Link>
+                    <small>{sessionStatusLabel(session.status)}{session.pain_before !== null ? ` · Dhimbja para: ${session.pain_before}/10` : ""}</small>
+                  </div>
+                  <Link className={styles.iconButton} href={`/physiotherapist-portal/patients/${session.patient_id}/history`} aria-label={`Hap historikun e ${patientName(patient)}`}>
+                    <ArrowRight size={17} />
+                  </Link>
+                </div>
+              );
+            })}
+            {!todaySessions.length && !todaySessionResult.error && (
+              <div className={styles.emptyState}>
+                <CalendarCheck2 size={27} aria-hidden="true" />
+                <h3>Nuk ka seanca të regjistruara sot</h3>
+                <p>Seancat e krijuara për sot do të shfaqen këtu sipas orës lokale.</p>
+              </div>
+            )}
+          </div>
+        </article>
+
+        <article className={styles.panel} id="attention-panel">
+          <div className={styles.panelHeader}>
+            <div>
+              <span className={styles.eyebrow}>Prioritet klinik</span>
+              <h2>Kërkon vëmendje</h2>
+            </div>
+            {attentionItems.length > 0 && <span className={styles.statusDraft}>{attentionItems.length} të fundit</span>}
+          </div>
+          <div className={styles.attentionList}>
+            {attentionItems.map((alert) => {
+              const patient = patientMap.get(alert.patient_id);
+              const painScore = alertPainScore(alert);
+              return (
+                <Link
+                  className={[styles.attentionItem, alert.severity === "critical" ? styles.attentionCritical : ""].join(" ")}
+                  href={`/physiotherapist-portal/patients/${alert.patient_id}`}
+                  key={alert.id}
+                >
+                  <span className={styles.attentionIcon}><AlertTriangle size={18} aria-hidden="true" /></span>
+                  <span className={styles.attentionBody}>
+                    <strong>{patientName(patient)}</strong>
+                    <span>{alert.title}{painScore !== null ? ` · ${painScore}/10` : ""}</span>
+                    <small>{alert.message || "Hap kartelën për ta kontrolluar raportimin."} · {formatRelativeDate(alert.created_at)}</small>
+                  </span>
+                  <ArrowRight size={17} aria-hidden="true" />
+                </Link>
+              );
+            })}
+            {!attentionItems.length && !attentionResult.error && (
+              <div className={styles.emptyState}>
+                <CheckCircle2 size={27} aria-hidden="true" />
+                <h3>Nuk ka alarme të hapura</h3>
+                <p>Raportimet e reja klinike do të shfaqen këtu.</p>
+              </div>
+            )}
+          </div>
+        </article>
       </section>
 
       <section className={[styles.section, styles.activityGrid].join(" ")}>
@@ -241,9 +416,9 @@ export default async function OverviewPage() {
                 <span className={styles.listAvatar}>{initials(patient.first_name, patient.last_name)}</span>
                 <div className={styles.listMeta}>
                   <Link href={`/physiotherapist-portal/patients/${patient.id}`}>
-                    {patient.first_name} {patient.last_name || ""}
+                    {patientName(patient)}
                   </Link>
-                  <small>{patient.diagnosis || "Pa diagnozë"} · {patient.patient_code}</small>
+                  <small>{patient.diagnosis || "Pa diagnozë"} · {maskPatientCode(patient.patient_code)}</small>
                 </div>
                 <Link className={styles.iconButton} href={`/physiotherapist-portal/patients/${patient.id}/program`} aria-label={`Hap planin e ${patient.first_name}`}>
                   <ArrowRight size={17} />
@@ -256,26 +431,26 @@ export default async function OverviewPage() {
 
         <article className={styles.panel}>
           <div className={styles.panelHeader}>
-            <h2>Plane për përfundim</h2>
-            <Link href="/physiotherapist-portal/programs?status=draft">Hap draftet</Link>
+            <h2>Plane për veprim</h2>
+            <Link href="/physiotherapist-portal/programs?status=draft">Hap programet</Link>
           </div>
           <div className={styles.list}>
             {recentPlans.map((plan) => {
-              const patient = planPatientMap.get(plan.patient_id);
+              const patient = patientMap.get(plan.patient_id);
               return (
                 <div className={styles.listRow} key={plan.id}>
                   <span className={styles.listAvatar}><ClipboardList size={17} /></span>
                   <div className={styles.listMeta}>
-                    <Link href={`/physiotherapist-portal/plan-builder?patientId=${plan.patient_id}&planId=${plan.id}`}>{plan.title}</Link>
-                    <small>{patient ? `${patient.first_name} ${patient.last_name || ""}` : "Pacient"} · {plan.status === "draft" ? "Draft" : "Në kontroll"}</small>
+                    <Link href={`/physiotherapist-portal/plan-builder?planId=${plan.id}`}>{plan.title}</Link>
+                    <small>{patientName(patient)} · {planStatusLabel(plan.status)}</small>
                   </div>
-                  <Link className={styles.iconButton} href={`/physiotherapist-portal/plan-builder?patientId=${plan.patient_id}&planId=${plan.id}`} aria-label="Vazhdo planin">
+                  <Link className={styles.iconButton} href={`/physiotherapist-portal/plan-builder?planId=${plan.id}`} aria-label="Vazhdo planin">
                     <ArrowRight size={17} />
                   </Link>
                 </div>
               );
             })}
-            {!recentPlans.length && !recentPlanResult.error && <div className={styles.emptyState}>Nuk ka plane të papërfunduara.</div>}
+            {!recentPlans.length && !recentPlanResult.error && <div className={styles.emptyState}>Nuk ka plane që presin veprim.</div>}
           </div>
         </article>
       </section>
