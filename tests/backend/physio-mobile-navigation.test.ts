@@ -18,12 +18,13 @@ test("mobile navigation uses a drawer instead of horizontal route scrolling", as
   assert.match(component, /document\.body\.style\.overflow = "hidden"/);
 });
 
-test("mobile navigation exposes all clinical destinations", async () => {
+test("mobile navigation exposes only durable clinical sections", async () => {
   const component = await source("components/PhysioDashboardNav.tsx");
 
-  for (const destination of ["Përmbledhje", "Pacientët", "Pacient i ri", "Programet", "Ushtrimet", "Pagesat"]) {
+  for (const destination of ["Përmbledhje", "Pacientët", "Programet", "Ushtrimet", "Pagesat"]) {
     assert.match(component, new RegExp(destination));
   }
+  assert.doesNotMatch(component, /label: "Pacient i ri"/);
   assert.match(component, /Krijo plan të ri/);
 });
 
