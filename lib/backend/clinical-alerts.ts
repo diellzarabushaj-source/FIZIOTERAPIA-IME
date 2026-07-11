@@ -90,7 +90,7 @@ export async function createHighPainClinicalAlert(
       severity: "critical",
       title: data.title,
       message: data.message,
-      link: "/physiotherapist-portal#alerts",
+      link: "/physiotherapist-portal/alerts",
       dedupeKey: `clinical-alert:${data.id}`,
     });
 
@@ -178,6 +178,62 @@ export async function acknowledgeClinicalAlertForActor(
     entityId: data.id,
     before: { status: existing.status },
     after: { status: data.status, acknowledged_at: data.acknowledged_at },
+  });
+
+  return ok(data);
+}
+
+export async function resolveClinicalAlertForActor(
+  actor: ActorContext,
+  alertIdInput: unknown,
+): Promise<BackendResult<ClinicalAlertRecord>> {
+  const alertIdResult = validateUuid(alertIdInput, "alertId");
+  if (alertIdResult.ok === false) {
+    return fail("VALIDATION_ERROR", alertIdResult.error.message, {
+      fieldErrors: alertIdResult.error.fieldErrors,
+    });
+  }
+
+  const supabase = getSupabaseAdmin();
+  if (!supabase) return fail("DATABASE_ERROR", "Databaza nuk është konfiguruar.");
+
+  const { data: existing, error: existingError } = await supabase
+    .from("clinical_alerts")
+    .select(alertSelect)
+    .eq("id", alertIdResult.data)
+    .maybeSingle<ClinicalAlertRecord>();
+
+  if (existingError) return fail("DATABASE_ERROR", "Alarmi nuk mund të ngarkohet.");
+  if (!existing) return fail("NOT_FOUND", "Alarmi nuk u gjet.");
+  if (!actorCanAccessPhysioResource(actor, existing.physio_id)) {
+    return fail("OWNERSHIP_MISMATCH", "Nuk ke qasje në këtë alarm.");
+  }
+  if (existing.status === "resolved") return ok(existing);
+
+  const now = new Date().toISOString();
+  const { data, error } = await supabase
+    .from("clinical_alerts")
+    .update({
+      status: "resolved",
+      acknowledged_at: existing.acknowledged_at || now,
+      acknowledged_by: existing.acknowledged_by || actor.profileId,
+      resolved_at: now,
+      resolved_by: actor.profileId,
+      updated_at: now,
+    })
+    .eq("id", existing.id)
+    .select(alertSelect)
+    .single<ClinicalAlertRecord>();
+
+  if (error || !data) return fail("DATABASE_ERROR", "Alarmi nuk u shënua si i zgjidhur.");
+
+  await writeAuditEvent({
+    actor,
+    action: "clinical_alert.resolved",
+    entityType: "clinical_alert",
+    entityId: data.id,
+    before: { status: existing.status },
+    after: { status: data.status, resolved_at: data.resolved_at },
   });
 
   return ok(data);
