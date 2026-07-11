@@ -15,6 +15,9 @@ concurrency:
   group: next-link-codemod-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  CODEMOD_SCOPE: internal-links-and-react-purity
+
 jobs:
   codemod:
     runs-on: ubuntu-latest
