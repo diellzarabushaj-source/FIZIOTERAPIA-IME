@@ -20,9 +20,11 @@ Fizioterapia Ime nuk cakton diagnozë, nuk cakton terapi dhe nuk e zëvendëson 
 ## Stack
 
 - **Frontend web**: Next.js + TypeScript
+- **Runtime**: Node.js 24 + npm 10.9.2
 - **Hosting**: Vercel
 - **Auth për physio/owner**: Clerk
 - **Database**: Supabase
+- **CMS**: Sanity Studio
 - **Email notifications**: Resend
 - **AI movement analysis**: MediaPipe Pose Landmarker, vetëm kur aktivizohet në pilot
 - **Mobile app**: Expo React Native, jo pjesë e launch-it publik të parë
@@ -39,20 +41,53 @@ Pagesa automatike ende nuk është aktive. Deri në integrimin e payment provide
 
 Pacientët ekzistues, planet, seancat dhe raportet nuk bllokohen vetëm sepse abonimi nuk është aktiv; kufizimi aplikohet te krijimi i pacientëve të rinj pas pesë vendeve falas.
 
+## Instalimi lokal
+
+```bash
+nvm use
+npm install --no-audit --no-fund
+cp .env.example .env.local
+npm run check:all
+npm run dev
+```
+
+Mos përdor production credentials në zhvillim lokal. `.env.example` dokumenton emrat e variablave, por nuk duhet të përmbajë secrets reale.
+
 ## Launch checks
 
 Para lansimit publik:
 
-- Clerk keys duhet të jenë në Vercel.
+- Clerk production keys duhet të jenë në Vercel.
 - `ADMIN_EMAIL` duhet të jetë i saktë në production.
 - `SUPABASE_SERVICE_ROLE_KEY` duhet të jetë vetëm server-side.
-- `NEXT_PUBLIC_APP_URL` duhet të jetë domain-i final.
-- `npm run preflight:routes`, `npm run lint` dhe `npm run build` duhet të kalojnë.
+- `PATIENT_SESSION_SECRET` duhet të jetë secret unik me së paku 32 bytes entropi.
+- `PATIENT_SESSION_REGISTRY_ENABLED=1` vendoset vetëm pasi migrimi përkatës të jetë aplikuar.
+- `NEXT_PUBLIC_APP_URL` duhet të jetë domain-i final HTTPS.
+- të gjitha migrimet në `supabase/migrations/` duhet të jenë aplikuar sipas rendit.
+- `GET /api/health` duhet të kthejë HTTP `200`.
+- `GET /api/readiness` duhet të kthejë HTTP `200` dhe schema version `20260711.4`.
+- `npm run check:all` duhet të kalojë pa çaktivizuar lint, type-check, teste ose build.
 - Vercel preview/deploy duhet të mos jetë i bllokuar nga deployment limit.
+- Resend duhet të ketë domain të verifikuar para email-eve reale.
+
+Për rikuperim dhe rollout të kontrolluar përdor:
+
+`docs/production-recovery-runbook.md`
+
+## Struktura kryesore
+
+- `app/` — Next.js App Router, portalet dhe API routes.
+- `lib/backend/` — autorizimi, validimi dhe shërbimet server-side.
+- `supabase/migrations/` — schema evolutive e databazës.
+- `apps/studio/` — Sanity Studio dhe schema burimore.
+- `apps/mobile-app/` — klienti Expo në fazë pilot.
+- `tests/backend/` — testet unit/integration të logjikës kritike.
+- `scripts/` — quality gates, smoke tests dhe kontrollet e sigurisë/readiness.
+- `docs/` — runbooks, SOP dhe handoff teknik.
 
 ## Deployment note
 
-Admin route guards now live in `proxy.ts` only. `middleware.ts` is intentionally not used. This note also confirms the latest `main` branch should trigger a clean Vercel production rebuild.
+Admin route guards jetojnë në `proxy.ts`; `middleware.ts` nuk përdoret. Rrugët e pacientit janë publike vetëm në shtresën Clerk, ndërsa të dhënat klinike mbrohen server-side nga sesioni i nënshkruar, pronësia e planit dhe statusi aktiv.
 
 ## Figma design
 
