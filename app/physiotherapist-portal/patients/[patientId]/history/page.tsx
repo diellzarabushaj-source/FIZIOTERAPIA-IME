@@ -14,7 +14,24 @@ function formatDateTime(value: string): string {
     year: "numeric",
     hour: "2-digit",
     minute: "2-digit",
+    timeZone: "Europe/Belgrade",
   }).format(date);
+}
+
+function formatBirthDate(value: string | null) {
+  if (!value) return "—";
+  const date = new Date(`${value}T00:00:00Z`);
+  if (Number.isNaN(date.getTime())) return value;
+  return new Intl.DateTimeFormat("sq-AL", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    timeZone: "UTC",
+  }).format(date);
+}
+
+function maskPatientCode(code: string) {
+  return code.length > 8 ? `${code.slice(0, 5)}…${code.slice(-4)}` : `${code.slice(0, 3)}…`;
 }
 
 function eventLabel(kind: "session" | "plan" | "profile" | "system"): string {
@@ -48,8 +65,8 @@ export default async function PatientHistoryPage({
           <span className={styles.eyebrow}>Historiku klinik</span>
           <h1>{patient.first_name} {patient.last_name || ""}</h1>
           <div className={styles.meta}>
-            <span>Datëlindja: {patient.date_of_birth || "—"}</span>
-            <span>Kodi: {patient.patient_code}</span>
+            <span>Datëlindja: {formatBirthDate(patient.date_of_birth)}</span>
+            <span>Kodi: {maskPatientCode(patient.patient_code)}</span>
             <span>{events.length} ngjarje të regjistruara</span>
           </div>
         </div>
