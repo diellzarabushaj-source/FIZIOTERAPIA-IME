@@ -43,5 +43,5 @@ test("alerts page exposes open acknowledged and resolved states", async () => {
   assert.match(page, /Të zgjidhura/);
   assert.match(page, /acknowledgeClinicalAlertAction/);
   assert.match(page, /resolveClinicalAlertAction/);
-  assert.match(page, /href={`\/physiotherapist-portal\/patients\/\$\{alert\.patient_id\}`}/);
+  assert.ok(page.includes('href={`/physiotherapist-portal/patients/${alert.patient_id}`}'));
 });
