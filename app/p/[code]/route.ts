@@ -1,6 +1,11 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { authenticatePatientCode } from "@/lib/backend/patient-login";
 import {
+  createPatientSession,
+  patientSessionRegistryEnabled,
+  PATIENT_SESSION_REGISTRY_COOKIE,
+} from "@/lib/backend/patient-sessions";
+import {
   PATIENT_CODE_COOKIE,
   PATIENT_SESSION_COOKIE,
   PATIENT_SESSION_MAX_AGE_SECONDS,
@@ -22,6 +27,7 @@ export async function GET(request: NextRequest, { params }: RouteProps) {
   }
 
   const ipAddress = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || null;
+  const userAgent = request.headers.get("user-agent");
   const result = await authenticatePatientCode({
     supabase,
     rawCode: decodeURIComponent(code || ""),
@@ -31,6 +37,20 @@ export async function GET(request: NextRequest, { params }: RouteProps) {
   if (result.ok === false) {
     const reason = result.reason === "misconfigured" ? "system" : result.reason;
     return NextResponse.redirect(new URL(`/patient-portal?error=${encodeURIComponent(reason)}`, request.url));
+  }
+
+  let registryToken: string | null = null;
+  if (patientSessionRegistryEnabled()) {
+    try {
+      registryToken = await createPatientSession({
+        supabase,
+        patientId: result.patient.id,
+        ipAddress,
+        userAgent,
+      });
+    } catch {
+      return NextResponse.redirect(new URL("/patient-portal?error=system", request.url));
+    }
   }
 
   const response = NextResponse.redirect(new URL("/patient-dashboard", request.url));
@@ -47,6 +67,8 @@ export async function GET(request: NextRequest, { params }: RouteProps) {
   if (result.patient.patient_username) {
     response.cookies.set(PATIENT_USERNAME_COOKIE, result.patient.patient_username, cookieOptions);
   }
+  if (registryToken) response.cookies.set(PATIENT_SESSION_REGISTRY_COOKIE, registryToken, cookieOptions);
+  else response.cookies.delete(PATIENT_SESSION_REGISTRY_COOKIE);
 
   return response;
 }
