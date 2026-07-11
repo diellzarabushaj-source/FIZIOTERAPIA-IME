@@ -1,5 +1,6 @@
 import { createHmac, timingSafeEqual } from "crypto";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { validatePatientSession } from "./backend/patient-sessions";
 import { normalizePatientCode } from "./supabase-admin";
 
 export const PATIENT_CODE_COOKIE = "fizioplan_patient_code";
@@ -81,7 +82,6 @@ export function parseBoundedNumber(value: FormDataEntryValue | null, fallback: n
   if (!Number.isFinite(parsed) || parsed < min || parsed > max) {
     throw new Error(`${label} duhet të jetë ${min}–${max}.`);
   }
-
   return parsed;
 }
 
@@ -100,10 +100,14 @@ export async function getActivePatientBySignedCode({
   supabase,
   code,
   signature,
+  sessionToken,
+  requireRegisteredSession = false,
 }: {
   supabase: SupabaseClient;
   code: string;
   signature?: string | null;
+  sessionToken?: string | null;
+  requireRegisteredSession?: boolean;
 }) {
   const normalizedCode = normalizePatientCode(code);
 
@@ -118,7 +122,18 @@ export async function getActivePatientBySignedCode({
     .eq("status", "active")
     .maybeSingle<ActivePatientSession>();
 
-  return patient || null;
+  if (!patient) return null;
+
+  if (requireRegisteredSession) {
+    const registered = await validatePatientSession({
+      supabase,
+      patientId: patient.id,
+      token: sessionToken,
+    });
+    if (!registered) return null;
+  }
+
+  return patient;
 }
 
 export async function requireAssignedPlanExercise({
@@ -144,10 +159,8 @@ export async function requireAssignedPlanExercise({
   }
 
   const { data: planExercise } = await query.maybeSingle();
-
   if (!planExercise) {
     throw new Error(aiOnly ? "Ky ushtrim nuk ka AI check aktiv për këtë pacient." : "Ky ushtrim nuk është caktuar në planin aktiv të pacientit.");
   }
-
   return planExercise;
 }
