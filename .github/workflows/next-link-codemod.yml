@@ -1,4 +1,4 @@
-name: Next Link Codemod
+name: Next Link and Purity Codemod
 
 on:
   push:
@@ -30,18 +30,18 @@ jobs:
         with:
           node-version: 24
 
-      - name: Convert internal anchors
+      - name: Apply targeted fixes
         run: node scripts/codemod-next-links.mjs
 
-      - name: Commit converted links
+      - name: Commit generated fixes
         shell: bash
         run: |
           if git diff --quiet; then
-            echo "No internal anchors required conversion."
+            echo "No targeted fixes were needed."
             exit 0
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add app components
-          git commit -m "fix: use Next links for internal navigation"
+          git add app apps components
+          git commit -m "fix: satisfy Next navigation and React purity rules"
           git push origin HEAD:improve/production-readiness
