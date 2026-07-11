@@ -35,6 +35,7 @@ Staging must test:
 6. pain score 7 or higher alert
 7. admin activation and suspension
 8. notifications and email logging
+9. `/api/readiness` returns HTTP 200 and matching schema versions
 
 ## Production
 
@@ -45,6 +46,7 @@ Purpose: real users and clinical records.
 - Clerk live keys
 - Production-only Supabase project
 - Unique patient session secret
+- Unique health monitor secret of at least 32 characters
 - Verified email sender
 - Restricted owner/admin accounts
 - Backups and audit logging enabled
@@ -56,6 +58,7 @@ Production must never use:
 - staging Supabase credentials
 - synthetic demo passwords as real patient credentials
 - development session secrets
+- the same health monitor secret as staging
 
 ## Vercel mapping
 
@@ -73,8 +76,18 @@ Environment variables must be assigned to the correct Vercel scope. A value shou
 4. Review migration for destructive operations.
 5. Apply to production.
 6. Verify schema, RLS, functions and security advisors.
+7. Confirm `/api/readiness` returns `ready` with the expected schema version.
 
 Do not test destructive migrations directly on production.
+
+The application schema version is declared in `lib/backend/schema-readiness.ts` and must match the version inserted by `supabase/migrations/20260711_database_schema_readiness.sql`. When a future migration changes a required table or RPC, bump both values together and update the readiness RPC checklist.
+
+## Health versus readiness
+
+- `/api/health` confirms the application process, required environment and basic database connectivity are alive.
+- `/api/readiness` confirms the production database has the exact expected schema version and all critical tables and RPC functions.
+- Detailed diagnostics are returned only when the request contains the configured `x-monitor-secret` value.
+- A Vercel deployment marked `READY` is not considered clinically ready until `/api/readiness` returns HTTP 200.
 
 ## Required release evidence
 
@@ -84,5 +97,6 @@ Before a production release, record:
 - successful backend quality workflow
 - successful staging smoke test
 - migration versions applied
-- production environment readiness result
+- successful production health result
+- successful production schema readiness result
 - rollback decision and responsible owner
