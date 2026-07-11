@@ -1,12 +1,15 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ClipboardPlus, History, QrCode } from "lucide-react";
+import { CalendarClock, ClipboardPlus, History, QrCode } from "lucide-react";
 import { requirePhysioActor } from "@/lib/backend/access";
+import { getClinicalSessionForActor } from "@/lib/backend/clinical-sessions";
 import { getPatientForActor } from "@/lib/backend/patients";
+import { CLINIC_TIME_ZONE } from "@/lib/backend/time-zone";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import { EditPatientForm } from "./EditPatientForm";
 import { PatientRecordNav } from "./PatientRecordNav";
 import { RotatePatientAccessCodeForm } from "./RotatePatientAccessCodeForm";
+import { ScheduleSessionForm } from "./ScheduleSessionForm";
 import SessionForm from "./SessionForm";
 import styles from "../../dashboard.module.css";
 
@@ -28,7 +31,20 @@ function formatSessionDate(value: string): string {
     day: "2-digit",
     month: "short",
     year: "numeric",
-    timeZone: "Europe/Belgrade",
+    timeZone: CLINIC_TIME_ZONE,
+  }).format(date);
+}
+
+function formatSessionDateTime(value: string): string {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return new Intl.DateTimeFormat("sq-AL", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: CLINIC_TIME_ZONE,
   }).format(date);
 }
 
@@ -49,7 +65,13 @@ export default async function PatientRecordPage({
   searchParams,
 }: {
   params: Promise<{ patientId: string }>;
-  searchParams: Promise<{ created?: string; existing?: string; session?: string; access?: string }>;
+  searchParams: Promise<{
+    created?: string;
+    existing?: string;
+    session?: string;
+    access?: string;
+    sessionId?: string;
+  }>;
 }) {
   const { patientId } = await params;
   const notices = await searchParams;
@@ -61,29 +83,41 @@ export default async function PatientRecordPage({
   const supabase = getSupabaseAdmin();
   if (!supabase) throw new Error("Supabase nuk është konfiguruar.");
 
-  let sessionCountQuery = supabase
+  let completedCountQuery = supabase
     .from("patient_sessions")
     .select("id", { count: "exact", head: true })
-    .eq("patient_id", patientId);
-  let latestSessionQuery = supabase
+    .eq("patient_id", patientId)
+    .eq("status", "completed");
+  let latestCompletedQuery = supabase
     .from("patient_sessions")
     .select("id,session_date,status,pain_before,pain_after,treatment_summary,clinical_notes,next_steps")
     .eq("patient_id", patientId)
+    .eq("status", "completed")
     .order("session_date", { ascending: false })
+    .limit(1);
+  let upcomingSessionQuery = supabase
+    .from("patient_sessions")
+    .select("id,session_date,status,pain_before,pain_after,treatment_summary,clinical_notes,next_steps")
+    .eq("patient_id", patientId)
+    .in("status", ["planned", "in_progress"])
+    .gte("session_date", new Date(Date.now() - 2 * 60 * 60_000).toISOString())
+    .order("session_date", { ascending: true })
     .limit(1);
 
   if (actor.role === "physio") {
-    sessionCountQuery = sessionCountQuery.eq("physio_id", actor.profileId);
-    latestSessionQuery = latestSessionQuery.eq("physio_id", actor.profileId);
+    completedCountQuery = completedCountQuery.eq("physio_id", actor.profileId);
+    latestCompletedQuery = latestCompletedQuery.eq("physio_id", actor.profileId);
+    upcomingSessionQuery = upcomingSessionQuery.eq("physio_id", actor.profileId);
   }
 
-  const [sessionCountResult, latestSessionResult] = await Promise.all([
-    sessionCountQuery,
-    latestSessionQuery.returns<SessionRow[]>(),
+  const [completedCountResult, latestCompletedResult, upcomingSessionResult] = await Promise.all([
+    completedCountQuery,
+    latestCompletedQuery.returns<SessionRow[]>(),
+    upcomingSessionQuery.returns<SessionRow[]>(),
   ]);
 
-  if (sessionCountResult.error || latestSessionResult.error) {
-    const loadError = sessionCountResult.error || latestSessionResult.error;
+  if (completedCountResult.error || latestCompletedResult.error || upcomingSessionResult.error) {
+    const loadError = completedCountResult.error || latestCompletedResult.error || upcomingSessionResult.error;
     console.error("patient_sessions_summary_load_failed", {
       patientId,
       physioId: actor.profileId,
@@ -93,9 +127,22 @@ export default async function PatientRecordPage({
     throw new Error("Përmbledhja e seancave nuk mund të ngarkohet.");
   }
 
-  const sessionCount = sessionCountResult.count ?? 0;
-  const nextSessionNumber = sessionCount + 1;
-  const latestSession = latestSessionResult.data?.[0] || null;
+  let selectedScheduledSessionId: string | undefined;
+  let selectedScheduledSessionDate: string | null = null;
+  if (notices.sessionId) {
+    const selectedResult = await getClinicalSessionForActor(actor, notices.sessionId);
+    if (selectedResult.ok === true && selectedResult.data.patient_id === patientId) {
+      if (["planned", "in_progress"].includes(selectedResult.data.status)) {
+        selectedScheduledSessionId = selectedResult.data.id;
+        selectedScheduledSessionDate = selectedResult.data.session_date;
+      }
+    }
+  }
+
+  const completedCount = completedCountResult.count ?? 0;
+  const nextSessionNumber = completedCount + 1;
+  const latestCompleted = latestCompletedResult.data?.[0] || null;
+  const upcomingSession = upcomingSessionResult.data?.[0] || null;
   const patientName = `${patient.first_name} ${patient.last_name || ""}`.trim();
   const accessRotated = notices.access === "rotated";
 
@@ -108,7 +155,7 @@ export default async function PatientRecordPage({
           <div className={styles.meta}>
             <span>Datëlindja: {formatBirthDate(patient.date_of_birth)}</span>
             <span>Mosha: {patient.age ?? "—"}</span>
-            <span>Seanca: {sessionCount}</span>
+            <span>Seanca të përfunduara: {completedCount}</span>
             <span className={styles.code}>Kodi {patient.patient_code}</span>
           </div>
         </div>
@@ -164,15 +211,24 @@ export default async function PatientRecordPage({
           <strong>{patient.diagnosis || "Nuk është shënuar ende."}</strong>
         </article>
         <article className={styles.summaryPanel}>
-          <span>Seanca e fundit</span>
-          <strong>{latestSession ? formatSessionDate(latestSession.session_date) : "Ende pa seanca"}</strong>
-          {latestSession && (
-            <small>Dhimbja: {latestSession.pain_before ?? "—"} → {latestSession.pain_after ?? "—"}</small>
+          <span>Termini i ardhshëm</span>
+          <strong>{upcomingSession ? formatSessionDateTime(upcomingSession.session_date) : "Ende pa termin"}</strong>
+          {upcomingSession && (
+            <Link href={`/physiotherapist-portal/patients/${patientId}?sessionId=${upcomingSession.id}#session-form`}>
+              <CalendarClock size={14} aria-hidden="true" /> Dokumento këtë seancë
+            </Link>
+          )}
+        </article>
+        <article className={styles.summaryPanel}>
+          <span>Seanca e fundit e përfunduar</span>
+          <strong>{latestCompleted ? formatSessionDate(latestCompleted.session_date) : "Ende pa seanca"}</strong>
+          {latestCompleted && (
+            <small>Dhimbja: {latestCompleted.pain_before ?? "—"} → {latestCompleted.pain_after ?? "—"}</small>
           )}
         </article>
         <article className={styles.summaryPanel}>
           <span>Historiku klinik</span>
-          <strong>{sessionCount} seanca të dokumentuara</strong>
+          <strong>{completedCount} seanca të dokumentuara</strong>
           <Link href={`/physiotherapist-portal/patients/${patientId}/history`}>
             <History size={14} aria-hidden="true" /> Hap timeline-in e plotë
           </Link>
@@ -199,15 +255,31 @@ export default async function PatientRecordPage({
         />
       </section>
 
-      <section className={styles.section}>
+      <section className={styles.section} id="schedule-session">
         <div className={styles.sectionHeading}>
           <div>
-            <span className={styles.eyebrow}>Seanca e ardhshme</span>
-            <h2>Regjistro seancën {nextSessionNumber}</h2>
+            <span className={styles.eyebrow}>Agjenda</span>
+            <h2>Planifiko seancën e ardhshme</h2>
+            <p>Vendos datën dhe orën; termini shfaqet në dashboard dhe te faqja Seancat.</p>
           </div>
-          <span className={styles.statusPill}>Ruhet në kartelën klinike</span>
+          <span className={styles.statusPill}>Ora lokale e klinikës</span>
         </div>
-        <SessionForm patientId={patientId} />
+        <ScheduleSessionForm patientId={patientId} />
+      </section>
+
+      <section className={styles.section} id="session-form">
+        <div className={styles.sectionHeading}>
+          <div>
+            <span className={styles.eyebrow}>Dokumentimi klinik</span>
+            <h2>
+              {selectedScheduledSessionId
+                ? `Dokumento seancën e planifikuar${selectedScheduledSessionDate ? ` · ${formatSessionDateTime(selectedScheduledSessionDate)}` : ""}`
+                : `Regjistro seancën ${nextSessionNumber}`}
+            </h2>
+          </div>
+          <span className={styles.statusPill}>Ruhet në historikun klinik</span>
+        </div>
+        <SessionForm patientId={patientId} scheduledSessionId={selectedScheduledSessionId} />
       </section>
     </>
   );
