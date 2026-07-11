@@ -2,6 +2,11 @@
   "name": "fizioplan-mvp",
   "version": "0.1.0",
   "private": true,
+  "packageManager": "npm@10.9.2",
+  "engines": {
+    "node": ">=22 <23",
+    "npm": ">=10 <11"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -10,13 +15,14 @@
     "typecheck": "tsc --noEmit",
     "test:backend": "node --experimental-strip-types --test tests/backend/*.test.ts",
     "preflight:routes": "node scripts/verify-route-files.mjs",
+    "check:dependencies": "node scripts/dependency-policy-check.mjs",
     "check:env": "node scripts/check-env-readiness.mjs",
     "check:env:contract": "node scripts/environment-contract-check.mjs",
     "check:env:staging": "APP_ENV=staging node scripts/check-env-readiness.mjs",
     "check:env:production": "APP_ENV=production node scripts/check-env-readiness.mjs",
     "check:security": "node scripts/security-regression-check.mjs",
     "check:recovery": "node scripts/data-recovery-contract-check.mjs",
-    "check:all": "npm run preflight:routes && npm run check:security && npm run check:env:contract && npm run check:recovery && npm run test:backend && npm run lint && npm run typecheck",
+    "check:all": "npm run check:dependencies && npm run preflight:routes && npm run check:security && npm run check:env:contract && npm run check:recovery && npm run test:backend && npm run lint && npm run typecheck && npm run build",
     "smoke:production": "node scripts/smoke-test-production.mjs",
     "qa:production:security": "node scripts/qa-production-security.mjs",
     "monitor:production": "node scripts/monitor-production-health.mjs",
@@ -30,25 +36,25 @@
     "studio:deploy": "npm install --prefix apps/studio --no-audit --no-fund && npm run deploy --prefix apps/studio"
   },
   "dependencies": {
-    "@clerk/nextjs": "latest",
-    "@mediapipe/tasks-vision": "latest",
-    "@portabletext/react": "latest",
-    "@supabase/supabase-js": "latest",
-    "lucide-react": "latest",
-    "next": "latest",
-    "next-sanity": "latest",
-    "qrcode": "latest",
-    "react": "latest",
-    "react-dom": "latest",
-    "resend": "latest"
+    "@clerk/nextjs": "7.5.17",
+    "@mediapipe/tasks-vision": "0.10.35",
+    "@portabletext/react": "6.2.0",
+    "@supabase/supabase-js": "2.110.2",
+    "lucide-react": "1.24.0",
+    "next": "16.2.10",
+    "next-sanity": "13.1.1",
+    "qrcode": "1.5.4",
+    "react": "19.2.7",
+    "react-dom": "19.2.7",
+    "resend": "6.17.2"
   },
   "devDependencies": {
-    "@types/node": "latest",
-    "@types/qrcode": "latest",
-    "@types/react": "latest",
-    "@types/react-dom": "latest",
-    "typescript": "latest",
-    "eslint": "latest",
-    "eslint-config-next": "latest"
+    "@types/node": "22.20.1",
+    "@types/qrcode": "1.5.6",
+    "@types/react": "19.2.17",
+    "@types/react-dom": "19.2.3",
+    "typescript": "6.0.3",
+    "eslint": "9.39.5",
+    "eslint-config-next": "16.2.10"
   }
 }
