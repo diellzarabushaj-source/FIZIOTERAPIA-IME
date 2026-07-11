@@ -94,7 +94,28 @@ jobs:
         run: exit 1
 
       - name: TypeScript check
-        run: npm run typecheck
+        id: typecheck
+        shell: bash
+        run: |
+          set +e
+          npm run typecheck > typecheck.log 2>&1
+          status=$?
+          tail -n 200 typecheck.log
+          echo "status=$status" >> "$GITHUB_OUTPUT"
+          exit 0
+
+      - name: Upload failed TypeScript log
+        if: steps.typecheck.outputs.status != '0'
+        uses: actions/upload-artifact@v4
+        with:
+          name: typecheck-log
+          path: typecheck.log
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Fail when TypeScript check failed
+        if: steps.typecheck.outputs.status != '0'
+        run: exit 1
 
       - name: Production dependency audit
         run: npm audit --omit=dev --audit-level=high
