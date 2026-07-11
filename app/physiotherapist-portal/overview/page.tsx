@@ -99,6 +99,16 @@ function sessionStatusLabel(status: string): string {
   return status;
 }
 
+function sessionHref(session: TodaySession): string {
+  if (session.status === "planned" || session.status === "in_progress") {
+    return `/physiotherapist-portal/patients/${session.patient_id}?sessionId=${session.id}#session-form`;
+  }
+  if (session.status === "completed") {
+    return `/physiotherapist-portal/patients/${session.patient_id}/history`;
+  }
+  return `/physiotherapist-portal/patients/${session.patient_id}`;
+}
+
 function planStatusLabel(status: string): string {
   if (status === "draft") return "Draft";
   if (status === "pending_review") return "Në kontroll";
@@ -285,10 +295,10 @@ export default async function OverviewPage() {
           <strong>{visibleCount(patientCountResult.count, patientCountResult.error)}</strong>
           <small>Hap listën e kartelave aktive.</small>
         </Link>
-        <Link className={[styles.card, styles.statCard, styles.statLink].join(" ")} href="#today-agenda">
+        <Link className={[styles.card, styles.statCard, styles.statLink].join(" ")} href="/physiotherapist-portal/sessions?view=today">
           <div className={styles.statTop}><span>Seanca sot</span><span className={styles.statIcon}><CalendarCheck2 size={18} /></span></div>
           <strong>{visibleCount(sessionCountResult.count, sessionCountResult.error)}</strong>
-          <small>Shiko agjendën dhe statusin e seancave.</small>
+          <small>Menaxho agjendën dhe statusin e seancave.</small>
         </Link>
         <Link className={[styles.card, styles.statCard, styles.statLink, attentionItems.length ? styles.statLinkDanger : ""].join(" ")} href="/physiotherapist-portal/alerts">
           <div className={styles.statTop}><span>Alarme të hapura</span><span className={styles.statIcon}><ShieldAlert size={18} /></span></div>
@@ -328,7 +338,7 @@ export default async function OverviewPage() {
               <span className={styles.eyebrow}>Sot</span>
               <h2>Agjenda e seancave</h2>
             </div>
-            <span className={styles.defaultBadge}>{todaySessions.length} të listuara</span>
+            <Link href="/physiotherapist-portal/sessions?view=today">Menaxho të gjitha</Link>
           </div>
           <div className={styles.list}>
             {todaySessions.map((session) => {
@@ -341,7 +351,7 @@ export default async function OverviewPage() {
                     <Link href={`/physiotherapist-portal/patients/${session.patient_id}`}>{patientName(patient)}</Link>
                     <small>{sessionStatusLabel(session.status)}{session.pain_before !== null ? ` · Dhimbja para: ${session.pain_before}/10` : ""}</small>
                   </div>
-                  <Link className={styles.iconButton} href={`/physiotherapist-portal/patients/${session.patient_id}/history`} aria-label={`Hap historikun e ${patientName(patient)}`}>
+                  <Link className={styles.iconButton} href={sessionHref(session)} aria-label={`Hap seancën e ${patientName(patient)}`}>
                     <ArrowRight size={17} />
                   </Link>
                 </div>
@@ -351,7 +361,8 @@ export default async function OverviewPage() {
               <div className={styles.emptyState}>
                 <CalendarCheck2 size={27} aria-hidden="true" />
                 <h3>Nuk ka seanca të regjistruara sot</h3>
-                <p>Seancat e krijuara për sot do të shfaqen këtu sipas orës lokale.</p>
+                <p>Planifiko termin nga kartela e pacientit; ai do të shfaqet këtu sipas orës lokale.</p>
+                <Link className={styles.secondary} href="/physiotherapist-portal/patients">Zgjidh pacientin</Link>
               </div>
             )}
           </div>
@@ -363,7 +374,7 @@ export default async function OverviewPage() {
               <span className={styles.eyebrow}>Prioritet klinik</span>
               <h2>Kërkon vëmendje</h2>
             </div>
-            {attentionItems.length > 0 && <span className={styles.statusDraft}>{attentionItems.length} të fundit</span>}
+            <Link href="/physiotherapist-portal/alerts">Hap alarmet</Link>
           </div>
           <div className={styles.attentionList}>
             {attentionItems.map((alert) => {
