@@ -4,18 +4,29 @@ import test from "node:test";
 
 const read = (path: string) => readFile(new URL(`../../${path}`, import.meta.url), "utf8");
 
-test("patient record reads only current patient_sessions columns", async () => {
+test("patient record reads modern session fields through the summary service", async () => {
   const page = await read("app/physiotherapist-portal/patients/[patientId]/page.tsx");
+  const summary = await read("lib/backend/patient-session-summary.ts");
 
-  assert.match(page, /treatment_summary/);
-  assert.match(page, /clinical_notes/);
-  assert.match(page, /next_steps/);
-  assert.match(page, /order\("session_date"/);
-  assert.doesNotMatch(page, /session_number/);
-  assert.doesNotMatch(page, /\.order\("session_number"/);
+  assert.match(page, /getPatientSessionSummaryForActor/);
+  assert.match(summary, /treatment_summary/);
+  assert.match(summary, /clinical_notes/);
+  assert.match(summary, /next_steps/);
+  assert.match(summary, /order\("session_date"/);
+  assert.doesNotMatch(summary, /session_number/);
+  assert.doesNotMatch(summary, /\.order\("session_number"/);
 });
 
-test("patient history uses the same production session schema", async () => {
+test("legacy session fields are isolated to a read-only schema mismatch fallback", async () => {
+  const summary = await read("lib/backend/patient-session-summary.ts");
+
+  assert.match(summary, /isDatabaseSchemaMismatch\(modernError\)/);
+  assert.match(summary, /select\("id,session_date,pain_before,pain_after,treatment,response"\)/);
+  assert.match(summary, /mode: "legacy_read_only"/);
+  assert.match(summary, /upcomingSession: null/);
+});
+
+test("patient history uses the production session schema", async () => {
   const history = await read("lib/backend/patient-history.ts");
 
   assert.match(history, /treatment_summary/);
