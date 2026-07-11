@@ -6,6 +6,7 @@ import {
   PATIENT_SESSION_REGISTRY_COOKIE,
 } from "@/lib/backend/patient-sessions";
 import {
+  patientSessionSigningConfigured,
   PATIENT_CODE_COOKIE,
   PATIENT_SESSION_COOKIE,
   PATIENT_SESSION_MAX_AGE_SECONDS,
@@ -19,6 +20,10 @@ type RouteProps = {
 };
 
 export async function GET(request: NextRequest, { params }: RouteProps) {
+  if (!patientSessionSigningConfigured()) {
+    return NextResponse.redirect(new URL("/patient-portal?error=system", request.url));
+  }
+
   const supabase = getSupabaseAdmin();
   const { code } = await params;
 
@@ -66,6 +71,8 @@ export async function GET(request: NextRequest, { params }: RouteProps) {
   response.cookies.set(PATIENT_SESSION_COOKIE, signPatientCode(result.patient.patient_code), cookieOptions);
   if (result.patient.patient_username) {
     response.cookies.set(PATIENT_USERNAME_COOKIE, result.patient.patient_username, cookieOptions);
+  } else {
+    response.cookies.delete(PATIENT_USERNAME_COOKIE);
   }
   if (registryToken) response.cookies.set(PATIENT_SESSION_REGISTRY_COOKIE, registryToken, cookieOptions);
   else response.cookies.delete(PATIENT_SESSION_REGISTRY_COOKIE);
