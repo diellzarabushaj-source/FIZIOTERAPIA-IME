@@ -5,7 +5,7 @@ import { requirePhysioActor } from "@/lib/backend/access";
 import { getClinicalSessionForActor } from "@/lib/backend/clinical-sessions";
 import { getPatientForActor } from "@/lib/backend/patients";
 import { getPatientSessionSummaryForActor } from "@/lib/backend/patient-session-summary";
-import { CLINIC_TIME_ZONE, getClinicDateTimeInput } from "@/lib/backend/time-zone";
+import { CLINIC_TIME_ZONE } from "@/lib/backend/time-zone";
 import { EditPatientForm } from "./EditPatientForm";
 import { PatientRecordNav } from "./PatientRecordNav";
 import { RotatePatientAccessCodeForm } from "./RotatePatientAccessCodeForm";
@@ -95,10 +95,6 @@ export default async function PatientRecordPage({
   const nextSessionNumber = completedCount + 1;
   const patientName = `${patient.first_name} ${patient.last_name || ""}`.trim();
   const accessRotated = notices.access === "rotated";
-  const schedulingMinimum = getClinicDateTimeInput();
-  const nextSchedulingHour = new Date(Date.now() + 60 * 60_000);
-  nextSchedulingHour.setMinutes(0, 0, 0);
-  const initialScheduledAt = getClinicDateTimeInput(nextSchedulingHour);
 
   return (
     <>
@@ -241,7 +237,7 @@ export default async function PatientRecordPage({
             </div>
             <span className={styles.statusPill}>Ora lokale e klinikës</span>
           </div>
-          <ScheduleSessionForm patientId={patientId} minimumScheduledAt={schedulingMinimum} initialScheduledAt={initialScheduledAt} />
+          <ScheduleSessionForm patientId={patientId} />
         </section>
       )}
 
