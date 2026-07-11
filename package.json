@@ -4,7 +4,7 @@
   "private": true,
   "packageManager": "npm@10.9.2",
   "engines": {
-    "node": ">=22 <23",
+    "node": "22.x",
     "npm": ">=10 <11"
   },
   "scripts": {
@@ -22,11 +22,13 @@
     "check:env:production": "APP_ENV=production node scripts/check-env-readiness.mjs",
     "check:security": "node scripts/security-regression-check.mjs",
     "check:recovery": "node scripts/data-recovery-contract-check.mjs",
-    "check:all": "npm run check:dependencies && npm run preflight:routes && npm run check:security && npm run check:env:contract && npm run check:recovery && npm run test:backend && npm run lint && npm run typecheck && npm run build",
+    "check:database-schema": "node scripts/database-schema-contract-check.mjs",
+    "check:all": "npm run check:dependencies && npm run preflight:routes && npm run check:security && npm run check:env:contract && npm run check:database-schema && npm run check:recovery && npm run test:backend && npm run lint && npm run typecheck && npm run build",
     "smoke:production": "node scripts/smoke-test-production.mjs",
     "qa:production:security": "node scripts/qa-production-security.mjs",
     "monitor:production": "node scripts/monitor-production-health.mjs",
-    "qa:production": "npm run monitor:production && npm run smoke:production && npm run qa:production:security",
+    "monitor:readiness": "node scripts/monitor-production-readiness.mjs",
+    "qa:production": "npm run monitor:production && npm run monitor:readiness && npm run smoke:production && npm run qa:production:security",
     "smoke:report": "node scripts/render-smoke-report.mjs",
     "smoke:mobile-api": "node scripts/smoke-test-mobile-api.mjs",
     "smoke:sanity-blog": "node scripts/smoke-test-sanity-blog.mjs",
