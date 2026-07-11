@@ -70,7 +70,28 @@ jobs:
         run: exit 1
 
       - name: Lint
-        run: npm run lint
+        id: lint
+        shell: bash
+        run: |
+          set +e
+          npm run lint > lint.log 2>&1
+          status=$?
+          tail -n 200 lint.log
+          echo "status=$status" >> "$GITHUB_OUTPUT"
+          exit 0
+
+      - name: Upload failed lint log
+        if: steps.lint.outputs.status != '0'
+        uses: actions/upload-artifact@v4
+        with:
+          name: lint-log
+          path: lint.log
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Fail when lint failed
+        if: steps.lint.outputs.status != '0'
+        run: exit 1
 
       - name: TypeScript check
         run: npm run typecheck
