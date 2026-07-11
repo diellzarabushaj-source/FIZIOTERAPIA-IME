@@ -5,7 +5,7 @@
   "packageManager": "npm@10.9.2",
   "engines": {
     "node": "24.x",
-    "npm": ">=10 <11"
+    "npm": ">=10 <12"
   },
   "scripts": {
     "dev": "next dev",
