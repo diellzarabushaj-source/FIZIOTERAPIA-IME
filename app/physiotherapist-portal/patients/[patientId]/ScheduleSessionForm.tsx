@@ -1,13 +1,12 @@
 "use client";
 
-import { useActionState, useEffect, useMemo, useRef } from "react";
+import { useActionState, useEffect, useRef } from "react";
 import { useFormStatus } from "react-dom";
 import { CalendarPlus } from "lucide-react";
 import {
   schedulePatientSessionAction,
   type ScheduleSessionFormState,
 } from "../actions";
-import { getClinicDateTimeInput } from "@/lib/backend/time-zone";
 import styles from "../../dashboard.module.css";
 
 const initialState: ScheduleSessionFormState = {
@@ -26,16 +25,18 @@ function SubmitButton() {
   );
 }
 
-export function ScheduleSessionForm({ patientId }: { patientId: string }) {
+export function ScheduleSessionForm({
+  patientId,
+  minimumScheduledAt,
+  initialScheduledAt,
+}: {
+  patientId: string;
+  minimumScheduledAt: string;
+  initialScheduledAt: string;
+}) {
   const action = schedulePatientSessionAction.bind(null, patientId);
   const [state, formAction] = useActionState(action, initialState);
   const formRef = useRef<HTMLFormElement>(null);
-  const minimum = useMemo(() => getClinicDateTimeInput(), []);
-  const defaultTime = useMemo(() => {
-    const nextHour = new Date(Date.now() + 60 * 60_000);
-    nextHour.setMinutes(0, 0, 0);
-    return getClinicDateTimeInput(nextHour);
-  }, []);
 
   useEffect(() => {
     if (state.status === "success") formRef.current?.reset();
@@ -61,8 +62,8 @@ export function ScheduleSessionForm({ patientId }: { patientId: string }) {
             id="scheduledAt"
             name="scheduledAt"
             type="datetime-local"
-            min={minimum}
-            defaultValue={defaultTime}
+            min={minimumScheduledAt}
+            defaultValue={initialScheduledAt}
             className={state.fieldErrors?.scheduledAt ? styles.inputError : undefined}
             required
           />
