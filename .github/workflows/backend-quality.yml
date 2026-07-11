@@ -1,9 +1,9 @@
 name: Backend Quality Gate
 
 on:
-  push:
-    branches: [main]
   pull_request:
+    branches: [main]
+  push:
     branches: [main]
 
 permissions:
@@ -22,14 +22,16 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Use Node.js 22
+      - name: Setup Node 22
         uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
 
       - name: Install dependencies
-        run: npm ci --no-audit --no-fund
+        run: npm install --no-audit --no-fund
+
+      - name: Dependency policy
+        run: npm run check:dependencies
 
       - name: Route preflight
         run: npm run preflight:routes
