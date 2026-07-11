@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { patientSessionSigningConfigured } from "@/lib/backend-logic";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 
 export const dynamic = "force-dynamic";
@@ -19,7 +20,7 @@ export async function GET(request: Request) {
     supabaseEnvironment: Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY),
     database: false,
     clerk: Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY && process.env.CLERK_SECRET_KEY),
-    patientSession: Boolean(process.env.PATIENT_SESSION_SECRET),
+    patientSession: patientSessionSigningConfigured(),
     email: Boolean(process.env.RESEND_API_KEY),
   };
 
