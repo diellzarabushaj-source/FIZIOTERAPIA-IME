@@ -11,7 +11,6 @@ import {
   Menu,
   MoreHorizontal,
   Plus,
-  UserPlus,
   Users,
   X,
 } from "lucide-react";
@@ -19,7 +18,6 @@ import {
 const items = [
   { href: "/physiotherapist-portal/overview", label: "Përmbledhje", icon: LayoutDashboard },
   { href: "/physiotherapist-portal/patients", label: "Pacientët", icon: Users },
-  { href: "/physiotherapist-portal/patients/new", label: "Pacient i ri", icon: UserPlus },
   { href: "/physiotherapist-portal/programs", label: "Programet", icon: ClipboardList },
   { href: "/physiotherapist-portal/exercises", label: "Ushtrimet", icon: Dumbbell },
   { href: "/physiotherapist-portal/billing", label: "Pagesat", icon: CreditCard },
@@ -35,10 +33,7 @@ const mobilePrimaryItems = items.filter((item) =>
 
 function itemIsActive(pathname: string, href: string): boolean {
   if (href.endsWith("/overview")) return pathname === href;
-  if (href.endsWith("/patients/new")) return pathname === href;
-  if (href.endsWith("/patients")) {
-    return (pathname === href || pathname.startsWith(href + "/")) && !pathname.endsWith("/new");
-  }
+  if (href.endsWith("/patients")) return pathname === href || pathname.startsWith(href + "/");
   if (href.endsWith("/programs")) {
     return pathname.startsWith(href) || pathname.startsWith("/physiotherapist-portal/plan-builder");
   }
