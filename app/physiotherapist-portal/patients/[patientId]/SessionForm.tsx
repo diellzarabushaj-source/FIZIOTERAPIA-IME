@@ -1,8 +1,9 @@
 "use client";
 
-import { useActionState, useEffect, useRef } from "react";
+import { useActionState, useEffect, useMemo, useRef } from "react";
 import { useFormStatus } from "react-dom";
 import { createPatientSessionAction, type SessionFormState } from "../actions";
+import { getClinicDateInput } from "@/lib/backend/time-zone";
 import styles from "../../dashboard.module.css";
 
 const initialState: SessionFormState = {
@@ -11,12 +12,16 @@ const initialState: SessionFormState = {
   fieldErrors: {},
 };
 
-function SubmitButton() {
+function SubmitButton({ completingScheduled }: { completingScheduled: boolean }) {
   const { pending } = useFormStatus();
 
   return (
     <button className={styles.primary} type="submit" disabled={pending} aria-disabled={pending} aria-busy={pending}>
-      {pending ? "Duke ruajtur seancën…" : "Ruaj seancën"}
+      {pending
+        ? "Duke ruajtur seancën…"
+        : completingScheduled
+          ? "Përfundo dhe ruaj"
+          : "Ruaj seancën"}
     </button>
   );
 }
@@ -26,10 +31,18 @@ function FieldError({ message }: { message?: string }) {
   return <span className={styles.fieldError} role="alert">{message}</span>;
 }
 
-export default function SessionForm({ patientId }: { patientId: string }) {
+export default function SessionForm({
+  patientId,
+  scheduledSessionId,
+}: {
+  patientId: string;
+  scheduledSessionId?: string;
+}) {
   const action = createPatientSessionAction.bind(null, patientId);
   const [state, formAction] = useActionState(action, initialState);
   const formRef = useRef<HTMLFormElement>(null);
+  const today = useMemo(() => getClinicDateInput(), []);
+  const completingScheduled = Boolean(scheduledSessionId);
 
   useEffect(() => {
     if (state.status === "success") {
@@ -39,6 +52,18 @@ export default function SessionForm({ patientId }: { patientId: string }) {
 
   return (
     <form ref={formRef} action={formAction} className={styles.form} noValidate>
+      {scheduledSessionId && <input type="hidden" name="scheduledSessionId" value={scheduledSessionId} />}
+
+      {completingScheduled && (
+        <div className={styles.smartCheckStatus} role="status">
+          <span className={styles.checkDotActive} aria-hidden="true" />
+          <div>
+            <strong>Po dokumenton një seancë të planifikuar</strong>
+            <span>Ruajtja do ta përditësojë të njëjtin termin në “E përfunduar”; nuk krijohet rekord i dytë.</span>
+          </div>
+        </div>
+      )}
+
       {state.status !== "idle" && (
         <div
           className={state.status === "success" ? styles.successMessage : styles.errorMessage}
@@ -57,7 +82,7 @@ export default function SessionForm({ patientId }: { patientId: string }) {
             id="sessionDate"
             name="sessionDate"
             type="date"
-            defaultValue={new Date().toISOString().slice(0, 10)}
+            defaultValue={today}
             className={state.fieldErrors?.sessionDate ? styles.inputError : undefined}
             required
           />
@@ -128,7 +153,7 @@ export default function SessionForm({ patientId }: { patientId: string }) {
 
       <div className={styles.formFooter}>
         <span>Seanca ruhet në historikun klinik të këtij pacienti.</span>
-        <SubmitButton />
+        <SubmitButton completingScheduled={completingScheduled} />
       </div>
     </form>
   );
