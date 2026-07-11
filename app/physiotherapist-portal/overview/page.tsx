@@ -7,7 +7,6 @@ import {
   ClipboardList,
   Clock3,
   ShieldAlert,
-  UserPlus,
   Users,
 } from "lucide-react";
 import { requirePhysioActor } from "@/lib/backend/access";
@@ -269,16 +268,6 @@ export default async function OverviewPage() {
           <h1>Përmbledhje klinike</h1>
           <p>Prioritetet, seancat dhe planet që kërkojnë veprim — pa kërkuar nëpër disa faqe.</p>
         </div>
-        <div className={styles.actions}>
-          <Link className={styles.secondary} href="/physiotherapist-portal/plan-builder">
-            <ClipboardList size={17} aria-hidden="true" />
-            Krijo plan
-          </Link>
-          <Link className={styles.primary} href="/physiotherapist-portal/patients/new">
-            <UserPlus size={17} aria-hidden="true" />
-            Shto pacient
-          </Link>
-        </div>
       </header>
 
       {hasOverviewError && (
@@ -301,7 +290,7 @@ export default async function OverviewPage() {
           <strong>{visibleCount(sessionCountResult.count, sessionCountResult.error)}</strong>
           <small>Shiko agjendën dhe statusin e seancave.</small>
         </Link>
-        <Link className={[styles.card, styles.statCard, styles.statLink, attentionItems.length ? styles.statLinkDanger : ""].join(" ")} href="#attention-panel">
+        <Link className={[styles.card, styles.statCard, styles.statLink, attentionItems.length ? styles.statLinkDanger : ""].join(" ")} href="/physiotherapist-portal/alerts">
           <div className={styles.statTop}><span>Alarme të hapura</span><span className={styles.statIcon}><ShieldAlert size={18} /></span></div>
           <strong>{visibleCount(alertCountResult.count, alertCountResult.error)}</strong>
           <small>Raportime që kërkojnë kontroll klinik.</small>
@@ -379,7 +368,7 @@ export default async function OverviewPage() {
           <div className={styles.attentionList}>
             {attentionItems.map((alert) => {
               const patient = patientMap.get(alert.patient_id);
-              const painScore = alertPainScore(alert);
+              const score = alertPainScore(alert);
               return (
                 <Link
                   className={[styles.attentionItem, alert.severity === "critical" ? styles.attentionCritical : ""].join(" ")}
@@ -389,7 +378,7 @@ export default async function OverviewPage() {
                   <span className={styles.attentionIcon}><AlertTriangle size={18} aria-hidden="true" /></span>
                   <span className={styles.attentionBody}>
                     <strong>{patientName(patient)}</strong>
-                    <span>{alert.title}{painScore !== null ? ` · ${painScore}/10` : ""}</span>
+                    <span>{alert.title}{score !== null ? ` · ${score}/10` : ""}</span>
                     <small>{alert.message || "Hap kartelën për ta kontrolluar raportimin."} · {formatRelativeDate(alert.created_at)}</small>
                   </span>
                   <ArrowRight size={17} aria-hidden="true" />
