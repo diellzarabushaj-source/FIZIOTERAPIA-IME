@@ -13,7 +13,10 @@ import {
 import { requirePhysioActor } from "@/lib/backend/access";
 import { CLINIC_TIME_ZONE, getUtcDayRange } from "@/lib/backend/time-zone";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
-import styles from "../dashboard.module.css";
+import dashboardStyles from "../dashboard.module.css";
+import overviewStyles from "./overview.module.css";
+
+const styles = { ...dashboardStyles, ...overviewStyles };
 
 type PatientSummary = {
   id: string;
