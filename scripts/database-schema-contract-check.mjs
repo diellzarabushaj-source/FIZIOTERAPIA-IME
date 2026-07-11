@@ -7,6 +7,7 @@ const files = {
   currentMigration: "supabase/migrations/20260711_patient_session_registry.sql",
   sessionService: "lib/backend/patient-sessions.ts",
   overview: "app/physiotherapist-portal/overview/page.tsx",
+  rotationAction: "app/physiotherapist-portal/patients/access-actions.ts",
 };
 
 const content = Object.fromEntries(
@@ -31,6 +32,8 @@ const rules = [
   ["readiness verifies auth session columns", content.currentMigration.includes("patient_auth_sessions.token_hash")],
   ["session service uses only the auth session table", content.sessionService.includes('PATIENT_AUTH_SESSIONS_TABLE = "patient_auth_sessions"') && !content.sessionService.includes('.from("patient_sessions")')],
   ["clinical overview continues to count treatment sessions", content.overview.includes('.from("patient_sessions")') && content.overview.includes("session_date")],
+  ["code rotation is transactional in the database", content.currentMigration.includes("function public.rotate_patient_access_code") && content.currentMigration.includes("update public.patient_auth_sessions")],
+  ["server action uses the atomic rotation RPC", content.rotationAction.includes('.rpc("rotate_patient_access_code"')],
   ["current migration creates readiness RPC", content.currentMigration.includes("function public.deployment_readiness")],
   ["readiness RPC is service-role only", content.currentMigration.includes("service_role required")],
   ["route reports missing columns to protected monitors", content.route.includes("missingColumns: readiness.missingColumns")],
