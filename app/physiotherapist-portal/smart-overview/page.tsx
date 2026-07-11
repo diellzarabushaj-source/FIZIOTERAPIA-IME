@@ -48,6 +48,15 @@ type Plan = {
   updated_at: string | null;
 };
 
+type NextAction = {
+  eyebrow: string;
+  title: string;
+  description: string;
+  href: string;
+  cta: string;
+  tone: "danger" | "default" | "success";
+};
+
 function fullName(patient?: Patient | null) {
   return patient ? `${patient.first_name} ${patient.last_name || ""}`.trim() : "Pacient";
 }
@@ -118,6 +127,11 @@ export default async function SmartOverviewPage() {
     patientCountQuery,
   ]);
 
+  const alertsFailed = Boolean(alertsResult.error);
+  const sessionsFailed = Boolean(sessionsResult.error);
+  const plansFailed = Boolean(plansResult.error);
+  const patientCountFailed = Boolean(patientCountResult.error);
+
   const alerts = alertsResult.data || [];
   const sessions = sessionsResult.data || [];
   const plans = plansResult.data || [];
@@ -128,53 +142,65 @@ export default async function SmartOverviewPage() {
   ])];
 
   let patients: Patient[] = [];
+  let patientLookupFailed = false;
   if (patientIds.length) {
     let query = supabase.from("patients").select("id,first_name,last_name,diagnosis").in("id", patientIds);
     if (actor.role === "physio") query = query.eq("physio_id", actor.profileId);
     const result = await query.returns<Patient[]>();
+    patientLookupFailed = Boolean(result.error);
     patients = result.data || [];
   }
 
+  const dataDegraded = alertsFailed || sessionsFailed || plansFailed || patientCountFailed || patientLookupFailed;
   const patientMap = new Map(patients.map((patient) => [patient.id, patient]));
   const criticalAlert = alerts.find((item) => item.severity === "critical") || alerts[0];
   const nextSession = sessions.find((item) => item.status === "planned" || item.status === "in_progress");
   const nextPlan = plans[0];
 
-  const nextAction = criticalAlert
+  const nextAction: NextAction = dataDegraded
     ? {
-        eyebrow: "Prioritet klinik",
-        title: `Kontrollo ${fullName(patientMap.get(criticalAlert.patient_id))}`,
-        description: criticalAlert.message || criticalAlert.title,
-        href: `/physiotherapist-portal/patients/${criticalAlert.patient_id}`,
-        cta: "Hap kartelën",
+        eyebrow: "Të dhënat nuk janë të plota",
+        title: "Dashboard-i nuk u ngarkua si duhet",
+        description: "Mos e interpreto këtë ekran si mungesë alarmesh ose detyrash. Rifreskoje para vendimit klinik.",
+        href: "/physiotherapist-portal/smart-overview",
+        cta: "Provo përsëri",
         tone: "danger",
       }
-    : nextSession
+    : criticalAlert
       ? {
-          eyebrow: "Veprimi i radhës",
-          title: `${formatTime(nextSession.session_date)} · ${fullName(patientMap.get(nextSession.patient_id))}`,
-          description: "Seanca e ardhshme është gati. Hape kartelën pa kërkuar në listë.",
-          href: `/physiotherapist-portal/patients/${nextSession.patient_id}?sessionId=${nextSession.id}#session-form`,
-          cta: "Fillo seancën",
-          tone: "default",
+          eyebrow: "Prioritet klinik",
+          title: `Kontrollo ${fullName(patientMap.get(criticalAlert.patient_id))}`,
+          description: criticalAlert.message || criticalAlert.title,
+          href: `/physiotherapist-portal/patients/${criticalAlert.patient_id}`,
+          cta: "Hap kartelën",
+          tone: "danger",
         }
-      : nextPlan
+      : nextSession
         ? {
-            eyebrow: "Vazhdo aty ku mbete",
-            title: nextPlan.title,
-            description: `${fullName(patientMap.get(nextPlan.patient_id))} · plani pret veprimin tënd.`,
-            href: `/physiotherapist-portal/plan-builder?planId=${nextPlan.id}`,
-            cta: "Vazhdo planin",
+            eyebrow: "Veprimi i radhës",
+            title: `${formatTime(nextSession.session_date)} · ${fullName(patientMap.get(nextSession.patient_id))}`,
+            description: "Seanca e ardhshme është gati. Hape kartelën pa kërkuar në listë.",
+            href: `/physiotherapist-portal/patients/${nextSession.patient_id}?sessionId=${nextSession.id}#session-form`,
+            cta: "Fillo seancën",
             tone: "default",
           }
-        : {
-            eyebrow: "Workspace i pastër",
-            title: "Nuk ka detyra urgjente",
-            description: "Mund të shtosh pacient, të krijosh plan ose të kontrollosh bibliotekën klinike.",
-            href: "/physiotherapist-portal/patients/new",
-            cta: "Shto pacient",
-            tone: "success",
-          };
+        : nextPlan
+          ? {
+              eyebrow: "Vazhdo aty ku mbete",
+              title: nextPlan.title,
+              description: `${fullName(patientMap.get(nextPlan.patient_id))} · plani pret veprimin tënd.`,
+              href: `/physiotherapist-portal/plan-builder?planId=${nextPlan.id}`,
+              cta: "Vazhdo planin",
+              tone: "default",
+            }
+          : {
+              eyebrow: "Workspace i pastër",
+              title: "Nuk ka detyra urgjente",
+              description: "Mund të shtosh pacient, të krijosh plan ose të kontrollosh bibliotekën klinike.",
+              href: "/physiotherapist-portal/patients/new",
+              cta: "Shto pacient",
+              tone: "success",
+            };
 
   const queue = [
     ...alerts.map((alert) => ({
@@ -182,7 +208,7 @@ export default async function SmartOverviewPage() {
       title: fullName(patientMap.get(alert.patient_id)),
       meta: `${alert.title} · ${formatDate(alert.created_at)}`,
       href: `/physiotherapist-portal/patients/${alert.patient_id}`,
-      icon: <AlertTriangle size={18} />,
+      icon: <AlertTriangle size={18} aria-hidden="true" />,
       priority: alert.severity === "critical" ? 0 : 1,
     })),
     ...plans.map((plan) => ({
@@ -190,7 +216,7 @@ export default async function SmartOverviewPage() {
       title: plan.title,
       meta: `${fullName(patientMap.get(plan.patient_id))} · ${plan.status === "draft" ? "Draft" : "Pret kontroll"}`,
       href: `/physiotherapist-portal/plan-builder?planId=${plan.id}`,
-      icon: <FileText size={18} />,
+      icon: <FileText size={18} aria-hidden="true" />,
       priority: 2,
     })),
   ].sort((a, b) => a.priority - b.priority).slice(0, 6);
@@ -199,29 +225,29 @@ export default async function SmartOverviewPage() {
     <main className={styles.workspace}>
       <header className={styles.header}>
         <div>
-          <span className={styles.eyebrow}><Sparkles size={15} /> Smart workspace</span>
+          <span className={styles.eyebrow}><Sparkles size={15} aria-hidden="true" /> Smart workspace</span>
           <h1>Çka kërkon veprim tani?</h1>
           <p>Një ekran për vendimet e ditës. Pjesa tjetër mbetet një klik larg.</p>
         </div>
         <Link className={styles.searchButton} href="/physiotherapist-portal/patients">
-          <Search size={18} /> Gjej pacient
+          <Search size={18} aria-hidden="true" /> Gjej pacient
         </Link>
       </header>
 
-      <section className={`${styles.hero} ${styles[nextAction.tone]}`}>
+      <section className={`${styles.hero} ${styles[nextAction.tone]}`} role={dataDegraded ? "alert" : undefined}>
         <div>
           <span>{nextAction.eyebrow}</span>
           <h2>{nextAction.title}</h2>
           <p>{nextAction.description}</p>
         </div>
-        <Link href={nextAction.href}>{nextAction.cta}<ArrowRight size={18} /></Link>
+        <Link href={nextAction.href}>{nextAction.cta}<ArrowRight size={18} aria-hidden="true" /></Link>
       </section>
 
       <section className={styles.quickActions} aria-label="Veprime të shpejta">
-        <Link href="/physiotherapist-portal/patients/new"><UserPlus size={20} /><span><strong>Pacient i ri</strong><small>Krijo kartelën një herë</small></span></Link>
-        <Link href="/physiotherapist-portal/plan-builder"><ClipboardPlus size={20} /><span><strong>Plan i ri</strong><small>Nis nga pacienti dhe gjendja</small></span></Link>
-        <Link href="/clinical-recommendations"><Activity size={20} /><span><strong>Rekomandime klinike</strong><small>Filtro ushtrimet me rregulla</small></span></Link>
-        <Link href="/physiotherapist-portal/sessions?view=today"><CalendarClock size={20} /><span><strong>Agjenda</strong><small>{sessions.length} seanca sot</small></span></Link>
+        <Link href="/physiotherapist-portal/patients/new"><UserPlus size={20} aria-hidden="true" /><span><strong>Pacient i ri</strong><small>Krijo kartelën një herë</small></span></Link>
+        <Link href="/physiotherapist-portal/plan-builder"><ClipboardPlus size={20} aria-hidden="true" /><span><strong>Plan i ri</strong><small>Nis nga pacienti dhe gjendja</small></span></Link>
+        <Link href="/clinical-recommendations"><Activity size={20} aria-hidden="true" /><span><strong>Rekomandime klinike</strong><small>Filtro ushtrimet me rregulla</small></span></Link>
+        <Link href="/physiotherapist-portal/sessions?view=today"><CalendarClock size={20} aria-hidden="true" /><span><strong>Agjenda</strong><small>{sessionsFailed ? "Nuk u ngarkua" : `${sessions.length} seanca sot`}</small></span></Link>
       </section>
 
       <section className={styles.contentGrid}>
@@ -236,19 +262,32 @@ export default async function SmartOverviewPage() {
                 <span className={styles.rank}>{index + 1}</span>
                 <span className={styles.queueIcon}>{item.icon}</span>
                 <span><strong>{item.title}</strong><small>{item.meta}</small></span>
-                <ArrowRight size={17} />
+                <ArrowRight size={17} aria-hidden="true" />
               </Link>
             ))}
-            {!queue.length && <div className={styles.empty}><CheckCircle2 size={26} /><strong>Gjithçka është në rregull</strong><span>Nuk ka alarme ose plane në pritje.</span></div>}
+            {!queue.length && dataDegraded && (
+              <div className={styles.empty} role="alert">
+                <AlertTriangle size={26} aria-hidden="true" />
+                <strong>Radha nuk mund të verifikohet</strong>
+                <span>Një ose më shumë burime të të dhënave dështuan. Provo përsëri.</span>
+              </div>
+            )}
+            {!queue.length && !dataDegraded && (
+              <div className={styles.empty}>
+                <CheckCircle2 size={26} aria-hidden="true" />
+                <strong>Gjithçka është në rregull</strong>
+                <span>Nuk ka alarme ose plane në pritje.</span>
+              </div>
+            )}
           </div>
         </article>
 
-        <aside className={styles.sidePanel}>
-          <div className={styles.metric}><Users size={20} /><span><strong>{patientCountResult.error ? "—" : patientCountResult.count ?? 0}</strong><small>pacientë aktivë</small></span></div>
-          <div className={styles.metric}><CalendarClock size={20} /><span><strong>{sessions.length}</strong><small>seanca sot</small></span></div>
-          <div className={styles.metric}><AlertTriangle size={20} /><span><strong>{alerts.length}</strong><small>raste për kontroll</small></span></div>
-          <div className={styles.metric}><FileText size={20} /><span><strong>{plans.length}</strong><small>plane për veprim</small></span></div>
-          <Link className={styles.secondaryLink} href="/physiotherapist-portal/overview">Hap pamjen analitike <ArrowRight size={16} /></Link>
+        <aside className={styles.sidePanel} aria-label="Përmbledhja e dashboard-it">
+          <div className={styles.metric}><Users size={20} aria-hidden="true" /><span><strong>{patientCountFailed ? "—" : patientCountResult.count ?? 0}</strong><small>pacientë aktivë</small></span></div>
+          <div className={styles.metric}><CalendarClock size={20} aria-hidden="true" /><span><strong>{sessionsFailed ? "—" : sessions.length}</strong><small>seanca sot</small></span></div>
+          <div className={styles.metric}><AlertTriangle size={20} aria-hidden="true" /><span><strong>{alertsFailed ? "—" : alerts.length}</strong><small>raste për kontroll</small></span></div>
+          <div className={styles.metric}><FileText size={20} aria-hidden="true" /><span><strong>{plansFailed ? "—" : plans.length}</strong><small>plane për veprim</small></span></div>
+          <Link className={styles.secondaryLink} href="/physiotherapist-portal/overview">Hap pamjen analitike <ArrowRight size={16} aria-hidden="true" /></Link>
         </aside>
       </section>
     </main>
