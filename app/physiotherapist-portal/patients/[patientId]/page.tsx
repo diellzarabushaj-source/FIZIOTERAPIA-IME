@@ -6,6 +6,7 @@ import { getPatientForActor } from "@/lib/backend/patients";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import { EditPatientForm } from "./EditPatientForm";
 import { PatientRecordNav } from "./PatientRecordNav";
+import { RotatePatientAccessCodeForm } from "./RotatePatientAccessCodeForm";
 import SessionForm from "./SessionForm";
 import styles from "../../dashboard.module.css";
 
@@ -35,7 +36,7 @@ export default async function PatientRecordPage({
   searchParams,
 }: {
   params: Promise<{ patientId: string }>;
-  searchParams: Promise<{ created?: string; existing?: string; session?: string }>;
+  searchParams: Promise<{ created?: string; existing?: string; session?: string; access?: string }>;
 }) {
   const { patientId } = await params;
   const notices = await searchParams;
@@ -70,6 +71,7 @@ export default async function PatientRecordPage({
   const nextSessionNumber = sessionCount + 1;
   const latestSession = sessions?.[0] || null;
   const patientName = (patient.first_name + " " + (patient.last_name || "")).trim();
+  const accessRotated = notices.access === "rotated";
 
   return (
     <>
@@ -86,6 +88,7 @@ export default async function PatientRecordPage({
         </div>
 
         <div className={styles.patientActions}>
+          <RotatePatientAccessCodeForm patientId={patientId} />
           <Link className={styles.secondary} href={"/patient-access/" + encodeURIComponent(patient.patient_code)} target="_blank">
             <QrCode size={17} />
             Printo QR
@@ -99,22 +102,26 @@ export default async function PatientRecordPage({
 
       <PatientRecordNav patientId={patientId} active="record" />
 
-      {(notices.created || notices.existing || notices.session === "created") && (
+      {(accessRotated || notices.created || notices.existing || notices.session === "created") && (
         <section className={styles.section}>
           <div className={styles.successMessage} role="status">
             <strong>
-              {notices.session === "created"
-                ? "Seanca u ruajt me sukses."
-                : notices.created
-                  ? "Kartela u krijua me sukses."
-                  : "U hap kartela ekzistuese."}
+              {accessRotated
+                ? "Kodi i pacientit u ndërrua me sukses."
+                : notices.session === "created"
+                  ? "Seanca u ruajt me sukses."
+                  : notices.created
+                    ? "Kartela u krijua me sukses."
+                    : "U hap kartela ekzistuese."}
             </strong>
             <span>
-              {notices.session === "created"
-                ? "Të dhënat klinike janë shtuar në historikun e pacientit."
-                : notices.created
-                  ? "Pacienti është gati për planin dhe seancën e parë."
-                  : "Nuk është krijuar pacient i dyfishtë; vazhdo në kartelën ekzistuese."}
+              {accessRotated
+                ? "Kodi dhe QR-ja e vjetër nuk funksionojnë më. Printo ose dërgo kodin e ri pacientit."
+                : notices.session === "created"
+                  ? "Të dhënat klinike janë shtuar në historikun e pacientit."
+                  : notices.created
+                    ? "Pacienti është gati për planin dhe seancën e parë."
+                    : "Nuk është krijuar pacient i dyfishtë; vazhdo në kartelën ekzistuese."}
             </span>
           </div>
         </section>
