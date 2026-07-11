@@ -134,6 +134,27 @@ jobs:
           RESEND_REPLY_TO_EMAIL: ${{ secrets.RESEND_REPLY_TO_EMAIL }}
 
       - name: Mobile TypeScript check
-        run: npm run mobile:typecheck
+        id: mobile-typecheck
+        shell: bash
         env:
           EXPO_PUBLIC_API_BASE_URL: https://fizioterapia-ime.vercel.app
+        run: |
+          set +e
+          npm run mobile:typecheck > mobile-typecheck.log 2>&1
+          status=$?
+          tail -n 200 mobile-typecheck.log
+          echo "status=$status" >> "$GITHUB_OUTPUT"
+          exit 0
+
+      - name: Upload failed mobile TypeScript log
+        if: steps.mobile-typecheck.outputs.status != '0'
+        uses: actions/upload-artifact@v4
+        with:
+          name: mobile-typecheck-log
+          path: mobile-typecheck.log
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Fail when mobile TypeScript check failed
+        if: steps.mobile-typecheck.outputs.status != '0'
+        run: exit 1
