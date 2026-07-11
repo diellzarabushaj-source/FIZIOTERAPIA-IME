@@ -29,7 +29,9 @@ const rules = [
   ["documentation defines Production", content.docs.includes("## Production")],
   ["documentation forbids production patient data in staging", content.docs.includes("No production patient data")],
   ["documentation separates clinical and auth sessions", content.docs.includes("public.patient_auth_sessions") && content.docs.includes("public.patient_sessions")],
-  ["documentation requires migration before enabling registry", content.docs.includes("schema version `20260711.3`")],
+  ["documentation requires the latest readiness schema", content.docs.includes("schema version `20260711.4`")],
+  ["documentation requires exercise ownership columns", content.docs.includes("exercise_library.owner_physio_id")],
+  ["documentation requires a strong patient secret", content.docs.includes("at least 43 characters")],
 ];
 
 const failed = rules.filter(([, passed]) => !passed);
