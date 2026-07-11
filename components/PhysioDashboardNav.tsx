@@ -2,14 +2,18 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
 import {
   ClipboardList,
   CreditCard,
   Dumbbell,
   LayoutDashboard,
+  Menu,
+  MoreHorizontal,
   Plus,
   UserPlus,
   Users,
+  X,
 } from "lucide-react";
 
 const items = [
@@ -20,6 +24,14 @@ const items = [
   { href: "/physiotherapist-portal/exercises", label: "Ushtrimet", icon: Dumbbell },
   { href: "/physiotherapist-portal/billing", label: "Pagesat", icon: CreditCard },
 ] as const;
+
+const mobilePrimaryItems = items.filter((item) =>
+  [
+    "/physiotherapist-portal/overview",
+    "/physiotherapist-portal/patients",
+    "/physiotherapist-portal/programs",
+  ].includes(item.href),
+);
 
 function itemIsActive(pathname: string, href: string): boolean {
   if (href.endsWith("/overview")) return pathname === href;
@@ -35,9 +47,39 @@ function itemIsActive(pathname: string, href: string): boolean {
 
 export function PhysioDashboardNav() {
   const pathname = usePathname();
+  const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    if (!open) return;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setOpen(false);
+    };
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [open]);
+
+  const closeMenu = () => setOpen(false);
 
   return (
     <>
+      <button
+        className="pd-mobile-menu-button"
+        type="button"
+        aria-label="Hap navigimin"
+        aria-expanded={open}
+        aria-controls="pd-mobile-drawer"
+        onClick={() => setOpen(true)}
+      >
+        <Menu size={20} aria-hidden="true" />
+      </button>
+
       <nav className="pd-nav" aria-label="Navigimi i dashboard-it">
         {items.map((item) => {
           const active = itemIsActive(pathname, item.href);
@@ -57,9 +99,76 @@ export function PhysioDashboardNav() {
       </nav>
 
       <Link className="pd-create-plan" href="/physiotherapist-portal/plan-builder">
-        <Plus size={18} />
+        <Plus size={18} aria-hidden="true" />
         Krijo plan
       </Link>
+
+      <Link className="pd-mobile-create" href="/physiotherapist-portal/plan-builder" aria-label="Krijo plan të ri">
+        <Plus size={22} aria-hidden="true" />
+      </Link>
+
+      <nav className="pd-mobile-bottom-nav" aria-label="Navigimi kryesor mobile">
+        {mobilePrimaryItems.map((item) => {
+          const active = itemIsActive(pathname, item.href);
+          const Icon = item.icon;
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={active ? "active" : ""}
+              aria-current={active ? "page" : undefined}
+            >
+              <Icon size={20} aria-hidden="true" />
+              <span>{item.label}</span>
+            </Link>
+          );
+        })}
+        <button type="button" aria-expanded={open} aria-controls="pd-mobile-drawer" onClick={() => setOpen(true)}>
+          <MoreHorizontal size={20} aria-hidden="true" />
+          <span>Më shumë</span>
+        </button>
+      </nav>
+
+      {open && (
+        <div className="pd-mobile-navigation-layer">
+          <button className="pd-mobile-overlay" type="button" aria-label="Mbyll navigimin" onClick={closeMenu} />
+          <aside id="pd-mobile-drawer" className="pd-mobile-drawer" role="dialog" aria-modal="true" aria-label="Navigimi i dashboard-it">
+            <div className="pd-mobile-drawer-head">
+              <div>
+                <strong>Fizioterapia ime</strong>
+                <small>Hapësira klinike</small>
+              </div>
+              <button type="button" aria-label="Mbyll navigimin" onClick={closeMenu} autoFocus>
+                <X size={20} aria-hidden="true" />
+              </button>
+            </div>
+
+            <nav aria-label="Të gjitha seksionet">
+              {items.map((item) => {
+                const active = itemIsActive(pathname, item.href);
+                const Icon = item.icon;
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={active ? "active" : ""}
+                    aria-current={active ? "page" : undefined}
+                    onClick={closeMenu}
+                  >
+                    <Icon size={19} aria-hidden="true" />
+                    <span>{item.label}</span>
+                  </Link>
+                );
+              })}
+            </nav>
+
+            <Link className="pd-mobile-drawer-create" href="/physiotherapist-portal/plan-builder" onClick={closeMenu}>
+              <Plus size={19} aria-hidden="true" />
+              Krijo plan të ri
+            </Link>
+          </aside>
+        </div>
+      )}
     </>
   );
 }
