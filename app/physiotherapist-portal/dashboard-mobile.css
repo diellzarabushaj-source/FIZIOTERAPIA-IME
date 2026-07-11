@@ -1,0 +1,257 @@
+.pd-mobile-menu-button,
+.pd-mobile-create,
+.pd-mobile-bottom-nav,
+.pd-mobile-navigation-layer {
+  display: none;
+}
+
+@media (max-width: 980px) {
+  .pd-sidebar {
+    position: sticky;
+    top: 0;
+    z-index: 60;
+    height: 66px;
+    padding: 8px 12px;
+    border-bottom: 1px solid #28423e;
+    display: block;
+  }
+
+  .pd-brand {
+    min-height: 50px;
+    padding: 4px 52px 4px 5px;
+  }
+
+  .pd-nav,
+  .pd-create-plan,
+  .pd-sidebar-foot {
+    display: none;
+  }
+
+  .pd-mobile-menu-button {
+    position: absolute;
+    top: 13px;
+    right: 13px;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 11px;
+    background: rgba(255, 255, 255, 0.08);
+    color: #ffffff;
+    cursor: pointer;
+    display: grid;
+    place-items: center;
+  }
+
+  .pd-mobile-menu-button:hover {
+    background: rgba(255, 255, 255, 0.14);
+  }
+
+  .pd-mobile-menu-button:focus-visible,
+  .pd-mobile-drawer button:focus-visible,
+  .pd-mobile-drawer a:focus-visible,
+  .pd-mobile-bottom-nav a:focus-visible,
+  .pd-mobile-bottom-nav button:focus-visible,
+  .pd-mobile-create:focus-visible {
+    outline: 0;
+    box-shadow: 0 0 0 4px rgba(48, 181, 168, 0.28);
+  }
+
+  .pd-mobile-create {
+    position: fixed;
+    right: 18px;
+    bottom: 18px;
+    z-index: 55;
+    width: 52px;
+    height: 52px;
+    border-radius: 17px;
+    background: #0f766e;
+    color: #ffffff;
+    text-decoration: none;
+    box-shadow: 0 14px 34px rgba(15, 76, 70, 0.28);
+    display: grid;
+    place-items: center;
+  }
+
+  .pd-mobile-navigation-layer {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    display: block;
+  }
+
+  .pd-mobile-overlay {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    padding: 0;
+    border: 0;
+    background: rgba(8, 20, 18, 0.54);
+    backdrop-filter: blur(3px);
+    cursor: pointer;
+  }
+
+  .pd-mobile-drawer {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: min(88vw, 360px);
+    height: 100%;
+    padding: 18px;
+    background: #ffffff;
+    color: #172923;
+    box-shadow: -18px 0 48px rgba(8, 28, 24, 0.24);
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    animation: pd-drawer-in 170ms ease-out;
+  }
+
+  @keyframes pd-drawer-in {
+    from { transform: translateX(100%); }
+    to { transform: translateX(0); }
+  }
+
+  .pd-mobile-drawer-head {
+    min-height: 52px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid #e2ebe8;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+  }
+
+  .pd-mobile-drawer-head strong,
+  .pd-mobile-drawer-head small {
+    display: block;
+  }
+
+  .pd-mobile-drawer-head strong {
+    font-size: 16px;
+  }
+
+  .pd-mobile-drawer-head small {
+    margin-top: 3px;
+    color: #71807a;
+    font-size: 12px;
+  }
+
+  .pd-mobile-drawer-head button {
+    width: 42px;
+    height: 42px;
+    padding: 0;
+    border: 1px solid #d9e3df;
+    border-radius: 12px;
+    background: #f6f9f8;
+    color: #29413a;
+    cursor: pointer;
+    display: grid;
+    place-items: center;
+  }
+
+  .pd-mobile-drawer nav {
+    display: grid;
+    gap: 5px;
+  }
+
+  .pd-mobile-drawer nav a {
+    min-height: 48px;
+    padding: 11px 12px;
+    border-radius: 12px;
+    color: #40514b;
+    font-size: 14px;
+    font-weight: 750;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .pd-mobile-drawer nav a:hover {
+    background: #f1f7f5;
+  }
+
+  .pd-mobile-drawer nav a.active {
+    background: #e8f5f1;
+    color: #0d665e;
+  }
+
+  .pd-mobile-drawer-create {
+    min-height: 48px;
+    margin-top: auto;
+    padding: 11px 14px;
+    border-radius: 13px;
+    background: #0f6f67;
+    color: #ffffff;
+    font-size: 14px;
+    font-weight: 800;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+  }
+}
+
+@media (max-width: 700px) {
+  .pd-content {
+    padding-bottom: 104px;
+  }
+
+  .pd-mobile-create {
+    right: 16px;
+    bottom: 76px;
+  }
+
+  .pd-mobile-bottom-nav {
+    position: fixed;
+    right: 10px;
+    bottom: 9px;
+    left: 10px;
+    z-index: 54;
+    min-height: 62px;
+    padding: 5px;
+    border: 1px solid rgba(207, 220, 215, 0.94);
+    border-radius: 18px;
+    background: rgba(255, 255, 255, 0.96);
+    box-shadow: 0 12px 34px rgba(18, 42, 36, 0.16);
+    backdrop-filter: blur(14px);
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .pd-mobile-bottom-nav a,
+  .pd-mobile-bottom-nav button {
+    min-width: 0;
+    min-height: 50px;
+    padding: 5px 3px;
+    border: 0;
+    border-radius: 13px;
+    background: transparent;
+    color: #6b7974;
+    font: inherit;
+    font-size: 10px;
+    font-weight: 750;
+    text-decoration: none;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+  }
+
+  .pd-mobile-bottom-nav a.active {
+    background: #e9f5f2;
+    color: #0d6a62;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pd-mobile-drawer {
+    animation: none;
+  }
+}
