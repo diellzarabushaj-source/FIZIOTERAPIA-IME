@@ -1,6 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-export const EXPECTED_DATABASE_SCHEMA_VERSION = "20260711.3";
+export const EXPECTED_DATABASE_SCHEMA_VERSION = "20260711.4";
 
 export type DatabaseReadiness = {
   ready: boolean;
