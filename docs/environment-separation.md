@@ -39,6 +39,7 @@ Staging must test:
 9. `/api/readiness` returns HTTP 200 and matching schema versions
 10. patient logout revokes the current auth session
 11. rotating a patient code revokes every registered auth session
+12. standard and private exercise libraries load with ownership filters
 
 ## Production
 
@@ -48,7 +49,7 @@ Purpose: real users and clinical records.
 - HTTPS application URL
 - Clerk live keys
 - Production-only Supabase project
-- Unique patient session secret
+- Unique PATIENT_SESSION_SECRET with at least 43 characters
 - PATIENT_SESSION_REGISTRY_ENABLED=1
 - Unique health monitor secret of at least 32 characters
 - Verified email sender
@@ -81,8 +82,9 @@ Environment variables must be assigned to the correct Vercel scope. A value shou
 4. Review migration for destructive operations.
 5. Apply to production.
 6. Verify schema, RLS, functions and security advisors.
-7. Confirm `/api/readiness` returns `ready` with the expected schema version.
-8. Set `PATIENT_SESSION_REGISTRY_ENABLED=1` only after schema version `20260711.3` is applied and readiness passes.
+7. Apply all migrations through `20260711_exercise_library_readiness.sql`.
+8. Confirm `/api/readiness` returns `ready` with schema version `20260711.4`.
+9. Set `PATIENT_SESSION_REGISTRY_ENABLED=1` only after the auth-session migration is applied and the latest readiness check passes.
 
 Do not test destructive migrations directly on production.
 
@@ -90,12 +92,15 @@ The application schema version is declared in `lib/backend/schema-readiness.ts` 
 
 `public.patient_sessions` stores clinical treatment sessions. `public.patient_auth_sessions` stores revocable login sessions. These tables must never be merged or reused for each other's purpose.
 
+The exercise backend requires `exercise_library.is_default`, `owner_physio_id`, `status` and `updated_at`. A deployment is not ready when those columns are absent, even if the application build itself succeeds.
+
 ## Health versus readiness
 
 - `/api/health` confirms the application process, required environment and basic database connectivity are alive.
 - `/api/readiness` confirms the production database has the exact expected schema version and all critical tables, columns and RPC functions.
 - Detailed diagnostics are returned only when the request contains the configured `x-monitor-secret` value.
 - A Vercel deployment marked `READY` is not considered clinically ready until `/api/readiness` returns HTTP 200.
+- Patient login must redirect to a controlled system message, not create a session, when the signing secret or session registry is unavailable.
 
 ## Required release evidence
 
@@ -104,8 +109,9 @@ Before a production release, record:
 - commit SHA
 - successful backend quality workflow
 - successful staging smoke test
-- migration versions applied
+- migration versions applied through `20260711.4`
 - successful production health result
 - successful production schema readiness result
 - confirmation that revocable patient sessions are enabled
+- confirmation that PATIENT_SESSION_SECRET is configured without exposing its value
 - rollback decision and responsible owner
