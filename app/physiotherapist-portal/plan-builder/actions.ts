@@ -13,28 +13,12 @@ import {
   updatePlanExerciseForActor,
 } from "@/lib/backend/plans";
 import { cleanText } from "@/lib/backend/validation";
-import { hasActivePhysioAccess } from "@/lib/billing";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 
-async function requireWorkspaceWithAccess() {
+async function requireWorkspace() {
   const actor = await requirePhysioActor();
   const supabase = getSupabaseAdmin();
   if (!supabase) throw new Error("Supabase server key mungon.");
-
-  if (actor.role === "physio") {
-    const { data: subscription } = await supabase
-      .from("subscriptions")
-      .select("status,current_period_end")
-      .eq("physio_id", actor.profileId)
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
-
-    if (!hasActivePhysioAccess(actor.role, subscription)) {
-      redirect("/physiotherapist-portal/billing?access=subscription-required");
-    }
-  }
-
   return { actor, supabase };
 }
 
@@ -48,11 +32,11 @@ function revalidatePlanWorkspace(patientId?: string) {
   revalidatePath("/physiotherapist-portal/programs");
   revalidatePath("/physiotherapist-portal/overview");
   revalidatePath("/patient-dashboard");
-  if (patientId) revalidatePath("/physiotherapist-portal/patients/" + patientId + "/program");
+  if (patientId) revalidatePath(`/physiotherapist-portal/patients/${patientId}/program`);
 }
 
 export async function createDraftPlanAction(formData: FormData) {
-  const { actor } = await requireWorkspaceWithAccess();
+  const { actor } = await requireWorkspace();
   const plan = requireOk(await createDraftPlanForActor(actor, {
     patientId: formData.get("patientId"),
     title: formData.get("title"),
@@ -61,15 +45,12 @@ export async function createDraftPlanAction(formData: FormData) {
 
   revalidatePlanWorkspace(plan.patient_id);
   redirect(
-    "/physiotherapist-portal/plan-builder?patientId=" +
-    encodeURIComponent(plan.patient_id) +
-    "&planId=" +
-    encodeURIComponent(plan.id),
+    `/physiotherapist-portal/plan-builder?patientId=${encodeURIComponent(plan.patient_id)}&planId=${encodeURIComponent(plan.id)}`,
   );
 }
 
 export async function addLibraryExerciseAction(formData: FormData) {
-  const { actor } = await requireWorkspaceWithAccess();
+  const { actor } = await requireWorkspace();
   const plan = requireOk(await getPlanForActor(actor, cleanText(formData.get("planId"), 80)));
 
   requireOk(await addExerciseToPlanForActor(actor, {
@@ -87,7 +68,7 @@ export async function addLibraryExerciseAction(formData: FormData) {
 }
 
 export async function addCustomExerciseAction(formData: FormData) {
-  const { actor, supabase } = await requireWorkspaceWithAccess();
+  const { actor, supabase } = await requireWorkspace();
   const planId = cleanText(formData.get("planId"), 80);
   if (!planId) throw new Error("Plani kërkohet.");
 
@@ -125,7 +106,7 @@ export async function addCustomExerciseAction(formData: FormData) {
 }
 
 export async function updatePlanExerciseAction(formData: FormData) {
-  const { actor } = await requireWorkspaceWithAccess();
+  const { actor } = await requireWorkspace();
   const planExerciseId = cleanText(formData.get("planExerciseId"), 80);
   if (!planExerciseId) throw new Error("Ushtrimi në plan mungon.");
 
@@ -144,7 +125,7 @@ export async function updatePlanExerciseAction(formData: FormData) {
 }
 
 export async function removePlanExerciseAction(formData: FormData) {
-  const { actor } = await requireWorkspaceWithAccess();
+  const { actor } = await requireWorkspace();
   const planExerciseId = cleanText(formData.get("planExerciseId"), 80);
   if (!planExerciseId) throw new Error("Ushtrimi në plan mungon.");
 
@@ -154,7 +135,7 @@ export async function removePlanExerciseAction(formData: FormData) {
 }
 
 export async function markPendingReviewAction(formData: FormData) {
-  const { actor } = await requireWorkspaceWithAccess();
+  const { actor } = await requireWorkspace();
   const planId = cleanText(formData.get("planId"), 80);
   if (!planId) throw new Error("Plani mungon.");
 
@@ -163,7 +144,7 @@ export async function markPendingReviewAction(formData: FormData) {
 }
 
 export async function approveAndSendPlanAction(formData: FormData) {
-  const { actor } = await requireWorkspaceWithAccess();
+  const { actor } = await requireWorkspace();
   const planId = cleanText(formData.get("planId"), 80);
   if (!planId) throw new Error("Plani mungon.");
 
@@ -175,10 +156,6 @@ export async function approveAndSendPlanAction(formData: FormData) {
 
   revalidatePlanWorkspace(plan.patient_id);
   redirect(
-    "/physiotherapist-portal/plan-builder?patientId=" +
-    encodeURIComponent(plan.patient_id) +
-    "&planId=" +
-    encodeURIComponent(plan.id) +
-    "&sent=1",
+    `/physiotherapist-portal/plan-builder?patientId=${encodeURIComponent(plan.patient_id)}&planId=${encodeURIComponent(plan.id)}&sent=1`,
   );
 }
