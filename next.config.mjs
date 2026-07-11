@@ -37,6 +37,37 @@ const securityHeaders = [
   },
 ];
 
+const noIndexHeaders = [
+  { key: "X-Robots-Tag", value: "noindex, nofollow, noarchive, nosnippet" },
+  { key: "Cache-Control", value: "private, no-store, max-age=0" },
+];
+
+const privateRouteSources = [
+  "/admin-:path*",
+  "/owner-hidden/:path*",
+  "/physiotherapist-dashboard/:path*",
+  "/physiotherapist-portal/:path*",
+  "/patient-dashboard/:path*",
+  "/patient-portal/:path*",
+  "/patient-progress/:path*",
+  "/patient-session/:path*",
+  "/patient-contact/:path*",
+  "/patient-access/:path*",
+  "/p/:path*",
+  "/sign-in/:path*",
+  "/sign-up/:path*",
+  "/api/:path*",
+  "/app-preview/:path*",
+  "/pilot-:path*",
+  "/launch-checklist/:path*",
+  "/final-handoff/:path*",
+  "/mobile-submission/:path*",
+  "/qa-checklist/:path*",
+  "/product-flow/:path*",
+  "/clinical-recommendations/:path*",
+  "/ai-check/:path*",
+];
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   poweredByHeader: false,
@@ -45,7 +76,14 @@ const nextConfig = {
     serverActions: { bodySizeLimit: "6mb" },
   },
   async headers() {
-    return [{ source: "/(.*)", headers: securityHeaders }];
+    return [
+      { source: "/(.*)", headers: securityHeaders },
+      ...privateRouteSources.map((source) => ({ source, headers: noIndexHeaders })),
+      {
+        source: "/_next/static/:path*",
+        headers: [{ key: "Cache-Control", value: "public, max-age=31536000, immutable" }],
+      },
+    ];
   },
 };
 
