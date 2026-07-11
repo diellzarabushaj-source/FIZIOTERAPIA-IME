@@ -12,6 +12,12 @@ function maskedCode(code: string) {
   return `${code.slice(0, 3)}…${code.slice(-4)}`;
 }
 
+type RotatedAccess = {
+  patient_id: string;
+  patient_code: string;
+  revoked_sessions: number;
+};
+
 export async function rotatePatientAccessCodeAction(formData: FormData) {
   const actor = await requirePhysioActor();
   const patientId = cleanText(formData.get("patientId"), 80);
@@ -28,32 +34,29 @@ export async function rotatePatientAccessCodeAction(formData: FormData) {
   const supabase = getSupabaseAdmin();
   if (!supabase) throw new Error("Databaza nuk është konfiguruar.");
 
-  let newCode = "";
-  let updated = false;
+  let rotated: RotatedAccess | null = null;
 
   for (let attempt = 0; attempt < 12; attempt += 1) {
     const candidate = createPatientCode();
     const { data, error } = await supabase
-      .from("patients")
-      .update({
-        patient_code: candidate,
-        updated_at: new Date().toISOString(),
+      .rpc("rotate_patient_access_code", {
+        p_patient_id: patient.id,
+        p_expected_code: patient.patient_code,
+        p_new_code: candidate,
       })
-      .eq("id", patient.id)
-      .eq("patient_code", patient.patient_code)
-      .select("id,patient_code")
-      .maybeSingle<{ id: string; patient_code: string }>();
+      .maybeSingle<RotatedAccess>();
 
     if (error?.code === "23505") continue;
-    if (error) throw new Error("Kodi i ri nuk mund të ruhet.");
-    if (!data) throw new Error("Pacienti është ndryshuar nga një kërkesë tjetër. Rifresko faqen dhe provo përsëri.");
+    if (error) throw new Error("Kodi i ri dhe sesionet nuk mund të përditësohen.");
+    if (!data) {
+      throw new Error("Pacienti është ndryshuar nga një kërkesë tjetër. Rifresko faqen dhe provo përsëri.");
+    }
 
-    newCode = data.patient_code;
-    updated = true;
+    rotated = data;
     break;
   }
 
-  if (!updated || !newCode) {
+  if (!rotated?.patient_code) {
     throw new Error("Nuk u gjenerua kod unik. Provo përsëri.");
   }
 
@@ -63,7 +66,11 @@ export async function rotatePatientAccessCodeAction(formData: FormData) {
     entityType: "patient",
     entityId: patient.id,
     before: { patient_code_masked: maskedCode(patient.patient_code) },
-    after: { patient_code_masked: maskedCode(newCode), previous_sessions_revoked: true },
+    after: {
+      patient_code_masked: maskedCode(rotated.patient_code),
+      legacy_sessions_invalidated: true,
+      registered_sessions_revoked: Number(rotated.revoked_sessions || 0),
+    },
   });
 
   revalidatePath(`/physiotherapist-portal/patients/${patient.id}`);
