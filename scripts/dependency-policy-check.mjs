@@ -26,8 +26,8 @@ if (packageJson.engines?.node !== "24.x") {
   problems.push(`engines.node must be "24.x", received ${JSON.stringify(packageJson.engines?.node)}`);
 }
 
-if (packageJson.engines?.npm !== ">=10 <11") {
-  problems.push(`engines.npm must be ">=10 <11", received ${JSON.stringify(packageJson.engines?.npm)}`);
+if (packageJson.engines?.npm !== ">=10 <12") {
+  problems.push(`engines.npm must be ">=10 <12", received ${JSON.stringify(packageJson.engines?.npm)}`);
 }
 
 if (packageJson.dependencies?.react !== packageJson.dependencies?.["react-dom"]) {
