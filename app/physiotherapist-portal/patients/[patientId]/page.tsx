@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { CalendarClock, ClipboardPlus, History, QrCode } from "lucide-react";
+import { CalendarClock, ClipboardPlus, Handshake, History, QrCode } from "lucide-react";
 import { requirePhysioActor } from "@/lib/backend/access";
 import { getClinicalSessionForActor } from "@/lib/backend/clinical-sessions";
 import { getPatientForActor } from "@/lib/backend/patients";
@@ -120,6 +120,13 @@ export default async function PatientRecordPage({
           >
             <QrCode size={17} aria-hidden="true" />
             Printo QR
+          </Link>
+          <Link
+            className={styles.secondary}
+            href={`/physiotherapist-portal/collaboration?patientId=${encodeURIComponent(patientId)}`}
+          >
+            <Handshake size={17} aria-hidden="true" />
+            Kalo pacientin
           </Link>
           <Link className={styles.primary} href={`/physiotherapist-portal/patients/${patientId}/program`}>
             <ClipboardPlus size={17} aria-hidden="true" />

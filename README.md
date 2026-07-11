@@ -17,6 +17,17 @@ https://fizioterapia-ime.vercel.app
 
 Fizioterapia Ime nuk cakton diagnozë, nuk cakton terapi dhe nuk e zëvendëson fizioterapeutin. Çdo plan nis nga profesionisti përgjegjës. Dhimbje 7/10 ose më shumë = ndalo ushtrimin dhe kontakto fizioterapeutin.
 
+## Bashkëpunimi mes fizioterapeutëve
+
+Fizioterapeutët aktivë mund të:
+
+- shohin direktorinë profesionale dhe kontaktet e kolegëve aktivë;
+- dërgojnë kërkesë për transferimin e një pacienti;
+- pranojnë ose refuzojnë kërkesat që u drejtohen;
+- ruajnë historikun e auditimit të transferimeve.
+
+Transferimi kërkon konfirmim të pëlqimit të pacientit. Pacienti mbetet te fizioterapeuti aktual derisa marrësi ta pranojë. Pas pranimit transferohen atomikisht kartela, planet, seancat dhe alarmet klinike. Migrimi përkatës është `supabase/migrations/20260711_zzz_patient_handoffs.sql`.
+
 ## Stack
 
 - **Frontend web**: Next.js + TypeScript
@@ -65,7 +76,7 @@ Para lansimit publik:
 - `NEXT_PUBLIC_APP_URL` duhet të jetë domain-i final HTTPS.
 - të gjitha migrimet në `supabase/migrations/` duhet të jenë aplikuar sipas rendit.
 - `GET /api/health` duhet të kthejë HTTP `200`.
-- `GET /api/readiness` duhet të kthejë HTTP `200` dhe schema version `20260711.4`.
+- `GET /api/readiness` duhet të kthejë HTTP `200` dhe schema version `20260711.5`.
 - `npm run check:all` duhet të kalojë pa çaktivizuar lint, type-check, teste ose build.
 - Vercel preview/deploy duhet të mos jetë i bllokuar nga deployment limit.
 - Resend duhet të ketë domain të verifikuar para email-eve reale.
