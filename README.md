@@ -29,11 +29,15 @@ Fizioterapia Ime nuk cakton diagnozë, nuk cakton terapi dhe nuk e zëvendëson 
 
 ## Billing pilot
 
-Fizioterapeutët duhet të kenë subscription aktiv për qasje operative:
+Çdo fizioterapeut i aprovuar mund ta përdorë dashboard-in klinik dhe të menaxhojë deri në **5 pacientë falas**.
 
-`29.90 EUR / muaj`
+Për krijimin e pacientit të gjashtë dhe pacientëve të tjerë kërkohet abonim aktiv:
 
-MVP billing është manual/local-bank. Owner/Admin e aktivizon qasjen në `/admin-billing`.
+`9.90 EUR / muaj`
+
+Pagesa automatike ende nuk është aktive. Deri në integrimin e payment provider-it, Owner/Admin mund ta aktivizojë manualisht abonimin në `/admin-billing`.
+
+Pacientët ekzistues, planet, seancat dhe raportet nuk bllokohen vetëm sepse abonimi nuk është aktiv; kufizimi aplikohet te krijimi i pacientëve të rinj pas pesë vendeve falas.
 
 ## Launch checks
 
