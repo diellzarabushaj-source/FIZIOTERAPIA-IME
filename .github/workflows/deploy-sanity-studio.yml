@@ -43,6 +43,20 @@ jobs:
       - name: Install Studio dependencies
         run: npm install --no-audit --no-fund
 
+      - name: Capture resolved Studio dependencies
+        shell: bash
+        run: npm ls --depth=0 --json > sanity-installed-versions.json
+
+      - name: Upload Studio dependency resolution
+        uses: actions/upload-artifact@v4
+        with:
+          name: sanity-studio-dependency-resolution
+          path: |
+            apps/studio/sanity-installed-versions.json
+            apps/studio/package-lock.json
+          if-no-files-found: error
+          retention-days: 7
+
       - name: Build Studio
         id: studio-build
         shell: bash
