@@ -1,0 +1,47 @@
+name: Next Link Codemod
+
+on:
+  push:
+    branches:
+      - improve/production-readiness
+    paths:
+      - scripts/codemod-next-links.mjs
+      - .github/workflows/next-link-codemod.yml
+
+permissions:
+  contents: write
+
+concurrency:
+  group: next-link-codemod-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  codemod:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v4
+        with:
+          ref: improve/production-readiness
+          fetch-depth: 0
+
+      - name: Setup Node.js 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Convert internal anchors
+        run: node scripts/codemod-next-links.mjs
+
+      - name: Commit converted links
+        shell: bash
+        run: |
+          if git diff --quiet; then
+            echo "No internal anchors required conversion."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add app components
+          git commit -m "fix: use Next links for internal navigation"
+          git push origin HEAD:improve/production-readiness
