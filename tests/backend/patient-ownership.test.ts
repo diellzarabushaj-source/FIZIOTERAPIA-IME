@@ -17,7 +17,7 @@ const collaborationPageSource = await readFile(
   "utf8",
 );
 
- test("patient creation always assigns the logged-in physiotherapist profile", () => {
+test("patient creation always assigns the logged-in physiotherapist profile", () => {
   assert.match(patientsSource, /p_physio_id:\s*actor\.profileId/);
   assert.doesNotMatch(patientsSource, /p_physio_id:\s*input\./);
 });
