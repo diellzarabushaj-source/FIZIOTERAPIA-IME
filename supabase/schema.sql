@@ -1,5 +1,6 @@
--- FizioPlan MVP Supabase schema draft
--- Run carefully in Supabase SQL editor after review.
+-- Fizioterapia Ime baseline Supabase schema.
+-- For an existing environment, apply every file in supabase/migrations in order.
+-- Do not use this baseline as a replacement for production migrations.
 
 create table if not exists profiles (
   id uuid primary key default gen_random_uuid(),
@@ -34,8 +35,15 @@ create table if not exists exercise_library (
   instructions_sq text,
   ai_enabled boolean default false,
   scoring_rules jsonb default '{}'::jsonb,
-  created_at timestamptz default now()
+  is_default boolean not null default true,
+  owner_physio_id uuid references profiles(id) on delete cascade,
+  status text not null default 'published',
+  created_at timestamptz default now(),
+  updated_at timestamptz not null default now()
 );
+
+create index if not exists exercise_library_visibility_idx
+  on exercise_library (status, is_default, owner_physio_id);
 
 create table if not exists plans (
   id uuid primary key default gen_random_uuid(),
