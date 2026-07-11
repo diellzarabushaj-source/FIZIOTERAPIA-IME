@@ -4,8 +4,13 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { requirePhysioActor } from "@/lib/backend/access";
 import { writeAuditEvent } from "@/lib/backend/audit";
+import {
+  getClinicalSessionForActor,
+  scheduleClinicalSessionForActor,
+} from "@/lib/backend/clinical-sessions";
 import { updatePatientForActor } from "@/lib/backend/patient-profile";
 import { createPatientForActor, getPatientForActor } from "@/lib/backend/patients";
+import { clinicDateInputToUtcNoon } from "@/lib/backend/time-zone";
 import { cleanText } from "@/lib/backend/validation";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 
@@ -27,6 +32,8 @@ export type SessionFormState = {
   fieldErrors?: Record<string, string>;
 };
 
+export type ScheduleSessionFormState = SessionFormState;
+
 function parsePain(value: FormDataEntryValue | null, field: "painBefore" | "painAfter") {
   if (value === null || String(value).trim() === "") {
     return { value: null as number | null, error: null as string | null };
@@ -43,6 +50,13 @@ function parsePain(value: FormDataEntryValue | null, field: "painBefore" | "pain
   }
 
   return { value: number, error: null };
+}
+
+function revalidatePatientSessionViews(patientId: string) {
+  revalidatePath(`/physiotherapist-portal/patients/${patientId}`);
+  revalidatePath(`/physiotherapist-portal/patients/${patientId}/history`);
+  revalidatePath("/physiotherapist-portal/overview");
+  revalidatePath("/physiotherapist-portal/sessions");
 }
 
 export async function createSmartPatientAction(
@@ -125,6 +139,42 @@ export async function updatePatientProfileAction(
   }
 }
 
+export async function schedulePatientSessionAction(
+  patientId: string,
+  _previousState: ScheduleSessionFormState,
+  formData: FormData,
+): Promise<ScheduleSessionFormState> {
+  try {
+    const actor = await requirePhysioActor();
+    const result = await scheduleClinicalSessionForActor(actor, {
+      patientId,
+      scheduledAt: formData.get("scheduledAt"),
+      note: formData.get("appointmentNote"),
+    });
+
+    if (result.ok === false) {
+      return {
+        status: "error",
+        message: result.error.message,
+        fieldErrors: result.error.fieldErrors || {},
+      };
+    }
+
+    revalidatePatientSessionViews(patientId);
+    return {
+      status: "success",
+      message: "Seanca u planifikua dhe u shtua në agjendë.",
+      fieldErrors: {},
+    };
+  } catch (error) {
+    return {
+      status: "error",
+      message: error instanceof Error ? error.message : "Seanca nuk u planifikua. Provo përsëri.",
+      fieldErrors: {},
+    };
+  }
+}
+
 export async function createPatientSessionAction(
   patientId: string,
   _previousState: SessionFormState,
@@ -138,14 +188,15 @@ export async function createPatientSessionAction(
     }
 
     const patient = patientResult.data;
-    if (!patient.physio_id || patient.physio_id !== actor.profileId) {
-      return { status: "error", message: "Nuk ke qasje në këtë pacient.", fieldErrors: {} };
+    if (!patient.physio_id) {
+      return { status: "error", message: "Pacienti nuk ka fizioterapeut të caktuar.", fieldErrors: {} };
     }
     if (patient.archived_at || patient.status !== "active") {
       return { status: "error", message: "Pacienti nuk është aktiv dhe nuk mund të ketë seancë të re.", fieldErrors: {} };
     }
 
     const sessionDate = cleanText(formData.get("sessionDate"), 10);
+    const scheduledSessionId = cleanText(formData.get("scheduledSessionId"), 64);
     const treatment = cleanText(formData.get("treatment"), 4000);
     const subjective = cleanText(formData.get("subjective"), 3000);
     const objective = cleanText(formData.get("objective"), 3000);
@@ -154,13 +205,10 @@ export async function createPatientSessionAction(
     const painBefore = parsePain(formData.get("painBefore"), "painBefore");
     const painAfter = parsePain(formData.get("painAfter"), "painAfter");
     const fieldErrors: Record<string, string> = {};
+    const completedAt = clinicDateInputToUtcNoon(sessionDate);
 
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(sessionDate)) {
-      fieldErrors.sessionDate = "Zgjidh datën e seancës.";
-    }
-    if (!treatment) {
-      fieldErrors.treatment = "Shëno trajtimin e kryer në këtë seancë.";
-    }
+    if (!completedAt) fieldErrors.sessionDate = "Zgjidh datën e seancës.";
+    if (!treatment) fieldErrors.treatment = "Shëno trajtimin e kryer në këtë seancë.";
     if (painBefore.error) fieldErrors.painBefore = painBefore.error;
     if (painAfter.error) fieldErrors.painAfter = painAfter.error;
 
@@ -172,38 +220,64 @@ export async function createPatientSessionAction(
       };
     }
 
+    let scheduledSession = null;
+    if (scheduledSessionId) {
+      const scheduledResult = await getClinicalSessionForActor(actor, scheduledSessionId);
+      if (scheduledResult.ok === false) {
+        return { status: "error", message: scheduledResult.error.message, fieldErrors: {} };
+      }
+      scheduledSession = scheduledResult.data;
+      if (scheduledSession.patient_id !== patientId) {
+        return { status: "error", message: "Seanca e planifikuar nuk i përket këtij pacienti.", fieldErrors: {} };
+      }
+      if (!["planned", "in_progress"].includes(scheduledSession.status)) {
+        return { status: "error", message: "Vetëm seanca e planifikuar ose në zhvillim mund të dokumentohet.", fieldErrors: {} };
+      }
+    }
+
     const supabase = getSupabaseAdmin();
     if (!supabase) {
       return { status: "error", message: "Databaza nuk është konfiguruar.", fieldErrors: {} };
     }
 
     const clinicalNotes = [
+      scheduledSession?.clinical_notes || "",
       subjective ? `Subjektive:\n${subjective}` : "",
       objective ? `Objektive:\n${objective}` : "",
       response ? `Reagimi pas seancës:\n${response}` : "",
     ].filter(Boolean).join("\n\n") || null;
 
-    const { data, error } = await supabase
-      .from("patient_sessions")
-      .insert({
-        patient_id: patientId,
-        physio_id: actor.profileId,
-        created_by: actor.profileId,
-        session_date: `${sessionDate}T12:00:00.000Z`,
-        status: "completed",
-        pain_before: painBefore.value,
-        pain_after: painAfter.value,
-        treatment_summary: treatment,
-        clinical_notes: clinicalNotes,
-        next_steps: nextPlan || null,
-      })
+    const payload = {
+      patient_id: patientId,
+      physio_id: patient.physio_id,
+      created_by: scheduledSession?.created_by || actor.profileId,
+      session_date: scheduledSession?.session_date || completedAt!.toISOString(),
+      status: "completed" as const,
+      pain_before: painBefore.value,
+      pain_after: painAfter.value,
+      treatment_summary: treatment,
+      clinical_notes: clinicalNotes,
+      next_steps: nextPlan || null,
+      updated_at: new Date().toISOString(),
+    };
+
+    const mutation = scheduledSession
+      ? supabase
+          .from("patient_sessions")
+          .update(payload)
+          .eq("id", scheduledSession.id)
+          .in("status", ["planned", "in_progress"])
+      : supabase.from("patient_sessions").insert(payload);
+
+    const { data, error } = await mutation
       .select("id,session_date,status,pain_before,pain_after,treatment_summary,clinical_notes,next_steps")
       .single();
 
     if (error || !data) {
       console.error("patient_session_save_failed", {
         patientId,
-        physioId: actor.profileId,
+        physioId: patient.physio_id,
+        scheduledSessionId: scheduledSession?.id || null,
         code: error?.code,
         message: error?.message,
       });
@@ -216,9 +290,10 @@ export async function createPatientSessionAction(
 
     await writeAuditEvent({
       actor,
-      action: "patient.session_created",
+      action: scheduledSession ? "patient.session_completed" : "patient.session_created",
       entityType: "patient_session",
       entityId: data.id,
+      before: scheduledSession ? { status: scheduledSession.status, session_date: scheduledSession.session_date } : undefined,
       after: {
         patient_id: patientId,
         session_date: data.session_date,
@@ -228,13 +303,13 @@ export async function createPatientSessionAction(
       },
     });
 
-    revalidatePath(`/physiotherapist-portal/patients/${patientId}`);
-    revalidatePath(`/physiotherapist-portal/patients/${patientId}/history`);
-    revalidatePath("/physiotherapist-portal/overview");
+    revalidatePatientSessionViews(patientId);
 
     return {
       status: "success",
-      message: "Seanca u ruajt me sukses në historikun klinik.",
+      message: scheduledSession
+        ? "Seanca e planifikuar u përfundua dhe u dokumentua në të njëjtin rekord."
+        : "Seanca u ruajt me sukses në historikun klinik.",
       fieldErrors: {},
     };
   } catch (error) {
