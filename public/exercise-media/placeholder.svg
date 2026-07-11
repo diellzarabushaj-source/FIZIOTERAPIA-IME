@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="640" viewBox="0 0 640 640" role="img" aria-labelledby="title desc">
+  <title id="title">Ilustrim demonstrues i ushtrimit</title>
+  <desc id="desc">Placeholder që zëvendësohet me videon ose fotografinë klinike të aprovuar.</desc>
+  <rect width="640" height="640" rx="56" fill="#eef7f4"/>
+  <circle cx="320" cy="170" r="62" fill="#0f766e" opacity=".92"/>
+  <path d="M320 245c-78 0-138 58-138 132v46h276v-46c0-74-60-132-138-132Z" fill="#14b8a6" opacity=".82"/>
+  <path d="M219 343 108 433M421 343l111 90M269 422l-54 122M371 422l54 122" fill="none" stroke="#0f766e" stroke-width="34" stroke-linecap="round"/>
+  <rect x="72" y="558" width="496" height="2" fill="#99c9c2"/>
+  <text x="320" y="605" text-anchor="middle" font-family="Arial, sans-serif" font-size="24" font-weight="700" fill="#285b55">Zëvendësoje me media të aprovuar</text>
+</svg>
