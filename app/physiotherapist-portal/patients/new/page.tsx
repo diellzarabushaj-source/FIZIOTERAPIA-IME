@@ -1,7 +1,10 @@
+import { getClinicDateInput } from "@/lib/backend/time-zone";
 import { NewPatientForm } from "./NewPatientForm";
 import styles from "../../dashboard.module.css";
 
 export default function NewPatientPage() {
+  const maximumBirthDate = getClinicDateInput();
+
   return (
     <>
       <header className={styles.topbar}>
@@ -12,7 +15,7 @@ export default function NewPatientPage() {
         </div>
       </header>
 
-      <NewPatientForm />
+      <NewPatientForm maximumBirthDate={maximumBirthDate} />
     </>
   );
 }

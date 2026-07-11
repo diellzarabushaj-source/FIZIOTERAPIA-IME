@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { AuthControls } from "@/components/AuthControls";
 import { BrandMark } from "@/components/BrandMark";
 
@@ -17,7 +18,7 @@ export default function HomePage() {
           <a href="#patient">Për pacientin</a>
           <a href="#physio">Për fizioterapeutin</a>
           <a href="#pricing">Çmimi</a>
-          <a href="/blog">Blog</a>
+          <Link href="/blog">Blog</Link>
           <AuthControls />
         </div>
       </nav>
@@ -31,10 +32,10 @@ export default function HomePage() {
             dhimbjen, progresin dhe sigurinë — pa letra dhe pa konfuzion.
           </p>
           <div className="portal-actions">
-            <a className="button" href="/physiotherapist-portal">Fillo si fizioterapeut</a>
+            <Link className="button" href="/physiotherapist-portal">Fillo si fizioterapeut</Link>
             <a className="button secondary" href="#how">Shiko si funksionon</a>
           </div>
-          <a className="landing-sub-action" href="/patient-portal">Je pacient? Hyr me kod →</a>
+          <Link className="landing-sub-action" href="/patient-portal">Je pacient? Hyr me kod →</Link>
           <div className="landing-proof">
             <div><strong>1 kod</strong><span>për çdo pacient</span></div>
             <div><strong>3 hapa</strong><span>krijo, dërgo, përcill</span></div>
@@ -178,7 +179,7 @@ export default function HomePage() {
             <li>✓ Kod dhe QR për pacientin</li>
             <li>✓ Progres, dhimbje dhe raporte</li>
           </ul>
-          <a className="button" href="/physiotherapist-portal">Fillo tani</a>
+          <Link className="button" href="/physiotherapist-portal">Fillo tani</Link>
         </div>
       </section>
 
@@ -198,8 +199,8 @@ export default function HomePage() {
         <BrandMark compact />
         <h2>Pacienti e kupton planin. Ti e përcjell progresin.</h2>
         <div className="portal-actions">
-          <a className="button" href="/physiotherapist-portal">Fillo si fizioterapeut</a>
-          <a className="button secondary" href="/patient-portal">Hyr si pacient</a>
+          <Link className="button" href="/physiotherapist-portal">Fillo si fizioterapeut</Link>
+          <Link className="button secondary" href="/patient-portal">Hyr si pacient</Link>
         </div>
       </section>
     </main>

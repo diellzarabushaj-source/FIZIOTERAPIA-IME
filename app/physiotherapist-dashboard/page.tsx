@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { currentUser } from "@clerk/nextjs/server";
 import { AuthControls } from "@/components/AuthControls";
 
@@ -35,14 +36,14 @@ export default async function PhysiotherapistDashboardPage() {
   return (
     <main className="page physio-dashboard-page">
       <nav className="top-nav">
-        <a className="brand-link" href="/">
+        <Link className="brand-link" href="/">
           <span className="brand-logo">FP</span>
           <span>FizioPlan</span>
-        </a>
+        </Link>
         <div className="nav-actions">
-          <a href="/physiotherapist-portal">Portal</a>
-          <a href="/patient-dashboard">Patient view</a>
-          <a href="/admin-hidden">Admin</a>
+          <Link href="/physiotherapist-portal">Portal</Link>
+          <Link href="/patient-dashboard">Patient view</Link>
+          <Link href="/admin-hidden">Admin</Link>
           <AuthControls />
         </div>
       </nav>

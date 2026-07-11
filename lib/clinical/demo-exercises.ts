@@ -1,4 +1,4 @@
-import type { ClinicalExercise, ConditionRule, ExerciseFlagRule } from "./types";
+import type { ClinicalExercise, ConditionRule, ExerciseFlagRule } from "./types.ts";
 
 const image = "/exercise-media/placeholder.svg";
 

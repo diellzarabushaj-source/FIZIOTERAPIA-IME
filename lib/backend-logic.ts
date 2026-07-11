@@ -1,7 +1,7 @@
 import { createHmac, timingSafeEqual } from "crypto";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { validatePatientSession } from "./backend/patient-sessions";
-import { normalizePatientCode } from "./supabase-admin";
+import { validatePatientSession } from "./backend/patient-sessions.ts";
+import { normalizePatientCode } from "./supabase-admin.ts";
 
 export const PATIENT_CODE_COOKIE = "fizioplan_patient_code";
 export const PATIENT_USERNAME_COOKIE = "fizioplan_patient_username";

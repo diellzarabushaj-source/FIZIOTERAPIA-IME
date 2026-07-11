@@ -1,5 +1,5 @@
-import { demoConditionRules, demoExercises, demoFlagRules } from "./demo-exercises";
-import type { Difficulty, ExerciseRecommendation, RecommendationInput, RecommendationResponse } from "./types";
+import { demoConditionRules, demoExercises, demoFlagRules } from "./demo-exercises.ts";
+import type { Difficulty, ExerciseRecommendation, RecommendationInput, RecommendationResponse } from "./types.ts";
 
 const difficultyRank: Record<Difficulty, number> = { beginner: 1, intermediate: 2, advanced: 3 };
 const disclaimer = "Ky rezultat është vetëm renditje e përputhshmërisë. Nuk është diagnozë, nuk mat sigurinë në përqindje dhe kërkon miratim nga fizioterapeuti.";

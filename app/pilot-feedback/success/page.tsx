@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { BrandMark } from "@/components/BrandMark";
 
 export default function PilotFeedbackSuccessPage() {
@@ -6,10 +7,10 @@ export default function PilotFeedbackSuccessPage() {
       <nav className="top-nav">
         <BrandMark />
         <div className="nav-actions">
-          <a href="/">Home</a>
-          <a href="/pilot-feedback">Feedback form</a>
-          <a href="/pilot-onboarding">Pilot Onboarding</a>
-          <a href="/support">Support</a>
+          <Link href="/">Home</Link>
+          <Link href="/pilot-feedback">Feedback form</Link>
+          <Link href="/pilot-onboarding">Pilot Onboarding</Link>
+          <Link href="/support">Support</Link>
         </div>
       </nav>
 
@@ -21,8 +22,8 @@ export default function PilotFeedbackSuccessPage() {
             Feedback-u u dërgua. Nëse tabela `pilot_feedback` ende nuk është krijuar në Supabase, admini duhet ta ekzekutojë SQL file-in e Phase 13.
           </p>
           <div className="hero-actions">
-            <a className="button" href="/pilot-onboarding">Kthehu te Pilot Onboarding</a>
-            <a className="button secondary" href="/qa-checklist">Hap QA Checklist</a>
+            <Link className="button" href="/pilot-onboarding">Kthehu te Pilot Onboarding</Link>
+            <Link className="button secondary" href="/qa-checklist">Hap QA Checklist</Link>
           </div>
         </div>
         <div className="launch-status-card ready">

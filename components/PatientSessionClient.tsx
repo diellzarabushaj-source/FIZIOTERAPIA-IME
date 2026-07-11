@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { completeSessionExerciseAction, skipSessionExerciseAction } from "@/app/patient-session/actions";
 
@@ -55,14 +56,32 @@ export function PatientSessionClient({
   const [restTimer, setRestTimer] = useState(30);
   const [restRunning, setRestRunning] = useState(false);
   const [sessionStart] = useState(() => Date.now());
+  const [elapsedMinutes, setElapsedMinutes] = useState(1);
 
   const completedCount = exercises.filter((exercise) => exercise.completed).length;
   const progress = exercises.length ? Math.round((completedCount / exercises.length) * 100) : 0;
   const activeExercise = exercises[activeIndex];
   const moodLabel = moods.find((item) => item.key === mood)?.label || "";
   const needsReview = mood === "shume_me_keq";
-  const elapsedMinutes = Math.max(1, Math.round((Date.now() - sessionStart) / 60000));
   const sessionComplete = exercises.length > 0 && completedCount === exercises.length;
+
+  useEffect(() => {
+    if (!sessionStarted) return;
+    const updateElapsed = () => {
+      setElapsedMinutes(Math.max(1, Math.round((Date.now() - sessionStart) / 60_000)));
+    };
+    updateElapsed();
+    const interval = window.setInterval(updateElapsed, 60_000);
+    return () => window.clearInterval(interval);
+  }, [sessionStart, sessionStarted]);
+
+  useEffect(() => {
+    if (!sessionStarted) return;
+    const elapsedMinutesInterval = window.setInterval(() => {
+      setElapsedMinutes(Math.max(1, Math.round((Date.now() - sessionStart) / 60000)));
+    }, 60_000);
+    return () => window.clearInterval(elapsedMinutesInterval);
+  }, [sessionStart, sessionStarted]);
 
   useEffect(() => {
     if (!timerRunning) return;
@@ -102,7 +121,7 @@ export function PatientSessionClient({
       <div className="patient-pro-phone duo-phone" style={{ maxWidth: 720, margin: "0 auto" }}>
         <div className="patient-pro-statusbar duo-status"><span>Fizioterapia Ime</span><span>Seanca e sotme</span></div>
         <header className="patient-pro-header duo-header">
-          <a href="/patient-dashboard" aria-label="Kthehu">‹</a>
+          <Link href="/patient-dashboard" aria-label="Kthehu">‹</Link>
           <div><span>Mirë se erdhe, {patientName}</span><small>{physioName}</small></div>
           <span>👋</span>
         </header>
@@ -169,8 +188,8 @@ export function PatientSessionClient({
           <article><span>Ushtrime</span><strong>{completedCount}</strong><small>Të përfunduara</small></article>
         </section>
         <div className="portal-actions" style={{ padding: 16 }}>
-          <a className="button" href="/patient-dashboard">Shiko progresin</a>
-          <a className="button secondary" href="/patient-dashboard#messages">Mesazh fizioterapeutit</a>
+          <Link className="button" href="/patient-dashboard">Shiko progresin</Link>
+          <Link className="button secondary" href="/patient-dashboard#messages">Mesazh fizioterapeutit</Link>
         </div>
       </div>
     );
@@ -180,7 +199,7 @@ export function PatientSessionClient({
     <div className="patient-pro-phone duo-phone" style={{ maxWidth: 720, margin: "0 auto" }}>
       <div className="patient-pro-statusbar duo-status"><span>{completedCount}/{exercises.length}</span><span>{progress}%</span></div>
       <header className="patient-pro-header duo-header">
-        <a href="/patient-dashboard" aria-label="Kthehu">‹</a>
+        <Link href="/patient-dashboard" aria-label="Kthehu">‹</Link>
         <div><span>Seanca e sotme</span><small>{moodLabel}</small></div>
         <span>🔥</span>
       </header>

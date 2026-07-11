@@ -18,7 +18,8 @@ test("patient dashboard renders the four explicit plan states", async () => {
 
 test("patient dashboard only shows exercises assigned to the current day", async () => {
   const source = await pageSource();
-  assert.match(source, /filter\(\(item\) => \(item\.day_number \|\| 1\) === day\)/);
+  assert.match(source, /const scheduledDays = item\.schedule_days\?\.length \? item\.schedule_days : \[item\.day_number \|\| 1\]/);
+  assert.match(source, /scheduledDays\.includes\(day\)/);
   assert.doesNotMatch(source, /day_number \|\| 1\) <= day/);
 });
 

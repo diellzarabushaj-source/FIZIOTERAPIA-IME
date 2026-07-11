@@ -28,14 +28,16 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
+      - name: Setup Node.js 24
         uses: actions/setup-node@v4
         with:
-          node-version: 20
-          cache: npm
+          node-version: 24
+
+      - name: Use repository npm version
+        run: npm install --global npm@10.9.2 --no-audit --no-fund
 
       - name: Install dependencies
-        run: npm install --no-audit --no-fund
+        run: npm ci --no-audit --no-fund
 
       - name: Route file preflight
         run: npm run preflight:routes
@@ -44,13 +46,76 @@ jobs:
         run: npm run check:security
 
       - name: Clinical backend regression tests
-        run: npm run test:backend
+        id: backend-tests
+        shell: bash
+        run: |
+          set +e
+          npm run test:backend > backend-tests.log 2>&1
+          status=$?
+          tail -n 200 backend-tests.log
+          echo "status=$status" >> "$GITHUB_OUTPUT"
+          exit 0
+
+      - name: Upload failed backend test log
+        if: steps.backend-tests.outputs.status != '0'
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-test-log
+          path: backend-tests.log
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Fail when backend tests failed
+        if: steps.backend-tests.outputs.status != '0'
+        run: exit 1
 
       - name: Lint
-        run: npm run lint
+        id: lint
+        shell: bash
+        run: |
+          set +e
+          npm run lint > lint.log 2>&1
+          status=$?
+          tail -n 200 lint.log
+          echo "status=$status" >> "$GITHUB_OUTPUT"
+          exit 0
+
+      - name: Upload failed lint log
+        if: steps.lint.outputs.status != '0'
+        uses: actions/upload-artifact@v4
+        with:
+          name: lint-log
+          path: lint.log
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Fail when lint failed
+        if: steps.lint.outputs.status != '0'
+        run: exit 1
 
       - name: TypeScript check
-        run: npm run typecheck
+        id: typecheck
+        shell: bash
+        run: |
+          set +e
+          npm run typecheck > typecheck.log 2>&1
+          status=$?
+          tail -n 200 typecheck.log
+          echo "status=$status" >> "$GITHUB_OUTPUT"
+          exit 0
+
+      - name: Upload failed TypeScript log
+        if: steps.typecheck.outputs.status != '0'
+        uses: actions/upload-artifact@v4
+        with:
+          name: typecheck-log
+          path: typecheck.log
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Fail when TypeScript check failed
+        if: steps.typecheck.outputs.status != '0'
+        run: exit 1
 
       - name: Production dependency audit
         run: npm audit --omit=dev --audit-level=high
@@ -69,6 +134,27 @@ jobs:
           RESEND_REPLY_TO_EMAIL: ${{ secrets.RESEND_REPLY_TO_EMAIL }}
 
       - name: Mobile TypeScript check
-        run: npm run mobile:typecheck
+        id: mobile-typecheck
+        shell: bash
         env:
           EXPO_PUBLIC_API_BASE_URL: https://fizioterapia-ime.vercel.app
+        run: |
+          set +e
+          npm run mobile:typecheck > mobile-typecheck.log 2>&1
+          status=$?
+          tail -n 200 mobile-typecheck.log
+          echo "status=$status" >> "$GITHUB_OUTPUT"
+          exit 0
+
+      - name: Upload failed mobile TypeScript log
+        if: steps.mobile-typecheck.outputs.status != '0'
+        uses: actions/upload-artifact@v4
+        with:
+          name: mobile-typecheck-log
+          path: mobile-typecheck.log
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Fail when mobile TypeScript check failed
+        if: steps.mobile-typecheck.outputs.status != '0'
+        run: exit 1

@@ -24,9 +24,11 @@ test("legacy patient session route cannot create a second workflow", () => {
 
 test("patient dashboard contains one clear completion action and no camera feature", () => {
   const page = read("app/patient-dashboard/page.tsx");
-  const button = read("components/PatientCompleteButton.tsx");
-  assert.match(button, /E kreva/);
-  assert.match(page, /Po ruhet|PatientCompleteButton/);
+  const form = read("components/PatientExerciseCompletionForm.tsx");
+  assert.match(form, /✓ E kreva/);
+  assert.match(form, /Po ruhet/);
+  assert.match(form, /useFormStatus/);
+  assert.match(page, /PatientExerciseCompletionForm/);
   assert.doesNotMatch(page, /camera|AI Movement Check|saveAiCheckAction/i);
 });
 

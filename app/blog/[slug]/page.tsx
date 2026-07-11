@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { BrandMark } from "@/components/BrandMark";
 import { PortableContentRenderer } from "@/components/PortableContentRenderer";
@@ -91,16 +92,16 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
       <nav className={styles.nav}>
         <BrandMark />
         <div className={styles.navLinks}>
-          <a href="/">Home</a>
-          <a href="/blog">Knowledge Center</a>
-          <a href="/patient-portal">Plani im</a>
+          <Link href="/">Home</Link>
+          <Link href="/blog">Knowledge Center</Link>
+          <Link href="/patient-portal">Plani im</Link>
         </div>
       </nav>
 
       <article>
         <header className={styles.articleHero}>
           <div className={styles.breadcrumb}>
-            <a href="/">Home</a><span>›</span><a href="/blog">Blog</a><span>›</span><span>{post.category}</span>
+            <Link href="/">Home</Link><span>›</span><Link href="/blog">Blog</Link><span>›</span><span>{post.category}</span>
           </div>
           <span className={styles.eyebrow}>{post.category} · {post.readingTime}</span>
           <h1>{post.title}</h1>
@@ -148,7 +149,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
                 <span>Program personal</span>
                 <h3>Ke marrë plan nga fizioterapeuti?</h3>
                 <p>Hyr me kod dhe shiko videot, dozimin dhe progresin tënd.</p>
-                <a className={styles.primaryLink} href="/patient-portal">Hyr në plan →</a>
+                <Link className={styles.primaryLink} href="/patient-portal">Hyr në plan →</Link>
               </section>
             </div>
           </aside>
@@ -161,11 +162,11 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
           <div className={styles.cardGrid}>
             {fallbackRelated.map((item) => (
               <article className={styles.articleCard} key={item.slug}>
-                <a className={styles.cardImage} href={`/blog/${item.slug}`}>
+                <Link className={styles.cardImage} href={`/blog/${item.slug}`}>
                   {item.mainImage?.url ? <img src={item.mainImage.url} alt={item.mainImage.alt || item.title} /> : <div className={styles.imageFallback}>✦</div>}
                   <span>{item.category}</span>
-                </a>
-                <div className={styles.cardBody}><div className={styles.cardMeta}><span>{item.readingTime}</span></div><h3><a href={`/blog/${item.slug}`}>{item.title}</a></h3><p>{item.description}</p></div>
+                </Link>
+                <div className={styles.cardBody}><div className={styles.cardMeta}><span>{item.readingTime}</span></div><h3><Link href={`/blog/${item.slug}`}>{item.title}</Link></h3><p>{item.description}</p></div>
               </article>
             ))}
           </div>
@@ -174,7 +175,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
 
       <section className={styles.newsletter}>
         <div><h2>Artikulli të ndihmoi?</h2><p>Plani personal dhe vendimi klinik vazhdojnë gjithmonë me fizioterapeutin tënd.</p></div>
-        <a href="/blog">Shiko artikujt e tjerë →</a>
+        <Link href="/blog">Shiko artikujt e tjerë →</Link>
       </section>
     </main>
   );

@@ -5,7 +5,7 @@ import {
   clinicDateTimeInputToUtc,
   getClinicDateInput,
   getClinicDateTimeInput,
-} from "../../lib/backend/time-zone";
+} from "../../lib/backend/time-zone.ts";
 
 test("clinic date inputs follow Europe/Belgrade instead of server UTC", () => {
   assert.equal(getClinicDateInput(new Date("2026-07-10T22:30:00.000Z")), "2026-07-11");

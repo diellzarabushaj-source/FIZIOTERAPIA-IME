@@ -1,7 +1,13 @@
-name: Deploy Sanity Studio
+name: Build and deploy Sanity Studio
 
 on:
   workflow_dispatch:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "apps/studio/**"
+      - ".github/workflows/deploy-sanity-studio.yml"
   push:
     branches:
       - main
@@ -9,37 +15,106 @@ on:
       - "apps/studio/**"
       - ".github/workflows/deploy-sanity-studio.yml"
 
+permissions:
+  contents: write
+
+concurrency:
+  group: sanity-studio-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  deploy-studio:
+  build-studio:
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: apps/studio
     env:
-      SANITY_AUTH_TOKEN: ${{ secrets.SANITY_AUTH_TOKEN }}
       SANITY_STUDIO_PROJECT_ID: a3wcdlcy
       SANITY_STUDIO_DATASET: production
     steps:
-      - name: Checkout repository
+      - name: Checkout source branch
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.head_ref || github.ref_name }}
 
-      - name: Setup Node.js
+      - name: Setup Node.js 24
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
+
+      - name: Use repository npm version
+        run: npm install --global npm@10.9.2 --no-audit --no-fund
 
       - name: Install Studio dependencies
-        run: npm install --no-audit --no-fund
+        shell: bash
+        run: |
+          if [ -f package-lock.json ]; then
+            npm ci --no-audit --no-fund
+          else
+            npm install --no-audit --no-fund
+          fi
+
+      - name: Commit generated Studio lockfile
+        if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+        shell: bash
+        run: |
+          if [ -z "$(git status --porcelain -- package-lock.json)" ]; then
+            echo "Studio package-lock.json is already current."
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add package-lock.json
+          git commit -m "chore: lock Sanity Studio dependencies"
+          git push origin "HEAD:${GITHUB_HEAD_REF:-$GITHUB_REF_NAME}"
+
+      - name: Verify fork pull request lockfile
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository
+        shell: bash
+        run: |
+          if [ -n "$(git status --porcelain -- package-lock.json)" ]; then
+            echo "apps/studio/package-lock.json is missing or stale."
+            exit 1
+          fi
+
+      - name: Build Studio
+        id: studio-build
+        shell: bash
+        run: |
+          set +e
+          npm run build > sanity-build.log 2>&1
+          status=$?
+          tail -n 120 sanity-build.log
+          echo "status=$status" >> "$GITHUB_OUTPUT"
+          exit 0
+
+      - name: Upload failed Studio build log
+        if: steps.studio-build.outputs.status != '0'
+        uses: actions/upload-artifact@v4
+        with:
+          name: sanity-studio-build-log
+          path: apps/studio/sanity-build.log
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Fail when Studio build failed
+        if: steps.studio-build.outputs.status != '0'
+        run: exit 1
 
       - name: Verify Sanity deploy token exists
+        if: github.event_name != 'pull_request'
+        env:
+          SANITY_AUTH_TOKEN: ${{ secrets.SANITY_AUTH_TOKEN }}
         run: |
           if [ -z "$SANITY_AUTH_TOKEN" ]; then
             echo "SANITY_AUTH_TOKEN is missing. Add it in GitHub Settings > Secrets and variables > Actions."
             exit 1
           fi
 
-      - name: Build Studio
-        run: npm run build
-
       - name: Deploy Studio to Sanity hosting
+        if: github.event_name != 'pull_request'
+        env:
+          SANITY_AUTH_TOKEN: ${{ secrets.SANITY_AUTH_TOKEN }}
         run: npm run deploy

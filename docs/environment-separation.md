@@ -92,7 +92,7 @@ The application schema version is declared in `lib/backend/schema-readiness.ts` 
 
 `public.patient_sessions` stores clinical treatment sessions. `public.patient_auth_sessions` stores revocable login sessions. These tables must never be merged or reused for each other's purpose.
 
-The exercise backend requires `exercise_library.is_default`, `owner_physio_id`, `status` and `updated_at`. A deployment is not ready when those columns are absent, even if the application build itself succeeds.
+The exercise backend requires `exercise_library.is_default`, `exercise_library.owner_physio_id`, `exercise_library.status` and `exercise_library.updated_at`. A deployment is not ready when those columns are absent, even if the application build itself succeeds.
 
 ## Health versus readiness
 

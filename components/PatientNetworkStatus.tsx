@@ -7,7 +7,7 @@ export function PatientNetworkStatus() {
   const [restored, setRestored] = useState(false);
 
   useEffect(() => {
-    setOnline(navigator.onLine);
+    const initialStatusTimer = window.setTimeout(() => setOnline(navigator.onLine), 0);
 
     const handleOffline = () => {
       setRestored(false);
@@ -23,6 +23,7 @@ export function PatientNetworkStatus() {
     window.addEventListener("offline", handleOffline);
     window.addEventListener("online", handleOnline);
     return () => {
+      window.clearTimeout(initialStatusTimer);
       window.removeEventListener("offline", handleOffline);
       window.removeEventListener("online", handleOnline);
     };

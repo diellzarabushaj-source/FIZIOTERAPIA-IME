@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { BrandMark } from "@/components/BrandMark";
 import { submitPilotFeedback } from "./actions";
 
@@ -32,9 +33,9 @@ export default function PilotFeedbackPage() {
       <nav className="top-nav">
         <BrandMark />
         <div className="nav-actions">
-          <a href="/">Home</a>
-          <a href="/support">Support</a>
-          <a href="/faq">FAQ</a>
+          <Link href="/">Home</Link>
+          <Link href="/support">Support</Link>
+          <Link href="/faq">FAQ</Link>
         </div>
       </nav>
 

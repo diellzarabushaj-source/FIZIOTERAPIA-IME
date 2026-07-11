@@ -63,7 +63,7 @@ function PatientMatchRow({ patient, exact = false }: { patient: PatientMatch; ex
   );
 }
 
-export function NewPatientForm() {
+export function NewPatientForm({ maximumBirthDate }: { maximumBirthDate: string }) {
   const [state, action] = useActionState(createSmartPatientAction, initialState);
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -79,12 +79,7 @@ export function NewPatientForm() {
   );
 
   useEffect(() => {
-    if (!canCheck) {
-      setMatches({ exact: null, similar: [] });
-      setCheckMessage("");
-      setChecking(false);
-      return;
-    }
+    if (!canCheck) return;
 
     const controller = new AbortController();
     const timer = window.setTimeout(async () => {
@@ -120,41 +115,45 @@ export function NewPatientForm() {
     };
   }, [canCheck, firstName, lastName, dateOfBirth, phone]);
 
+  const visibleMatches: MatchResponse = canCheck ? matches : { exact: null, similar: [] };
+  const visibleChecking = canCheck && checking;
+  const visibleCheckMessage = canCheck ? checkMessage : "";
+
   return (
     <form action={action} className={styles.form} noValidate>
       <div className={styles.smartCheckStatus} aria-live="polite">
-        <span className={checking ? styles.checkDotActive : styles.checkDot} aria-hidden="true" />
+        <span className={visibleChecking ? styles.checkDotActive : styles.checkDot} aria-hidden="true" />
         <div>
-          <strong>{checking ? "Duke kontrolluar pacientët…" : "Kontroll inteligjent i kartelës"}</strong>
+          <strong>{visibleChecking ? "Duke kontrolluar pacientët…" : "Kontroll inteligjent i kartelës"}</strong>
           <span>
-            {checking
+            {visibleChecking
               ? "Po kërkohet përputhje e saktë ose kartelë e ngjashme."
               : "Sistemi kontrollon vetëm pacientët e praktikës suaj."}
           </span>
         </div>
       </div>
 
-      {matches.exact && (
+      {visibleMatches.exact && (
         <div className={styles.exactMatch} role="status">
           <strong>Ky pacient ekziston tashmë.</strong>
           <span>Mos krijo kartelë tjetër. Hape kartelën ekzistuese dhe vazhdo seancën e radhës.</span>
-          <PatientMatchRow patient={matches.exact} exact />
+          <PatientMatchRow patient={visibleMatches.exact} exact />
         </div>
       )}
 
-      {!matches.exact && matches.similar.length > 0 && (
+      {!visibleMatches.exact && visibleMatches.similar.length > 0 && (
         <div className={styles.similarMatch} role="status">
           <strong>U gjetën pacientë të ngjashëm.</strong>
           <span>Kontrolloji para ruajtjes që të shmangësh kartelën e dyfishtë.</span>
           <div className={styles.matchList}>
-            {matches.similar.map((patient) => <PatientMatchRow key={patient.id} patient={patient} />)}
+            {visibleMatches.similar.map((patient) => <PatientMatchRow key={patient.id} patient={patient} />)}
           </div>
         </div>
       )}
 
-      {checkMessage && (
+      {visibleCheckMessage && (
         <div className={styles.checkNotice} role="status">
-          {checkMessage}
+          {visibleCheckMessage}
         </div>
       )}
 
@@ -205,7 +204,7 @@ export function NewPatientForm() {
             name="dateOfBirth"
             type="date"
             required
-            max={new Date().toISOString().slice(0, 10)}
+            max={maximumBirthDate}
             value={dateOfBirth}
             onChange={(event) => setDateOfBirth(event.target.value)}
             aria-invalid={Boolean(state.fieldErrors?.dateOfBirth)}
@@ -247,11 +246,11 @@ export function NewPatientForm() {
 
       <div className={styles.formFooter}>
         <p>
-          {matches.exact
+          {visibleMatches.exact
             ? "Kartela ekzistuese do të hapet; nuk krijohet pacient i ri."
             : "Edhe nëse kontrolli paraprak dështon, databaza bllokon përputhjen e saktë të dyfishtë."}
         </p>
-        <SubmitButton exactMatch={Boolean(matches.exact)} />
+        <SubmitButton exactMatch={Boolean(visibleMatches.exact)} />
       </div>
     </form>
   );

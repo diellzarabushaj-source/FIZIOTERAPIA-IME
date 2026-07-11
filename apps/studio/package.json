@@ -2,17 +2,22 @@
   "name": "fizioterapia-ime-sanity-studio",
   "version": "1.0.0",
   "private": true,
+  "packageManager": "npm@10.9.2",
+  "engines": {
+    "node": "24.x",
+    "npm": ">=10 <12"
+  },
   "scripts": {
     "dev": "sanity dev",
     "build": "sanity build",
     "deploy": "sanity deploy --yes --url fizioterapia-ime-blog"
   },
   "dependencies": {
-    "@sanity/vision": "latest",
-    "sanity": "latest",
-    "styled-components": "latest"
+    "@sanity/vision": "6.4.0",
+    "sanity": "6.4.0",
+    "styled-components": "6.4.3"
   },
   "devDependencies": {
-    "typescript": "latest"
+    "typescript": "5.9.3"
   }
 }

@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { BrandMark } from "@/components/BrandMark";
 
 const qaGroups = [
@@ -76,10 +77,10 @@ export default function QaChecklistPage() {
       <nav className="top-nav">
         <BrandMark />
         <div className="nav-actions">
-          <a href="/">Home</a>
-          <a href="/support">Support</a>
-          <a href="/clinic-use">Clinic guide</a>
-          <a href="/launch-checklist">Launch checklist</a>
+          <Link href="/">Home</Link>
+          <Link href="/support">Support</Link>
+          <Link href="/clinic-use">Clinic guide</Link>
+          <Link href="/launch-checklist">Launch checklist</Link>
         </div>
       </nav>
 

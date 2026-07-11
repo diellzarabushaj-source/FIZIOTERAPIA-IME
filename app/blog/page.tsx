@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { BrandMark } from "@/components/BrandMark";
 import { BlogExplorer } from "@/components/BlogExplorer";
 import { hasSanityConfig } from "@/lib/sanity/client";
@@ -26,10 +27,10 @@ export default async function BlogPage() {
       <nav className={styles.nav}>
         <BrandMark />
         <div className={styles.navLinks}>
-          <a href="/">Home</a>
-          <a href="/blog">Knowledge Center</a>
-          <a href="/patient-portal">Pacienti</a>
-          <a href="/physiotherapist-portal">Fizioterapeuti</a>
+          <Link href="/">Home</Link>
+          <Link href="/blog">Knowledge Center</Link>
+          <Link href="/patient-portal">Pacienti</Link>
+          <Link href="/physiotherapist-portal">Fizioterapeuti</Link>
         </div>
       </nav>
 
@@ -73,7 +74,7 @@ export default async function BlogPage() {
           <h2>Rehabilitimi bëhet më i lehtë kur e kupton planin.</h2>
           <p>Shiko ushtrimet e tua, progresin dhe udhëzimet direkt në Fizioterapia Ime.</p>
         </div>
-        <a href="/patient-portal">Hyr në planin tënd →</a>
+        <Link href="/patient-portal">Hyr në planin tënd →</Link>
       </section>
     </main>
   );

@@ -4,25 +4,14 @@ import { CalendarClock, ClipboardPlus, History, QrCode } from "lucide-react";
 import { requirePhysioActor } from "@/lib/backend/access";
 import { getClinicalSessionForActor } from "@/lib/backend/clinical-sessions";
 import { getPatientForActor } from "@/lib/backend/patients";
+import { getPatientSessionSummaryForActor } from "@/lib/backend/patient-session-summary";
 import { CLINIC_TIME_ZONE } from "@/lib/backend/time-zone";
-import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import { EditPatientForm } from "./EditPatientForm";
 import { PatientRecordNav } from "./PatientRecordNav";
 import { RotatePatientAccessCodeForm } from "./RotatePatientAccessCodeForm";
 import { ScheduleSessionForm } from "./ScheduleSessionForm";
 import SessionForm from "./SessionForm";
 import styles from "../../dashboard.module.css";
-
-type SessionRow = {
-  id: string;
-  session_date: string;
-  status: string;
-  pain_before: number | null;
-  pain_after: number | null;
-  treatment_summary: string | null;
-  clinical_notes: string | null;
-  next_steps: string | null;
-};
 
 function formatSessionDate(value: string): string {
   const date = new Date(value);
@@ -80,56 +69,20 @@ export default async function PatientRecordPage({
   if (patientResult.ok === false) notFound();
   const patient = patientResult.data;
 
-  const supabase = getSupabaseAdmin();
-  if (!supabase) throw new Error("Supabase nuk është konfiguruar.");
+  const summaryResult = await getPatientSessionSummaryForActor(actor, patientId);
+  if (summaryResult.ok === false) throw new Error(summaryResult.error.message);
 
-  let completedCountQuery = supabase
-    .from("patient_sessions")
-    .select("id", { count: "exact", head: true })
-    .eq("patient_id", patientId)
-    .eq("status", "completed");
-  let latestCompletedQuery = supabase
-    .from("patient_sessions")
-    .select("id,session_date,status,pain_before,pain_after,treatment_summary,clinical_notes,next_steps")
-    .eq("patient_id", patientId)
-    .eq("status", "completed")
-    .order("session_date", { ascending: false })
-    .limit(1);
-  let upcomingSessionQuery = supabase
-    .from("patient_sessions")
-    .select("id,session_date,status,pain_before,pain_after,treatment_summary,clinical_notes,next_steps")
-    .eq("patient_id", patientId)
-    .in("status", ["planned", "in_progress"])
-    .gte("session_date", new Date(Date.now() - 2 * 60 * 60_000).toISOString())
-    .order("session_date", { ascending: true })
-    .limit(1);
-
-  if (actor.role === "physio") {
-    completedCountQuery = completedCountQuery.eq("physio_id", actor.profileId);
-    latestCompletedQuery = latestCompletedQuery.eq("physio_id", actor.profileId);
-    upcomingSessionQuery = upcomingSessionQuery.eq("physio_id", actor.profileId);
-  }
-
-  const [completedCountResult, latestCompletedResult, upcomingSessionResult] = await Promise.all([
-    completedCountQuery,
-    latestCompletedQuery.returns<SessionRow[]>(),
-    upcomingSessionQuery.returns<SessionRow[]>(),
-  ]);
-
-  if (completedCountResult.error || latestCompletedResult.error || upcomingSessionResult.error) {
-    const loadError = completedCountResult.error || latestCompletedResult.error || upcomingSessionResult.error;
-    console.error("patient_sessions_summary_load_failed", {
-      patientId,
-      physioId: actor.profileId,
-      code: loadError?.code,
-      message: loadError?.message,
-    });
-    throw new Error("Përmbledhja e seancave nuk mund të ngarkohet.");
-  }
+  const {
+    mode: sessionMode,
+    completedCount,
+    latestCompleted,
+    upcomingSession,
+  } = summaryResult.data;
+  const legacySessionMode = sessionMode === "legacy_read_only";
 
   let selectedScheduledSessionId: string | undefined;
   let selectedScheduledSessionDate: string | null = null;
-  if (notices.sessionId) {
+  if (!legacySessionMode && notices.sessionId) {
     const selectedResult = await getClinicalSessionForActor(actor, notices.sessionId);
     if (selectedResult.ok === true && selectedResult.data.patient_id === patientId) {
       if (["planned", "in_progress"].includes(selectedResult.data.status)) {
@@ -139,10 +92,7 @@ export default async function PatientRecordPage({
     }
   }
 
-  const completedCount = completedCountResult.count ?? 0;
   const nextSessionNumber = completedCount + 1;
-  const latestCompleted = latestCompletedResult.data?.[0] || null;
-  const upcomingSession = upcomingSessionResult.data?.[0] || null;
   const patientName = `${patient.first_name} ${patient.last_name || ""}`.trim();
   const accessRotated = notices.access === "rotated";
 
@@ -180,6 +130,18 @@ export default async function PatientRecordPage({
 
       <PatientRecordNav patientId={patientId} active="record" />
 
+      {legacySessionMode && (
+        <section className={styles.section}>
+          <div className={styles.errorMessage} role="status">
+            <strong>Seancat janë në modalitet vetëm-lexim.</strong>
+            <span>
+              Historiku ekzistues është i dukshëm, por planifikimi dhe dokumentimi i seancave të reja
+              aktivizohen vetëm pasi të aplikohen migrimet e databazës.
+            </span>
+          </div>
+        </section>
+      )}
+
       {(accessRotated || notices.created || notices.existing || notices.session === "created") && (
         <section className={styles.section}>
           <div className={styles.successMessage} role="status">
@@ -212,8 +174,14 @@ export default async function PatientRecordPage({
         </article>
         <article className={styles.summaryPanel}>
           <span>Termini i ardhshëm</span>
-          <strong>{upcomingSession ? formatSessionDateTime(upcomingSession.session_date) : "Ende pa termin"}</strong>
-          {upcomingSession && (
+          <strong>
+            {legacySessionMode
+              ? "Aktivizohet pas migrimit"
+              : upcomingSession
+                ? formatSessionDateTime(upcomingSession.session_date)
+                : "Ende pa termin"}
+          </strong>
+          {!legacySessionMode && upcomingSession && (
             <Link href={`/physiotherapist-portal/patients/${patientId}?sessionId=${upcomingSession.id}#session-form`}>
               <CalendarClock size={14} aria-hidden="true" /> Dokumento këtë seancë
             </Link>
@@ -229,9 +197,13 @@ export default async function PatientRecordPage({
         <article className={styles.summaryPanel}>
           <span>Historiku klinik</span>
           <strong>{completedCount} seanca të dokumentuara</strong>
-          <Link href={`/physiotherapist-portal/patients/${patientId}/history`}>
-            <History size={14} aria-hidden="true" /> Hap timeline-in e plotë
-          </Link>
+          {legacySessionMode ? (
+            <small>Timeline-i i plotë aktivizohet pas migrimit.</small>
+          ) : (
+            <Link href={`/physiotherapist-portal/patients/${patientId}/history`}>
+              <History size={14} aria-hidden="true" /> Hap timeline-in e plotë
+            </Link>
+          )}
         </article>
       </section>
 
@@ -255,32 +227,36 @@ export default async function PatientRecordPage({
         />
       </section>
 
-      <section className={styles.section} id="schedule-session">
-        <div className={styles.sectionHeading}>
-          <div>
-            <span className={styles.eyebrow}>Agjenda</span>
-            <h2>Planifiko seancën e ardhshme</h2>
-            <p>Vendos datën dhe orën; termini shfaqet në dashboard dhe te faqja Seancat.</p>
+      {!legacySessionMode && (
+        <section className={styles.section} id="schedule-session">
+          <div className={styles.sectionHeading}>
+            <div>
+              <span className={styles.eyebrow}>Agjenda</span>
+              <h2>Planifiko seancën e ardhshme</h2>
+              <p>Vendos datën dhe orën; termini shfaqet në dashboard dhe te faqja Seancat.</p>
+            </div>
+            <span className={styles.statusPill}>Ora lokale e klinikës</span>
           </div>
-          <span className={styles.statusPill}>Ora lokale e klinikës</span>
-        </div>
-        <ScheduleSessionForm patientId={patientId} />
-      </section>
+          <ScheduleSessionForm patientId={patientId} />
+        </section>
+      )}
 
-      <section className={styles.section} id="session-form">
-        <div className={styles.sectionHeading}>
-          <div>
-            <span className={styles.eyebrow}>Dokumentimi klinik</span>
-            <h2>
-              {selectedScheduledSessionId
-                ? `Dokumento seancën e planifikuar${selectedScheduledSessionDate ? ` · ${formatSessionDateTime(selectedScheduledSessionDate)}` : ""}`
-                : `Regjistro seancën ${nextSessionNumber}`}
-            </h2>
+      {!legacySessionMode && (
+        <section className={styles.section} id="session-form">
+          <div className={styles.sectionHeading}>
+            <div>
+              <span className={styles.eyebrow}>Dokumentimi klinik</span>
+              <h2>
+                {selectedScheduledSessionId
+                  ? `Dokumento seancën e planifikuar${selectedScheduledSessionDate ? ` · ${formatSessionDateTime(selectedScheduledSessionDate)}` : ""}`
+                  : `Regjistro seancën ${nextSessionNumber}`}
+              </h2>
+            </div>
+            <span className={styles.statusPill}>Ruhet në historikun klinik</span>
           </div>
-          <span className={styles.statusPill}>Ruhet në historikun klinik</span>
-        </div>
-        <SessionForm patientId={patientId} scheduledSessionId={selectedScheduledSessionId} />
-      </section>
+          <SessionForm patientId={patientId} scheduledSessionId={selectedScheduledSessionId} />
+        </section>
+      )}
     </>
   );
 }

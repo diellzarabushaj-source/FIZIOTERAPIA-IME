@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { Suspense, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import type { ExerciseRecommendation, RecommendationResponse } from "@/lib/clinical/types";
 import { addClinicalRecommendationToPlanAction } from "./actions";
@@ -12,6 +12,24 @@ const conditions = [
 ];
 
 export default function ClinicalRecommendationsPage() {
+  return (
+    <Suspense fallback={<ClinicalRecommendationsFallback />}>
+      <ClinicalRecommendationsContent />
+    </Suspense>
+  );
+}
+
+function ClinicalRecommendationsFallback() {
+  return (
+    <main style={{ maxWidth: 1120, margin: "0 auto", padding: "32px 20px 80px" }} aria-busy="true">
+      <span className="badge">Clinical recommendation engine · pilot</span>
+      <h1>Po përgatiten kriteret klinike…</h1>
+      <p>Moduli po ngarkohet. Asnjë rekomandim nuk publikohet automatikisht.</p>
+    </main>
+  );
+}
+
+function ClinicalRecommendationsContent() {
   const searchParams = useSearchParams();
   const planId = (searchParams.get("planId") || "").slice(0, 80);
   const patientId = (searchParams.get("patientId") || "").slice(0, 80);

@@ -1,13 +1,13 @@
 "use client";
 
-import { useActionState, useEffect, useMemo, useRef } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { CalendarPlus } from "lucide-react";
+import { getClinicDateTimeInput } from "@/lib/backend/time-zone";
 import {
   schedulePatientSessionAction,
   type ScheduleSessionFormState,
 } from "../actions";
-import { getClinicDateTimeInput } from "@/lib/backend/time-zone";
 import styles from "../../dashboard.module.css";
 
 const initialState: ScheduleSessionFormState = {
@@ -30,12 +30,15 @@ export function ScheduleSessionForm({ patientId }: { patientId: string }) {
   const action = schedulePatientSessionAction.bind(null, patientId);
   const [state, formAction] = useActionState(action, initialState);
   const formRef = useRef<HTMLFormElement>(null);
-  const minimum = useMemo(() => getClinicDateTimeInput(), []);
-  const defaultTime = useMemo(() => {
-    const nextHour = new Date(Date.now() + 60 * 60_000);
-    nextHour.setMinutes(0, 0, 0);
-    return getClinicDateTimeInput(nextHour);
-  }, []);
+  const [schedulingDefaults] = useState(() => {
+    const minimumScheduledAt = getClinicDateTimeInput();
+    const nextSchedulingHour = new Date(Date.now() + 60 * 60_000);
+    nextSchedulingHour.setMinutes(0, 0, 0);
+    return {
+      minimumScheduledAt,
+      initialScheduledAt: getClinicDateTimeInput(nextSchedulingHour),
+    };
+  });
 
   useEffect(() => {
     if (state.status === "success") formRef.current?.reset();
@@ -61,8 +64,8 @@ export function ScheduleSessionForm({ patientId }: { patientId: string }) {
             id="scheduledAt"
             name="scheduledAt"
             type="datetime-local"
-            min={minimum}
-            defaultValue={defaultTime}
+            min={schedulingDefaults.minimumScheduledAt}
+            defaultValue={schedulingDefaults.initialScheduledAt}
             className={state.fieldErrors?.scheduledAt ? styles.inputError : undefined}
             required
           />

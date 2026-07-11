@@ -27,10 +27,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Node 22
+      - name: Setup Node 24
         uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 24
 
       - name: Use repository npm version
         run: npm install --global npm@10.9.2 --no-audit --no-fund
@@ -42,14 +42,28 @@ jobs:
           node scripts/dependency-policy-check.mjs
 
       - name: Install dependencies
-        shell: bash
-        run: |
-          if [[ -f package-lock.json ]]; then
-            npm ci --no-audit --no-fund
-          else
-            echo "package-lock.json is being bootstrapped; using npm install for this run."
-            npm install --no-audit --no-fund
-          fi
+        run: npm ci --no-audit --no-fund
 
       - name: Run full quality gate
-        run: npm run check:all
+        id: full-quality
+        shell: bash
+        run: |
+          set +e
+          npm run check:all > full-quality.log 2>&1
+          status=$?
+          tail -n 240 full-quality.log
+          echo "status=$status" >> "$GITHUB_OUTPUT"
+          exit 0
+
+      - name: Upload failed quality gate log
+        if: steps.full-quality.outputs.status != '0'
+        uses: actions/upload-artifact@v4
+        with:
+          name: full-quality-log
+          path: full-quality.log
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Fail when full quality gate failed
+        if: steps.full-quality.outputs.status != '0'
+        run: exit 1

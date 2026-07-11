@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { BrandMark } from "@/components/BrandMark";
 
 const checklist = [
@@ -54,10 +55,10 @@ export default function LaunchChecklistPage() {
       <nav className="top-nav">
         <BrandMark />
         <div className="nav-actions">
-          <a href="/">Home</a>
-          <a href="/support">Support</a>
-          <a href="/clinic-use">Clinic guide</a>
-          <a href="/admin-billing">Admin Billing</a>
+          <Link href="/">Home</Link>
+          <Link href="/support">Support</Link>
+          <Link href="/clinic-use">Clinic guide</Link>
+          <Link href="/admin-billing">Admin Billing</Link>
         </div>
       </nav>
 
@@ -97,7 +98,7 @@ export default function LaunchChecklistPage() {
             Testo manualisht patient flow, physio flow, admin billing, AI check, PDF report dhe Resend alerts. Për përdorim real klinik duhet review legal/GDPR dhe vendim i qartë për ruajtjen e të dhënave.
           </p>
         </div>
-        <a className="button" href="/support">Hap Support Center</a>
+        <Link className="button" href="/support">Hap Support Center</Link>
       </section>
     </main>
   );

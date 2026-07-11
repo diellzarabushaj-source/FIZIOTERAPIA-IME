@@ -19,12 +19,15 @@ test("patient list searches in Supabase, paginates, and masks access codes", asy
   assert.doesNotMatch(page, /\(data \|\| \[\]\)\.filter/);
 });
 
-test("patient record summary does not fetch the full clinical session history", async () => {
+test("patient record summary does not fetch the full modern clinical session history", async () => {
   const page = await source("app/physiotherapist-portal/patients/[patientId]/page.tsx");
+  const summary = await source("lib/backend/patient-session-summary.ts");
 
-  assert.match(page, /count: "exact", head: true/);
-  assert.match(page, /\.limit\(1\)/);
-  assert.match(page, /Promise\.all/);
+  assert.match(page, /getPatientSessionSummaryForActor/);
+  assert.match(summary, /count: "exact", head: true/);
+  assert.match(summary, /\.limit\(1\)/);
+  assert.match(summary, /Promise\.all/);
+  assert.match(summary, /legacy_read_only/);
 });
 
 test("patient history scopes physios but allows authorized owner and admin views", async () => {
