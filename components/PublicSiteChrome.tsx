@@ -2,26 +2,10 @@
 
 import { usePathname } from "next/navigation";
 import { SiteHeader } from "@/components/SiteHeader";
+import { isPublicSitePath } from "@/lib/public-routes";
 
 export function PublicSiteChrome() {
   const pathname = usePathname();
-  const isPublic =
-    pathname === "/" ||
-    pathname.startsWith("/blog") ||
-    pathname === "/si-perdoret-ne-klinike" ||
-    pathname === "/clinic-use" ||
-    pathname === "/per-fizioterapeutin" ||
-    pathname === "/per-pacientin" ||
-    pathname === "/cmimi" ||
-    pathname === "/support" ||
-    pathname === "/contact" ||
-    pathname === "/faq" ||
-    pathname === "/privacy" ||
-    pathname === "/terms" ||
-    pathname === "/medical-disclaimer" ||
-    pathname === "/data-deletion" ||
-    pathname === "/camera-consent";
-
-  if (!isPublic) return null;
+  if (!isPublicSitePath(pathname)) return null;
   return <div className="public-site-chrome"><SiteHeader /></div>;
 }
