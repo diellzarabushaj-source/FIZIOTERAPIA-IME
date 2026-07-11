@@ -1,7 +1,13 @@
-name: Deploy Sanity Studio
+name: Build and deploy Sanity Studio
 
 on:
   workflow_dispatch:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "apps/studio/**"
+      - ".github/workflows/deploy-sanity-studio.yml"
   push:
     branches:
       - main
@@ -9,37 +15,49 @@ on:
       - "apps/studio/**"
       - ".github/workflows/deploy-sanity-studio.yml"
 
+permissions:
+  contents: read
+
+concurrency:
+  group: sanity-studio-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  deploy-studio:
+  build-studio:
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: apps/studio
     env:
-      SANITY_AUTH_TOKEN: ${{ secrets.SANITY_AUTH_TOKEN }}
       SANITY_STUDIO_PROJECT_ID: a3wcdlcy
       SANITY_STUDIO_DATASET: production
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
+      - name: Setup Node.js 24
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
 
       - name: Install Studio dependencies
         run: npm install --no-audit --no-fund
 
+      - name: Build Studio
+        run: npm run build
+
       - name: Verify Sanity deploy token exists
+        if: github.event_name != 'pull_request'
+        env:
+          SANITY_AUTH_TOKEN: ${{ secrets.SANITY_AUTH_TOKEN }}
         run: |
           if [ -z "$SANITY_AUTH_TOKEN" ]; then
             echo "SANITY_AUTH_TOKEN is missing. Add it in GitHub Settings > Secrets and variables > Actions."
             exit 1
           fi
 
-      - name: Build Studio
-        run: npm run build
-
       - name: Deploy Studio to Sanity hosting
+        if: github.event_name != 'pull_request'
+        env:
+          SANITY_AUTH_TOKEN: ${{ secrets.SANITY_AUTH_TOKEN }}
         run: npm run deploy
