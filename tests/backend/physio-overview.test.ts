@@ -14,7 +14,7 @@ test("overview masks patient access codes and links clinical priorities", async 
   assert.match(page, /function maskPatientCode/);
   assert.match(page, /maskPatientCode\(patient\.patient_code\)/);
   assert.doesNotMatch(page, /\{patient\.diagnosis \|\| "Pa diagnozë"\} · \{patient\.patient_code\}/);
-  assert.match(page, /href="#attention-panel"/);
+  assert.match(page, /href="\/physiotherapist-portal\/alerts"/);
   assert.match(page, /href="#today-agenda"/);
 });
 
@@ -34,6 +34,14 @@ test("overview separates every actionable plan state", async () => {
   assert.match(page, /status=approved/);
   assert.match(page, /status=active/);
   assert.match(page, /Plane në pritje/);
+});
+
+test("overview relies on the global quick action menu instead of duplicate page actions", async () => {
+  const page = await source("app/physiotherapist-portal/overview/page.tsx");
+
+  assert.doesNotMatch(page, /UserPlus/);
+  assert.doesNotMatch(page, />Shto pacient<\/Link>/);
+  assert.doesNotMatch(page, />Krijo plan<\/Link>/);
 });
 
 test("overview has isolated responsive styles", async () => {
