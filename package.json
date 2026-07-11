@@ -4,7 +4,7 @@
   "private": true,
   "packageManager": "npm@10.9.2",
   "engines": {
-    "node": "22.x",
+    "node": "24.x",
     "npm": ">=10 <11"
   },
   "scripts": {
@@ -51,7 +51,7 @@
     "resend": "6.17.2"
   },
   "devDependencies": {
-    "@types/node": "22.20.1",
+    "@types/node": "24.10.4",
     "@types/qrcode": "1.5.6",
     "@types/react": "19.2.17",
     "@types/react-dom": "19.2.3",
