@@ -26,24 +26,42 @@ const checks = [
   },
   {
     file: "lib/backend-logic.ts",
-    mustContain: ["PATIENT_SESSION_MAX_AGE_SECONDS", "timingSafeEqual", "PATIENT_SESSION_SECRET is required in production", ".eq(\"plans.status\", \"active\")"],
+    mustContain: [
+      "PATIENT_SESSION_MAX_AGE_SECONDS",
+      "timingSafeEqual",
+      "PATIENT_SESSION_SECRET is required in production",
+      ".eq(\"plans.status\", \"active\")",
+    ],
     mustNotContain: ["CLERK_SECRET_KEY ||", "SUPABASE_SERVICE_ROLE_KEY ||"],
     label: "Patient sessions expire, fail closed, and active-plan ownership is enforced",
   },
   {
     file: "app/api/patient/access-qr/[code]/route.ts",
     mustContain: ["actorCanAccessPhysioResource", ".eq(\"status\", \"active\")"],
-    label: "QR access checks patient ownership and status",
+    label: "QR generation checks operator authentication, patient ownership, and status",
   },
   {
-    file: "next.config.ts",
-    mustContain: ["Content-Security-Policy", "Strict-Transport-Security", "X-Content-Type-Options", "Permissions-Policy"],
+    file: "app/patient-dashboard/page.tsx",
+    mustContain: ["getCurrentPatientSession"],
+    label: "Public patient routes protect clinical data at the server session layer",
+  },
+  {
+    file: "next.config.mjs",
+    mustContain: [
+      "Content-Security-Policy",
+      "Strict-Transport-Security",
+      "X-Content-Type-Options",
+      "Permissions-Policy",
+    ],
     label: "Production security headers are configured",
   },
   {
     file: "proxy.ts",
-    mustContain: ["/physiotherapist-portal", "/patient-access"],
-    label: "Clinical and operator routes are protected at the proxy layer",
+    mustContain: [
+      "/physiotherapist-portal",
+      "Patient code routes are intentionally public at the Clerk layer",
+    ],
+    label: "Operator routes use Clerk while patient clinical data uses signed server sessions",
   },
   {
     file: "scripts/check-env-readiness.mjs",
