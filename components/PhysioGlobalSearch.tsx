@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 import { ClipboardList, Dumbbell, LoaderCircle, Search, UserRound, X } from "lucide-react";
 
 type SearchResult = {
@@ -45,13 +45,7 @@ export function PhysioGlobalSearch() {
 
   useEffect(() => {
     const normalized = query.trim();
-    if (normalized.length < 2) {
-      setResults([]);
-      setLoading(false);
-      setError("");
-      setActiveIndex(-1);
-      return;
-    }
+    if (normalized.length < 2) return;
 
     const controller = new AbortController();
     const timer = window.setTimeout(async () => {
@@ -86,6 +80,7 @@ export function PhysioGlobalSearch() {
   const reset = () => {
     setQuery("");
     setResults([]);
+    setLoading(false);
     setError("");
     setOpen(false);
     setActiveIndex(-1);
@@ -96,7 +91,19 @@ export function PhysioGlobalSearch() {
     router.push(result.href);
   };
 
-  const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleQueryChange = (value: string) => {
+    setQuery(value);
+    const searchable = value.trim().length >= 2;
+    setOpen(searchable);
+    if (!searchable) {
+      setResults([]);
+      setLoading(false);
+      setError("");
+      setActiveIndex(-1);
+    }
+  };
+
+  const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
     if (event.key === "Escape") {
       setOpen(false);
       setActiveIndex(-1);
@@ -127,10 +134,7 @@ export function PhysioGlobalSearch() {
         <input
           type="search"
           value={query}
-          onChange={(event) => {
-            setQuery(event.target.value);
-            setOpen(true);
-          }}
+          onChange={(event) => handleQueryChange(event.target.value)}
           onFocus={() => query.trim().length >= 2 && setOpen(true)}
           onKeyDown={handleKeyDown}
           placeholder="Kërko pacient, kod, plan ose ushtrim…"
