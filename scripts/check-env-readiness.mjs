@@ -12,7 +12,7 @@ const requiredWebEnv = [
   "NEXT_PUBLIC_APP_URL",
 ];
 
-const productionOnlyWebEnv = ["HEALTH_MONITOR_SECRET"];
+const productionOnlyWebEnv = ["HEALTH_MONITOR_SECRET", "PATIENT_SESSION_REGISTRY_ENABLED"];
 
 const recommendedWebEnv = [
   "NEXT_PUBLIC_SUPABASE_ANON_KEY",
@@ -40,7 +40,7 @@ function parseUrl(value) {
   }
 }
 
-function validUrlForEnvironment(name, value) {
+function validUrlForEnvironment(_name, value) {
   const parsed = parseUrl(value);
   if (!parsed) return false;
   if (appEnvironment === "development" || appEnvironment === "test") {
@@ -55,6 +55,7 @@ function statusFor(name) {
   if (!value) return "missing";
   if (name === "PATIENT_SESSION_SECRET" && value.length < 43) return "too_short";
   if (name === "HEALTH_MONITOR_SECRET" && value.length < 32) return "too_short";
+  if (name === "PATIENT_SESSION_REGISTRY_ENABLED" && !["0", "1"].includes(value)) return "invalid_boolean";
   if (["NEXT_PUBLIC_APP_URL", "NEXT_PUBLIC_SUPABASE_URL", "EXPO_PUBLIC_API_BASE_URL"].includes(name) && !validUrlForEnvironment(name, value)) {
     return "invalid_url";
   }
@@ -78,11 +79,13 @@ const clerkPublishable = valueFor("NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY");
 const clerkSecret = valueFor("CLERK_SECRET_KEY");
 const appUrl = valueFor("NEXT_PUBLIC_APP_URL");
 const supabaseUrl = valueFor("NEXT_PUBLIC_SUPABASE_URL");
+const patientSessionRegistry = valueFor("PATIENT_SESSION_REGISTRY_ENABLED");
 
 if (appEnvironment === "production") {
   if (!clerkPublishable.startsWith("pk_live_")) issues.push("Production kërkon Clerk publishable key të ambientit production.");
   if (!clerkSecret.startsWith("sk_live_")) issues.push("Production kërkon Clerk secret key të ambientit production.");
   if (/localhost|127\.0\.0\.1/i.test(appUrl)) issues.push("Production NEXT_PUBLIC_APP_URL nuk mund të jetë localhost.");
+  if (patientSessionRegistry !== "1") issues.push("Production kërkon PATIENT_SESSION_REGISTRY_ENABLED=1 pas aplikimit të migration-it 20260711.3.");
 }
 
 if (appEnvironment === "staging" && appUrl && !/vercel\.app|staging|preview/i.test(appUrl)) {
