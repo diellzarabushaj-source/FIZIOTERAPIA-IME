@@ -50,7 +50,7 @@ export default async function NewPlanChoicePage({ searchParams }: { searchParams
     : null;
   if (requestedPatientId && !patient) notFound();
 
-  let matchingTemplates = patient ? templatesForDiagnosis(patient.diagnosis) : [];
+  const matchingTemplates = patient ? templatesForDiagnosis(patient.diagnosis) : [];
   let availableTemplates = matchingTemplates;
   if (patient && matchingTemplates.length) {
     const exerciseResult = await listExercisesForActor(actor);
