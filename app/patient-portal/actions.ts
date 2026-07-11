@@ -1,7 +1,6 @@
 "use server";
 
-import { headers } from "next/headers";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { authenticatePatientCode } from "@/lib/backend/patient-login";
 import {
@@ -20,7 +19,7 @@ import { getSupabaseAdmin } from "@/lib/supabase-admin";
 
 export async function patientLoginAction(formData: FormData) {
   const supabase = getSupabaseAdmin();
-  if (!supabase) throw new Error("Supabase server key is missing.");
+  if (!supabase) redirect("/patient-portal?error=system");
 
   const requestHeaders = await headers();
   const ipAddress = requestHeaders.get("x-forwarded-for")?.split(",")[0]?.trim() || null;
@@ -32,20 +31,26 @@ export async function patientLoginAction(formData: FormData) {
   });
 
   if (result.ok === false) {
-    if (result.reason === "misconfigured") throw new Error("Patient login protection is not configured.");
-    redirect(`/patient-portal?error=${encodeURIComponent(result.reason)}`);
+    const reason = result.reason === "misconfigured" ? "system" : result.reason;
+    redirect(`/patient-portal?error=${encodeURIComponent(reason)}`);
   }
 
   const patient = result.patient;
   const registryEnabled = patientSessionRegistryEnabled();
-  const registryToken = registryEnabled
-    ? await createPatientSession({
+  let registryToken: string | null = null;
+
+  if (registryEnabled) {
+    try {
+      registryToken = await createPatientSession({
         supabase,
         patientId: patient.id,
         ipAddress,
         userAgent,
-      })
-    : null;
+      });
+    } catch {
+      redirect("/patient-portal?error=system");
+    }
+  }
 
   const cookieStore = await cookies();
   const cookieOptions = {
@@ -59,6 +64,7 @@ export async function patientLoginAction(formData: FormData) {
   cookieStore.set(PATIENT_CODE_COOKIE, patient.patient_code, cookieOptions);
   cookieStore.set(PATIENT_SESSION_COOKIE, signPatientCode(patient.patient_code), cookieOptions);
   if (patient.patient_username) cookieStore.set(PATIENT_USERNAME_COOKIE, patient.patient_username, cookieOptions);
+  else cookieStore.delete(PATIENT_USERNAME_COOKIE);
   if (registryToken) cookieStore.set(PATIENT_SESSION_REGISTRY_COOKIE, registryToken, cookieOptions);
   else cookieStore.delete(PATIENT_SESSION_REGISTRY_COOKIE);
 
