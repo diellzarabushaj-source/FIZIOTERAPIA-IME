@@ -60,7 +60,7 @@ jobs:
         if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
         shell: bash
         run: |
-          if git diff --quiet -- package-lock.json; then
+          if [ -z "$(git status --porcelain -- package-lock.json)" ]; then
             echo "package-lock.json is already current."
             exit 0
           fi
@@ -73,4 +73,10 @@ jobs:
 
       - name: Verify pull request lockfile is current
         if: github.event_name == 'pull_request'
-        run: git diff --exit-code -- package-lock.json
+        shell: bash
+        run: |
+          if [ -n "$(git status --porcelain -- package-lock.json)" ]; then
+            echo "package-lock.json is missing or stale."
+            git status --short -- package-lock.json
+            exit 1
+          fi
