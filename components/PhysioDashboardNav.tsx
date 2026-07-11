@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
   BellRing,
+  CalendarDays,
   ClipboardList,
   CreditCard,
   Dumbbell,
@@ -20,6 +21,7 @@ const items = [
   { href: "/physiotherapist-portal/overview", label: "Përmbledhje", icon: LayoutDashboard },
   { href: "/physiotherapist-portal/alerts", label: "Alarmet", icon: BellRing },
   { href: "/physiotherapist-portal/patients", label: "Pacientët", icon: Users },
+  { href: "/physiotherapist-portal/sessions", label: "Seancat", icon: CalendarDays },
   { href: "/physiotherapist-portal/programs", label: "Programet", icon: ClipboardList },
   { href: "/physiotherapist-portal/exercises", label: "Ushtrimet", icon: Dumbbell },
   { href: "/physiotherapist-portal/billing", label: "Pagesat", icon: CreditCard },
@@ -29,7 +31,7 @@ const mobilePrimaryItems = items.filter((item) =>
   [
     "/physiotherapist-portal/overview",
     "/physiotherapist-portal/patients",
-    "/physiotherapist-portal/programs",
+    "/physiotherapist-portal/sessions",
   ].includes(item.href),
 );
 
