@@ -15,7 +15,16 @@ test("overview masks patient access codes and links clinical priorities", async 
   assert.match(page, /maskPatientCode\(patient\.patient_code\)/);
   assert.doesNotMatch(page, /\{patient\.diagnosis \|\| "Pa diagnozë"\} · \{patient\.patient_code\}/);
   assert.match(page, /href="\/physiotherapist-portal\/alerts"/);
-  assert.match(page, /href="#today-agenda"/);
+  assert.match(page, /href="\/physiotherapist-portal\/sessions\?view=today"/);
+});
+
+test("overview opens planned sessions in their existing documentation record", async () => {
+  const page = await source("app/physiotherapist-portal/overview/page.tsx");
+
+  assert.match(page, /function sessionHref/);
+  assert.match(page, /session\.status === "planned" \|\| session\.status === "in_progress"/);
+  assert.ok(page.includes('sessionId=${session.id}#session-form'));
+  assert.match(page, /href=\{sessionHref\(session\)\}/);
 });
 
 test("overview scopes alerts and sessions to the physiotherapist", async () => {
