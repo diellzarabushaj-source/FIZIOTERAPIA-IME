@@ -40,14 +40,17 @@ test("completing a scheduled session updates its record instead of inserting ano
   assert.match(completion, /action: scheduledSession \? "patient\.session_completed" : "patient\.session_created"/);
 });
 
-test("patient record separates scheduling from clinical documentation", async () => {
+test("patient record separates scheduling from clinical documentation and disables writes in legacy mode", async () => {
   const page = await source("app/physiotherapist-portal/patients/[patientId]/page.tsx");
+  const summary = await source("lib/backend/patient-session-summary.ts");
 
   assert.match(page, /<ScheduleSessionForm patientId=\{patientId\} \/>/);
   assert.match(page, /id="schedule-session"/);
   assert.match(page, /id="session-form"/);
   assert.match(page, /scheduledSessionId=\{selectedScheduledSessionId\}/);
-  assert.match(page, /\.eq\("status", "completed"\)/);
+  assert.match(page, /!legacySessionMode && \(/);
+  assert.match(summary, /\.eq\("status", "completed"\)/);
+  assert.match(summary, /mode: "legacy_read_only"/);
 });
 
 test("sessions workspace offers start, document and confirmed cancel actions", async () => {
