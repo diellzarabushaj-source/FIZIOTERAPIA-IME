@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
+  BellRing,
   ClipboardList,
   CreditCard,
   Dumbbell,
@@ -17,6 +18,7 @@ import {
 
 const items = [
   { href: "/physiotherapist-portal/overview", label: "Përmbledhje", icon: LayoutDashboard },
+  { href: "/physiotherapist-portal/alerts", label: "Alarmet", icon: BellRing },
   { href: "/physiotherapist-portal/patients", label: "Pacientët", icon: Users },
   { href: "/physiotherapist-portal/programs", label: "Programet", icon: ClipboardList },
   { href: "/physiotherapist-portal/exercises", label: "Ushtrimet", icon: Dumbbell },
