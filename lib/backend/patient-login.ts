@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { normalizePatientCode } from "@/lib/supabase-admin";
+import { normalizePatientCode } from "../supabase-admin.ts";
 
 export type PatientLoginRecord = {
   id: string;
