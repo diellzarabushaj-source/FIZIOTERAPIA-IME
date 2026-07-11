@@ -42,13 +42,83 @@ function getTimeZoneOffsetMs(date: Date, timeZone: string) {
   ) - date.getTime();
 }
 
-function localMidnightUtc(year: number, month: number, day: number, timeZone: string) {
-  const wallClockUtc = Date.UTC(year, month - 1, day, 0, 0, 0);
+function localDateTimeUtc(
+  year: number,
+  month: number,
+  day: number,
+  hour: number,
+  minute: number,
+  second: number,
+  timeZone: string,
+) {
+  const wallClockUtc = Date.UTC(year, month - 1, day, hour, minute, second);
   let candidate = new Date(wallClockUtc - getTimeZoneOffsetMs(new Date(wallClockUtc), timeZone));
 
-  // Recalculate once at the resolved instant so DST transition days remain correct.
+  // Recalculate at the resolved instant so daylight-saving transitions remain correct.
   candidate = new Date(wallClockUtc - getTimeZoneOffsetMs(candidate, timeZone));
   return candidate;
+}
+
+function localMidnightUtc(year: number, month: number, day: number, timeZone: string) {
+  return localDateTimeUtc(year, month, day, 0, 0, 0, timeZone);
+}
+
+function pad(value: number) {
+  return String(value).padStart(2, "0");
+}
+
+export function getClinicDateInput(now = new Date(), timeZone = CLINIC_TIME_ZONE) {
+  const local = getZonedParts(now, timeZone);
+  return `${local.year}-${pad(local.month)}-${pad(local.day)}`;
+}
+
+export function getClinicDateTimeInput(now = new Date(), timeZone = CLINIC_TIME_ZONE) {
+  const local = getZonedParts(now, timeZone);
+  return `${local.year}-${pad(local.month)}-${pad(local.day)}T${pad(local.hour)}:${pad(local.minute)}`;
+}
+
+export function clinicDateTimeInputToUtc(value: string, timeZone = CLINIC_TIME_ZONE): Date | null {
+  const match = value.trim().match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})$/);
+  if (!match) return null;
+
+  const [, yearRaw, monthRaw, dayRaw, hourRaw, minuteRaw] = match;
+  const year = Number(yearRaw);
+  const month = Number(monthRaw);
+  const day = Number(dayRaw);
+  const hour = Number(hourRaw);
+  const minute = Number(minuteRaw);
+  if (month < 1 || month > 12 || day < 1 || day > 31 || hour > 23 || minute > 59) return null;
+
+  const calendarCheck = new Date(Date.UTC(year, month - 1, day, hour, minute));
+  if (
+    calendarCheck.getUTCFullYear() !== year ||
+    calendarCheck.getUTCMonth() + 1 !== month ||
+    calendarCheck.getUTCDate() !== day ||
+    calendarCheck.getUTCHours() !== hour ||
+    calendarCheck.getUTCMinutes() !== minute
+  ) {
+    return null;
+  }
+
+  const resolved = localDateTimeUtc(year, month, day, hour, minute, 0, timeZone);
+  const local = getZonedParts(resolved, timeZone);
+  if (
+    local.year !== year ||
+    local.month !== month ||
+    local.day !== day ||
+    local.hour !== hour ||
+    local.minute !== minute
+  ) {
+    // Reject local clock times that do not exist during a DST transition.
+    return null;
+  }
+
+  return resolved;
+}
+
+export function clinicDateInputToUtcNoon(value: string, timeZone = CLINIC_TIME_ZONE): Date | null {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return null;
+  return clinicDateTimeInputToUtc(`${value}T12:00`, timeZone);
 }
 
 export function getUtcDayRange(now = new Date(), timeZone = CLINIC_TIME_ZONE) {
