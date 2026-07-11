@@ -1,0 +1,229 @@
+.statLink {
+  color: inherit;
+  text-decoration: none;
+  transition: transform 150ms ease, border-color 150ms ease, box-shadow 150ms ease;
+}
+
+.statLink:hover {
+  transform: translateY(-2px);
+  border-color: #8eb5ae;
+  box-shadow: 0 15px 34px rgba(20, 35, 31, 0.09);
+}
+
+.statLink:focus-visible {
+  outline: 0;
+  box-shadow: 0 0 0 4px rgba(15, 118, 110, 0.16);
+}
+
+.sessionTabs {
+  width: max-content;
+  max-width: 100%;
+  margin-bottom: 15px;
+  padding: 4px;
+  border-radius: 12px;
+  background: #eaf0ee;
+  display: flex;
+  gap: 4px;
+}
+
+.sessionTab,
+.sessionTabActive {
+  min-height: 38px;
+  padding: 8px 13px;
+  border-radius: 9px;
+  color: #62716b;
+  font-size: 13px;
+  font-weight: 750;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sessionTabActive {
+  background: #ffffff;
+  color: #173b43;
+  box-shadow: 0 2px 7px rgba(22, 42, 36, 0.09);
+}
+
+.sessionTab:focus-visible,
+.sessionTabActive:focus-visible {
+  outline: 0;
+  box-shadow: 0 0 0 4px rgba(15, 118, 110, 0.14);
+}
+
+.sessionAgenda {
+  display: grid;
+  gap: 11px;
+}
+
+.sessionAgendaCard {
+  min-width: 0;
+  padding: 15px 16px;
+  border: 1px solid #dfe8e5;
+  border-radius: 14px;
+  background: #ffffff;
+  display: grid;
+  grid-template-columns: minmax(112px, auto) minmax(220px, 1fr) minmax(150px, auto) auto;
+  align-items: center;
+  gap: 16px;
+}
+
+.sessionTime {
+  color: #0f6f67;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.sessionTime strong {
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.sessionPatient {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.sessionAvatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 11px;
+  background: #e9f4f1;
+  color: #0f766e;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+}
+
+.sessionPatient div {
+  min-width: 0;
+}
+
+.sessionPatient a,
+.sessionPatient small {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sessionPatient a {
+  color: #1d302a;
+  font-size: 14px;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.sessionPatient a:hover {
+  color: #0f766e;
+}
+
+.sessionPatient small,
+.sessionState small {
+  margin-top: 3px;
+  color: #71807a;
+  font-size: 11px;
+}
+
+.sessionState {
+  display: grid;
+  justify-items: start;
+  gap: 4px;
+}
+
+.sessionActions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.sessionActions form {
+  margin: 0;
+}
+
+.sessionActions .primary,
+.sessionActions .secondary,
+.sessionActions .dangerButton {
+  min-height: 38px;
+  padding: 8px 10px;
+  font-size: 12px;
+}
+
+@media (max-width: 1180px) {
+  .sessionAgendaCard {
+    grid-template-columns: minmax(110px, auto) minmax(0, 1fr) auto;
+  }
+
+  .sessionActions {
+    grid-column: 1 / -1;
+    justify-content: flex-end;
+    padding-top: 10px;
+    border-top: 1px solid #edf2f0;
+  }
+}
+
+@media (max-width: 760px) {
+  .sessionTabs {
+    width: 100%;
+  }
+
+  .sessionTab,
+  .sessionTabActive {
+    flex: 1;
+  }
+
+  .sessionAgendaCard {
+    grid-template-columns: 1fr auto;
+    align-items: start;
+  }
+
+  .sessionPatient {
+    grid-column: 1 / -1;
+    grid-row: 1;
+  }
+
+  .sessionTime {
+    grid-column: 1;
+    grid-row: 2;
+  }
+
+  .sessionState {
+    grid-column: 2;
+    grid-row: 2;
+  }
+
+  .sessionActions {
+    grid-column: 1 / -1;
+    grid-row: 3;
+    justify-content: stretch;
+  }
+
+  .sessionActions form,
+  .sessionActions a,
+  .sessionActions button {
+    flex: 1;
+  }
+}
+
+@media (max-width: 520px) {
+  .sessionAgendaCard {
+    padding: 14px;
+  }
+
+  .sessionActions {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .sessionActions form,
+  .sessionActions a,
+  .sessionActions button {
+    width: 100%;
+  }
+}
