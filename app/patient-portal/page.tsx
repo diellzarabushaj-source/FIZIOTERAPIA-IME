@@ -15,13 +15,20 @@ const safetyNotes = [
   "Dhimbje 7/10+ = ndalo dhe kontakto terapistin.",
 ];
 
+const errorMessages: Record<string, string> = {
+  invalid: "Kodi nuk është i saktë. Kontrolloje dhe provo përsëri.",
+  missing: "Shkruaj kodin që ta ka dhënë fizioterapeuti.",
+  "rate-limited": "Ke provuar shumë herë. Prit pak dhe provo përsëri.",
+  system: "Hyrja nuk është gati për momentin. Provo përsëri pak më vonë.",
+};
+
 export default async function PatientPortalPage({ searchParams }: { searchParams?: Promise<{ error?: string; code?: string }> }) {
   const session = await getCurrentPatientSession();
   if (session) redirect("/patient-dashboard");
 
   const params = await searchParams;
-  const error = params?.error;
-  const code = params?.code || "";
+  const errorMessage = params?.error ? errorMessages[params.error] : undefined;
+  const code = (params?.code || "").slice(0, 40);
 
   return (
     <main className="page patient-entry-page">
@@ -46,22 +53,28 @@ export default async function PatientPortalPage({ searchParams }: { searchParams
               className="fi-input patient-code-input"
               name="code"
               defaultValue={code}
-              placeholder="Shkruaj kodin këtu"
+              placeholder="P.sh. FI-1A2B3C4D5E6F"
               autoCapitalize="characters"
               autoComplete="one-time-code"
+              autoCorrect="off"
+              spellCheck={false}
               inputMode="text"
+              enterKeyHint="go"
+              maxLength={40}
+              aria-invalid={Boolean(errorMessage)}
+              aria-describedby={`patient-code-help${errorMessage ? " patient-code-error" : ""}`}
               autoFocus
               required
             />
+            <small id="patient-code-help" className="patient-entry-helper">
+              Mund ta shkruash me shkronja të vogla ose të mëdha; hapësirat hiqen automatikisht.
+            </small>
           </div>
 
-          {error === "invalid" && <div className="fi-alert danger">Kodi nuk është i saktë. Kontrolloje dhe provo përsëri.</div>}
-          {error === "missing" && <div className="fi-alert danger">Shkruaj kodin.</div>}
-          {error === "rate-limited" && <div className="fi-alert danger">Ke provuar shumë herë. Prit pak dhe provo përsëri.</div>}
-          {error === "system" && <div className="fi-alert danger">Hyrja nuk është gati për momentin. Provo përsëri pak më vonë.</div>}
+          {errorMessage && <div id="patient-code-error" className="fi-alert danger" role="alert">{errorMessage}</div>}
 
           <button className="button patient-entry-submit" type="submit">Hyr në planin tim</button>
-          <small className="patient-entry-helper">Nuk e ke kodin? Kontakto fizioterapeutin.</small>
+          <small className="patient-entry-helper">Mos e ndaj kodin publikisht. Nuk e ke kodin? Kontakto fizioterapeutin.</small>
         </form>
 
         <aside className="patient-entry-preview" aria-label="Si funksionon hyrja e pacientit">
