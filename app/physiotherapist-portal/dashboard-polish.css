@@ -35,7 +35,6 @@
 }
 
 .pd-nav-link,
-.pd-create-plan,
 .pd-secure-status {
   border-radius: 12px;
 }
@@ -45,7 +44,6 @@
 }
 
 .pd-nav-link:focus-visible,
-.pd-create-plan:focus-visible,
 .pd-content a:focus-visible,
 .pd-content button:focus-visible,
 .pd-topbar button:focus-visible,
@@ -86,6 +84,10 @@
   transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease;
 }
 
+.pd-content [class*="patientSummaryGrid"] {
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+}
+
 @media (hover: hover) and (pointer: fine) {
   .pd-content article:hover,
   .pd-content [class*="quickAction"]:hover {
@@ -109,22 +111,15 @@
   box-shadow: 0 0 0 4px rgba(15, 118, 110, 0.12);
 }
 
+@media (max-width: 1120px) {
+  .pd-content [class*="patientSummaryGrid"] {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
 @media (max-width: 980px) {
   .pd-sidebar {
     box-shadow: 0 12px 30px rgba(14, 37, 33, 0.12);
-  }
-
-  .pd-nav {
-    scroll-snap-type: x proximity;
-    scrollbar-width: none;
-  }
-
-  .pd-nav::-webkit-scrollbar {
-    display: none;
-  }
-
-  .pd-nav-link {
-    scroll-snap-align: start;
   }
 }
 
@@ -137,8 +132,8 @@
     min-height: 62px;
   }
 
-  .pd-create-plan {
-    min-height: 40px;
+  .pd-content [class*="patientSummaryGrid"] {
+    grid-template-columns: 1fr !important;
   }
 }
 
