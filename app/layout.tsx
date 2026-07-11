@@ -1,7 +1,8 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
 import { PublicSiteChrome } from "@/components/PublicSiteChrome";
 import { PublicSiteFooter } from "@/components/PublicSiteFooter";
+import { DEFAULT_DESCRIPTION, DEFAULT_TITLE, SITE_NAME, SITE_URL } from "@/lib/seo/site";
 import "./globals.css";
 import "./design-system.css";
 import "./brand.css";
@@ -33,28 +34,54 @@ import "./faq-explorer.css";
 import "./legal-pages.css";
 import "./data-deletion.css";
 
-const siteUrl = process.env.NEXT_PUBLIC_APP_URL || "https://fizioterapia-ime.vercel.app";
-
 export const metadata: Metadata = {
-  metadataBase: new URL(siteUrl),
-  title: "Fizioterapia Ime – Platformë digjitale për fizioterapi",
-  description: "Website dhe platformë digjitale për plane fizioterapie, udhëzime të qarta për pacientë dhe mbështetje për fizioterapeutë.",
-  alternates: { canonical: "/" },
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: DEFAULT_TITLE,
+    template: `%s | ${SITE_NAME}`,
+  },
+  description: DEFAULT_DESCRIPTION,
+  applicationName: SITE_NAME,
+  category: "health",
+  creator: SITE_NAME,
+  publisher: SITE_NAME,
+  referrer: "strict-origin-when-cross-origin",
+  formatDetection: { email: false, address: false, telephone: false },
   icons: { icon: "/brand-mark.svg", shortcut: "/brand-mark.svg", apple: "/app-icon.svg" },
+  manifest: "/manifest.webmanifest",
   openGraph: {
     type: "website",
     url: "/",
-    siteName: "Fizioterapia Ime",
-    title: "Fizioterapia Ime",
-    description: "Lëviz më mirë, jeto më mirë. Website dhe platformë moderne për fizioterapi digjitale.",
-    images: ["/app-icon.svg"],
+    siteName: SITE_NAME,
+    locale: "sq_AL",
+    title: DEFAULT_TITLE,
+    description: DEFAULT_DESCRIPTION,
+    images: [{ url: "/app-icon.svg", alt: SITE_NAME }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Fizioterapia Ime",
-    description: "Website dhe platformë moderne për fizioterapi digjitale.",
+    title: DEFAULT_TITLE,
+    description: DEFAULT_DESCRIPTION,
     images: ["/app-icon.svg"],
   },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+      "max-video-preview": -1,
+    },
+  },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  themeColor: "#174A73",
+  colorScheme: "light",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
