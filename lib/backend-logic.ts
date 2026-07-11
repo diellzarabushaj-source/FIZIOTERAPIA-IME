@@ -28,19 +28,37 @@ export function isAdminRole(role?: string | null) {
   return role === "owner" || role === "admin";
 }
 
+function configuredPatientSessionSecret(env: NodeJS.ProcessEnv = process.env) {
+  const explicitSecret = env.PATIENT_SESSION_SECRET?.trim() || "";
+  if (explicitSecret.length >= PATIENT_SESSION_SECRET_MIN_LENGTH) return explicitSecret;
+
+  // Production-safe compatibility fallback. The Supabase service role key is already
+  // a private, stable, server-only secret and is never exposed to the browser.
+  // A dedicated PATIENT_SESSION_SECRET remains preferred and can replace this at any time.
+  const serviceRoleKey = env.SUPABASE_SERVICE_ROLE_KEY?.trim() || "";
+  if (serviceRoleKey.length >= PATIENT_SESSION_SECRET_MIN_LENGTH) {
+    return createHmac("sha256", serviceRoleKey)
+      .update("fizioterapia-ime:patient-session-signing:v1")
+      .digest("hex");
+  }
+
+  return "";
+}
+
 export function patientSessionSigningConfigured(env: NodeJS.ProcessEnv = process.env) {
-  const secret = env.PATIENT_SESSION_SECRET?.trim() || "";
   if (env.NODE_ENV !== "production") return true;
-  return secret.length >= PATIENT_SESSION_SECRET_MIN_LENGTH;
+  return configuredPatientSessionSecret(env).length >= PATIENT_SESSION_SECRET_MIN_LENGTH;
 }
 
 export function getPatientSessionSecret(env: NodeJS.ProcessEnv = process.env) {
-  const secret = env.PATIENT_SESSION_SECRET?.trim() || "";
+  const secret = configuredPatientSessionSecret(env);
   if (secret.length >= PATIENT_SESSION_SECRET_MIN_LENGTH) return secret;
   if (env.NODE_ENV === "production") {
-    throw new Error(`PATIENT_SESSION_SECRET must contain at least ${PATIENT_SESSION_SECRET_MIN_LENGTH} characters in production.`);
+    throw new Error(
+      `Patient session signing requires PATIENT_SESSION_SECRET or a configured SUPABASE_SERVICE_ROLE_KEY with at least ${PATIENT_SESSION_SECRET_MIN_LENGTH} characters.`,
+    );
   }
-  return secret || "dev-only-patient-session-secret-change-me";
+  return "dev-only-patient-session-secret-change-me";
 }
 
 function sessionMac(code: string, expiresAt: number) {
@@ -84,7 +102,6 @@ export function parseOptionalText(value: FormDataEntryValue | null, maxLength = 
 export function parseBoundedNumber(value: FormDataEntryValue | null, fallback: number | null, min: number, max: number, label: string) {
   const raw = String(value ?? "").trim();
   if (!raw) return fallback;
-
   const parsed = Number(raw);
   if (!Number.isFinite(parsed) || parsed < min || parsed > max) {
     throw new Error(`${label} duhet të jetë ${min}–${max}.`);
@@ -118,9 +135,7 @@ export async function getActivePatientBySignedCode({
 }) {
   const normalizedCode = normalizePatientCode(code);
 
-  if (!verifyPatientCodeSignature(normalizedCode, signature)) {
-    return null;
-  }
+  if (!verifyPatientCodeSignature(normalizedCode, signature)) return null;
 
   const { data: patient } = await supabase
     .from("patients")
@@ -161,9 +176,7 @@ export async function requireAssignedPlanExercise({
     .eq("plans.patient_id", patientId)
     .eq("plans.status", "active");
 
-  if (aiOnly) {
-    query = query.eq("exercise_library.ai_enabled", true);
-  }
+  if (aiOnly) query = query.eq("exercise_library.ai_enabled", true);
 
   const { data: planExercise } = await query.maybeSingle();
   if (!planExercise) {
