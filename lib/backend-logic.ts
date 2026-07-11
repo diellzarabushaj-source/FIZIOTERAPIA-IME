@@ -38,118 +38,136 @@ export function getPatientSessionSecret(env: NodeJS.ProcessEnv = process.env) {
   const secret = env.PATIENT_SESSION_SECRET?.trim() || "";
   if (secret.length >= PATIENT_SESSION_SECRET_MIN_LENGTH) return secret;
   if (env.NODE_ENV === "production") {
-    throw new Error(
-      `PATIENT_SESSION_SECRET must contain at least ${PATIENT_SESSION_SECRET_MIN_LENGTH} characters in production.`,
-    );
+    throw new Error(`PATIENT_SESSION_SECRET must contain at least ${PATIENT_SESSION_SECRET_MIN_LENGTH} characters in production.`);
   }
-  return "fizioplan-dev-only-session-secret-change-me";
+  return secret || "dev-only-patient-session-secret-change-me";
 }
 
-export function normalizeOptionalText(value: unknown, maxLength = 500) {
-  const text = String(value ?? "").trim();
-  return text ? text.slice(0, maxLength) : null;
-}
-
-export function normalizeRequiredText(value: unknown, maxLength = 500) {
-  return String(value ?? "").trim().slice(0, maxLength);
-}
-
-export function normalizePainScore(value: unknown) {
-  const score = Number(value);
-  return Number.isInteger(score) && score >= 0 && score <= 10 ? score : null;
-}
-
-export function normalizeAiScore(value: unknown) {
-  const score = Number(value);
-  return Number.isFinite(score) && score >= 0 && score <= 100 ? Math.round(score) : null;
-}
-
-export function normalizeClinicalText(value: unknown, maxLength = MAX_CLINICAL_TEXT_LENGTH) {
-  return normalizeOptionalText(value, maxLength);
-}
-
-export function deriveAlertType({ painScore, aiScore, comment }: { painScore?: number | null; aiScore?: number | null; comment?: string | null }) {
-  if (typeof painScore === "number" && painScore >= HIGH_PAIN_THRESHOLD) return "high_pain" as const;
-  if (typeof aiScore === "number" && aiScore < LOW_AI_SCORE_THRESHOLD) return "low_ai_score" as const;
-  if (comment?.trim()) return "patient_message" as const;
-  return null;
-}
-
-export function signPatientCode(code: string, env: NodeJS.ProcessEnv = process.env) {
-  const issuedAt = Math.floor(Date.now() / 1000).toString();
-  const normalized = normalizePatientCode(code);
-  const payload = `${normalized}.${issuedAt}`;
-  const signature = createHmac("sha256", getPatientSessionSecret(env)).update(payload).digest("hex");
-  return `${payload}.${signature}`;
-}
-
-export function verifyPatientCodeSignature(value: string, env: NodeJS.ProcessEnv = process.env) {
-  const [code, issuedAt, signature] = String(value || "").split(".");
-  if (!code || !issuedAt || !signature) return null;
-  const normalized = normalizePatientCode(code);
-  const issuedAtNumber = Number(issuedAt);
-  const now = Math.floor(Date.now() / 1000);
-  if (!Number.isFinite(issuedAtNumber) || issuedAtNumber > now + 60) return null;
-  if (now - issuedAtNumber > PATIENT_SESSION_MAX_AGE_SECONDS) return null;
-  const payload = `${normalized}.${issuedAt}`;
-  const expected = createHmac("sha256", getPatientSessionSecret(env)).update(payload).digest("hex");
-  if (signature.length !== expected.length) return null;
-  if (!timingSafeEqual(Buffer.from(signature), Buffer.from(expected))) return null;
-  return normalized;
-}
-
-export async function getActivePatientByCode(supabase: SupabaseClient, code: string) {
+function sessionMac(code: string, expiresAt: number) {
   const normalizedCode = normalizePatientCode(code);
-  const { data: patient, error } = await supabase
+  return createHmac("sha256", getPatientSessionSecret())
+    .update(`${normalizedCode}.${expiresAt}`)
+    .digest("hex");
+}
+
+export function signPatientCode(
+  code: string,
+  expiresAt = Math.floor(Date.now() / 1000) + PATIENT_SESSION_MAX_AGE_SECONDS,
+) {
+  return `${expiresAt}.${sessionMac(code, expiresAt)}`;
+}
+
+export function verifyPatientCodeSignature(code: string, signature?: string | null) {
+  if (!code || !signature || !patientSessionSigningConfigured()) return false;
+  const [expiresRaw, mac] = signature.split(".");
+  const expiresAt = Number(expiresRaw);
+  if (!Number.isInteger(expiresAt) || expiresAt <= Math.floor(Date.now() / 1000) || !mac) return false;
+
+  const expected = sessionMac(code, expiresAt);
+  const expectedBuffer = Buffer.from(expected, "hex");
+  const actualBuffer = Buffer.from(mac, "hex");
+  if (expectedBuffer.length !== actualBuffer.length) return false;
+  return timingSafeEqual(expectedBuffer, actualBuffer);
+}
+
+export function parseRequiredText(value: FormDataEntryValue | null, label: string, maxLength = 200) {
+  const text = String(value || "").trim();
+  if (!text) throw new Error(`${label} është e detyrueshme.`);
+  return text.slice(0, maxLength);
+}
+
+export function parseOptionalText(value: FormDataEntryValue | null, maxLength = 500) {
+  const text = String(value || "").trim();
+  return text ? text.slice(0, maxLength) : "";
+}
+
+export function parseBoundedNumber(value: FormDataEntryValue | null, fallback: number | null, min: number, max: number, label: string) {
+  const raw = String(value ?? "").trim();
+  if (!raw) return fallback;
+
+  const parsed = Number(raw);
+  if (!Number.isFinite(parsed) || parsed < min || parsed > max) {
+    throw new Error(`${label} duhet të jetë ${min}–${max}.`);
+  }
+  return parsed;
+}
+
+export function normalizeFrequency(value: FormDataEntryValue | null) {
+  const frequency = parseOptionalText(value, 80);
+  return frequency || "Çdo ditë";
+}
+
+export function getAiAlertType(score: number) {
+  if (score < LOW_AI_SCORE_THRESHOLD) return "contact_physio";
+  if (score < 80) return "needs_attention";
+  return "good";
+}
+
+export async function getActivePatientBySignedCode({
+  supabase,
+  code,
+  signature,
+  sessionToken,
+  requireRegisteredSession = false,
+}: {
+  supabase: SupabaseClient;
+  code: string;
+  signature?: string | null;
+  sessionToken?: string | null;
+  requireRegisteredSession?: boolean;
+}) {
+  const normalizedCode = normalizePatientCode(code);
+
+  if (!verifyPatientCodeSignature(normalizedCode, signature)) {
+    return null;
+  }
+
+  const { data: patient } = await supabase
     .from("patients")
-    .select("id, patient_code, patient_username, status")
+    .select("id,patient_username,patient_code,status")
     .eq("patient_code", normalizedCode)
     .eq("status", "active")
     .maybeSingle<ActivePatientSession>();
-  if (error || !patient) return null;
+
+  if (!patient) return null;
+
+  if (requireRegisteredSession) {
+    const registered = await validatePatientSession({
+      supabase,
+      patientId: patient.id,
+      token: sessionToken,
+    });
+    if (!registered) return null;
+  }
+
   return patient;
 }
 
-export async function requireAssignedPlanExercise(
-  supabase: SupabaseClient,
-  patientId: string,
-  planExerciseId: string,
-  options: { requireAiEnabled?: boolean } = {},
-) {
-  const { data, error } = await supabase
+export async function requireAssignedPlanExercise({
+  supabase,
+  patientId,
+  planExerciseId,
+  aiOnly = false,
+}: {
+  supabase: SupabaseClient;
+  patientId: string;
+  planExerciseId: string;
+  aiOnly?: boolean;
+}) {
+  let query = supabase
     .from("plan_exercises")
-    .select("id, plan_id, exercise_id, plans!inner(patient_id,status), exercise_library(ai_enabled)")
+    .select("id,plans!inner(patient_id,status),exercise_library(ai_enabled)")
     .eq("id", planExerciseId)
     .eq("plans.patient_id", patientId)
-    .eq("plans.status", "active")
-    .maybeSingle<{
-      id: string;
-      plan_id: string;
-      exercise_id: string;
-      plans?: { patient_id?: string; status?: string } | null;
-      exercise_library?: { ai_enabled?: boolean } | null;
-    }>();
-  if (error || !data) return null;
-  if (options.requireAiEnabled && data.exercise_library?.ai_enabled !== true) return null;
-  return data;
-}
+    .eq("plans.status", "active");
 
-export async function validateSignedPatientSession(
-  supabase: SupabaseClient,
-  signedCode: string,
-  registryToken?: string | null,
-): Promise<ActivePatientSession | null> {
-  const code = verifyPatientCodeSignature(signedCode);
-  if (!code) return null;
-  const patient = await getActivePatientByCode(supabase, code);
-  if (!patient) return null;
-  if (registryToken) {
-    const validRegistrySession = await validatePatientSession({
-      supabase,
-      token: registryToken,
-      patientId: patient.id,
-    });
-    if (!validRegistrySession) return null;
+  if (aiOnly) {
+    query = query.eq("exercise_library.ai_enabled", true);
   }
-  return patient;
+
+  const { data: planExercise } = await query.maybeSingle();
+  if (!planExercise) {
+    throw new Error(aiOnly ? "Ky ushtrim nuk ka AI check aktiv për këtë pacient." : "Ky ushtrim nuk është caktuar në planin aktiv të pacientit.");
+  }
+  return planExercise;
 }
