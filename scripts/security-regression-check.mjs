@@ -28,12 +28,13 @@ const checks = [
     file: "lib/backend-logic.ts",
     mustContain: [
       "PATIENT_SESSION_MAX_AGE_SECONDS",
+      "PATIENT_SESSION_SECRET_MIN_LENGTH",
       "timingSafeEqual",
-      "PATIENT_SESSION_SECRET is required in production",
+      "must contain at least",
       ".eq(\"plans.status\", \"active\")",
     ],
     mustNotContain: ["CLERK_SECRET_KEY ||", "SUPABASE_SERVICE_ROLE_KEY ||"],
-    label: "Patient sessions expire, fail closed, and active-plan ownership is enforced",
+    label: "Patient sessions expire, require a dedicated strong secret, fail closed, and enforce active-plan ownership",
   },
   {
     file: "app/api/patient/access-qr/[code]/route.ts",
