@@ -1,8 +1,7 @@
-import { requirePhysioActor } from "@/lib/backend/access";
 import { DashboardShell } from "./DashboardShell";
 import "./dashboard.css";
+import "./dashboard-polish.css";
 
-export default async function PhysiotherapistPortalLayout({ children }: { children: React.ReactNode }) {
-  await requirePhysioActor();
+export default function PhysiotherapistPortalLayout({ children }: { children: React.ReactNode }) {
   return <DashboardShell>{children}</DashboardShell>;
 }
