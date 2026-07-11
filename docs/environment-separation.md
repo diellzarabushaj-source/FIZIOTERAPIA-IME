@@ -82,7 +82,7 @@ Environment variables must be assigned to the correct Vercel scope. A value shou
 4. Review migration for destructive operations.
 5. Apply to production.
 6. Verify schema, RLS, functions and security advisors.
-7. Apply all migrations through `20260711_exercise_library_readiness.sql`.
+7. Apply all migrations through `20260711_zz_exercise_library_readiness.sql`.
 8. Confirm `/api/readiness` returns `ready` with schema version `20260711.4`.
 9. Set `PATIENT_SESSION_REGISTRY_ENABLED=1` only after the auth-session migration is applied and the latest readiness check passes.
 
