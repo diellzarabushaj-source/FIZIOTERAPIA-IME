@@ -76,6 +76,14 @@ export function PatientSessionClient({
   }, [sessionStart, sessionStarted]);
 
   useEffect(() => {
+    if (!sessionStarted) return;
+    const elapsedMinutesInterval = window.setInterval(() => {
+      setElapsedMinutes(Math.max(1, Math.round((Date.now() - sessionStart) / 60000)));
+    }, 60_000);
+    return () => window.clearInterval(elapsedMinutesInterval);
+  }, [sessionStart, sessionStarted]);
+
+  useEffect(() => {
     if (!timerRunning) return;
     const interval = window.setInterval(() => {
       setTimer((value) => {
