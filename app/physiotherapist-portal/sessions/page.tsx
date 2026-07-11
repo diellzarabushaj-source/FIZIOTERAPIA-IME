@@ -3,7 +3,6 @@ import {
   ArrowRight,
   CalendarCheck2,
   CalendarClock,
-  CheckCircle2,
   Clock3,
   Play,
   UserRound,
@@ -89,16 +88,26 @@ export default async function SessionsPage({ searchParams }: { searchParams: Sea
   const now = new Date();
   const { start, end } = getUtcDayRange(now);
 
-  const sessionOptions = view === "today"
-    ? { from: start, to: end, limit: 150, ascending: true }
+  const sessionResult = view === "today"
+    ? await listClinicalSessionsForActor(actor, {
+        from: start,
+        to: end,
+        limit: 150,
+        ascending: true,
+      })
     : view === "upcoming"
-      ? { from: now, statuses: ["planned", "in_progress"] as const, limit: 150, ascending: true }
-      : { statuses: ["completed", "cancelled"] as const, limit: 150, ascending: false };
+      ? await listClinicalSessionsForActor(actor, {
+          from: now,
+          statuses: ["planned", "in_progress"],
+          limit: 150,
+          ascending: true,
+        })
+      : await listClinicalSessionsForActor(actor, {
+          statuses: ["completed", "cancelled"],
+          limit: 150,
+          ascending: false,
+        });
 
-  const sessionResult = await listClinicalSessionsForActor(actor, {
-    ...sessionOptions,
-    statuses: sessionOptions.statuses ? [...sessionOptions.statuses] : undefined,
-  });
   if (sessionResult.ok === false) throw new Error(sessionResult.error.message);
   const sessions = sessionResult.data;
 
