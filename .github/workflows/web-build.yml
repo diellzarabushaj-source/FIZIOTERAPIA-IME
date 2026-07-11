@@ -16,7 +16,7 @@ concurrency:
   cancel-in-progress: true
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   build:
@@ -25,13 +25,34 @@ jobs:
     timeout-minutes: 25
 
     steps:
-      - name: Checkout repository
+      - name: Checkout source branch
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref || github.ref_name }}
+          fetch-depth: 0
 
       - name: Setup Node.js 24
         uses: actions/setup-node@v4
         with:
           node-version: 24
+
+      - name: Apply targeted navigation and purity fixes
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+        run: node scripts/codemod-next-links.mjs
+
+      - name: Commit targeted fixes
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+        shell: bash
+        run: |
+          if git diff --quiet; then
+            echo "No targeted fixes were needed."
+          else
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add app apps components
+            git commit -m "fix: satisfy Next navigation and React purity rules"
+            git push origin "HEAD:${GITHUB_HEAD_REF}"
+          fi
 
       - name: Use repository npm version
         run: npm install --global npm@10.9.2 --no-audit --no-fund
