@@ -111,8 +111,6 @@ export default function App() {
   useEffect(() => {
     if (screen !== 'ai-checking') return;
 
-    setCountdown(3);
-    setIsAnalyzing(false);
     let count = 3;
 
     const interval = setInterval(() => {
@@ -211,6 +209,12 @@ export default function App() {
     } else {
       void saveResult(score);
     }
+  }
+
+  function startAiCheck() {
+    setCountdown(3);
+    setIsAnalyzing(false);
+    setScreen('ai-checking');
   }
 
   return (
@@ -344,7 +348,7 @@ export default function App() {
               <View style={styles.safetyBox}>
                 <Text style={styles.safetyText}>AI mat vetëm cilësinë e lëvizjes. Nuk diagnostikon dhe nuk ndryshon planin.</Text>
               </View>
-              <TouchableOpacity style={styles.primaryButton} onPress={() => setScreen('ai-checking')} activeOpacity={0.86}>
+              <TouchableOpacity style={styles.primaryButton} onPress={startAiCheck} activeOpacity={0.86}>
                 <Text style={styles.primaryButtonText}>Fillo kontrollin</Text>
               </TouchableOpacity>
             </View>
