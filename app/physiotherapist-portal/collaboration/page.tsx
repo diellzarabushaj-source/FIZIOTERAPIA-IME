@@ -83,7 +83,7 @@ function HandoffCard({
   direction,
 }: {
   handoff: PatientHandoffView;
-  direction: "incoming" | "outgoing" | "history";
+  direction: "incoming" | "outgoing";
 }) {
   const counterpart = direction === "incoming" ? handoff.fromPhysio : handoff.toPhysio;
   const canOpenPatient = handoff.status === "accepted" && direction === "incoming";
@@ -163,8 +163,13 @@ export default async function CollaborationPage({
   const incoming = handoffs.filter((item) => item.to_physio_id === actor.profileId && item.status === "pending");
   const outgoing = handoffs.filter((item) => item.from_physio_id === actor.profileId && item.status === "pending");
   const history = handoffs.filter((item) => item.status !== "pending");
-  const schemaReady = handoffsResult.ok || handoffsResult.error.code !== "SCHEMA_NOT_READY";
-  const error = one(params.error) || (!directoryResult.ok ? directoryResult.error.message : "") || (!patientsResult.ok ? patientsResult.error.message : "");
+  const handoffFeatureReady = handoffsResult.ok;
+  const schemaNotReady = !handoffsResult.ok && handoffsResult.error.code === "SCHEMA_NOT_READY";
+  const handoffLoadError = !handoffsResult.ok && !schemaNotReady ? handoffsResult.error.message : "";
+  const error = one(params.error)
+    || handoffLoadError
+    || (!directoryResult.ok ? directoryResult.error.message : "")
+    || (!patientsResult.ok ? patientsResult.error.message : "");
 
   return (
     <main className={styles.page}>
@@ -186,7 +191,7 @@ export default async function CollaborationPage({
       {one(params.responded) === "accepted" && <div className={styles.alertSuccess} role="status">Pacienti dhe kartela klinike u transferuan me sukses.</div>}
       {one(params.responded) === "declined" && <div className={styles.alertNotice} role="status">Kërkesa u refuzua. Pacienti mbetet te fizioterapeuti aktual.</div>}
       {one(params.cancelled) === "1" && <div className={styles.alertNotice} role="status">Kërkesa u anulua.</div>}
-      {!schemaReady && <div className={styles.alertNotice} role="status">Kontaktet janë aktive. Transferimi aktivizohet pasi të aplikohet migrimi <code>20260711_zzz_patient_handoffs.sql</code>.</div>}
+      {schemaNotReady && <div className={styles.alertNotice} role="status">Kontaktet janë aktive. Transferimi aktivizohet pasi të aplikohet migrimi <code>20260711_zzz_patient_handoffs.sql</code>.</div>}
 
       <section className={styles.primaryGrid}>
         <article className={styles.panel}>
@@ -221,7 +226,7 @@ export default async function CollaborationPage({
               <input type="checkbox" name="consentConfirmed" required />
               <span><strong>Pacienti ka dhënë pëlqimin</strong><small>Konfirmoj se pacienti e di kujt po i kalon kartela dhe të dhënat klinike.</small></span>
             </label>
-            <button className={styles.sendButton} type="submit" disabled={!schemaReady || !patients.length || !directory.length}>
+            <button className={styles.sendButton} type="submit" disabled={!handoffFeatureReady || !patients.length || !directory.length}>
               <Send size={17} aria-hidden="true" /> Dërgo kërkesën
             </button>
             {!patients.length && <small>Nuk ke pacient aktiv për transferim.</small>}
@@ -268,7 +273,13 @@ export default async function CollaborationPage({
         <article className={styles.panel}>
           <div className={styles.panelHeading}><span className={styles.iconBox}><ShieldCheck size={20} aria-hidden="true" /></span><div><span className={styles.eyebrow}>Audit trail</span><h2>Historiku</h2></div></div>
           <div className={styles.cardList}>
-            {history.slice(0, 20).map((handoff) => <HandoffCard key={handoff.id} handoff={handoff} direction="history" />)}
+            {history.slice(0, 20).map((handoff) => (
+              <HandoffCard
+                key={handoff.id}
+                handoff={handoff}
+                direction={handoff.to_physio_id === actor.profileId ? "incoming" : "outgoing"}
+              />
+            ))}
             {!history.length && <div className={styles.emptyState}><ShieldCheck size={26} aria-hidden="true" /><strong>Nuk ka transferime të përfunduara</strong></div>}
           </div>
         </article>
