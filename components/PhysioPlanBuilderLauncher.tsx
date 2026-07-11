@@ -10,7 +10,7 @@ export function PhysioPlanBuilderLauncher() {
     <a className="physio-plan-builder-launcher" href="/physiotherapist-portal/plan-builder" aria-label="Hap Clinical Plan Builder">
       <span>＋</span>
       <b>Krijo plan</b>
-      <small>AI sugjeron · PT aprovon</small>
+      <small>Sugjerime klinike · PT aprovon</small>
     </a>
   );
 }
