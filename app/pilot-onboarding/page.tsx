@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { BrandMark } from "@/components/BrandMark";
 
 const pilotSteps = [
@@ -53,10 +54,10 @@ export default function PilotOnboardingPage() {
       <nav className="top-nav">
         <BrandMark />
         <div className="nav-actions">
-          <a href="/">Home</a>
-          <a href="/qa-checklist">QA Checklist</a>
-          <a href="/clinic-use">Clinic guide</a>
-          <a href="/support">Support</a>
+          <Link href="/">Home</Link>
+          <Link href="/qa-checklist">QA Checklist</Link>
+          <Link href="/clinic-use">Clinic guide</Link>
+          <Link href="/support">Support</Link>
         </div>
       </nav>
 

@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { AuthControls } from "@/components/AuthControls";
 import { BrandMark } from "@/components/BrandMark";
 import {
@@ -45,9 +46,9 @@ export default function ProductFlowPage() {
       <nav className="top-nav landing-nav">
         <BrandMark />
         <div className="nav-actions">
-          <a href="/">Home</a>
-          <a href="/physiotherapist-portal">Fizioterapeut</a>
-          <a href="/patient-portal">Pacient</a>
+          <Link href="/">Home</Link>
+          <Link href="/physiotherapist-portal">Fizioterapeut</Link>
+          <Link href="/patient-portal">Pacient</Link>
           <AuthControls />
         </div>
       </nav>
@@ -59,8 +60,8 @@ export default function ProductFlowPage() {
           Arkitektura kryesore: AI sugjeron, fizioterapeuti editon dhe aprovon, pacienti ndjek vetëm planin e miratuar.
         </p>
         <div className="portal-actions">
-          <a className="button" href="/physiotherapist-portal#new-patient">Krijo plan si fizioterapeut</a>
-          <a className="button secondary" href="/patient-portal">Shiko hyrjen e pacientit</a>
+          <Link className="button" href="/physiotherapist-portal#new-patient">Krijo plan si fizioterapeut</Link>
+          <Link className="button secondary" href="/patient-portal">Shiko hyrjen e pacientit</Link>
         </div>
       </section>
 

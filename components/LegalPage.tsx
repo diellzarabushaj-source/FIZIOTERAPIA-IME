@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type { ReactNode } from "react";
 
 type LegalSection = {
@@ -128,7 +129,7 @@ export function LegalPage({ badge, title, intro, lastUpdated = "Korrik 2026", se
               <h2>{title}</h2>
               <p>Përditësuar së fundmi: {lastUpdated}</p>
             </div>
-            <a href="/">Kthehu në ballinë</a>
+            <Link href="/">Kthehu në ballinë</Link>
           </div>
 
           <div className="legal-note">
