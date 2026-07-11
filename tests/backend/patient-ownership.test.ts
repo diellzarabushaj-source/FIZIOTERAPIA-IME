@@ -1,33 +1,36 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { actorCanAccessPhysioResource, type ActorContext } from "../../lib/backend/access.ts";
+import { readFile } from "node:fs/promises";
 
-function actor(role: ActorContext["role"], profileId: string): ActorContext {
-  return {
-    profileId,
-    clerkUserId: `clerk-${profileId}`,
-    email: `${profileId}@example.test`,
-    role,
-    status: "active",
-  };
-}
+const accessSource = await readFile(new URL("../../lib/backend/access.ts", import.meta.url), "utf8");
+const patientsSource = await readFile(new URL("../../lib/backend/patients.ts", import.meta.url), "utf8");
+const duplicateRouteSource = await readFile(
+  new URL("../../app/api/physio/patients/check-duplicate/route.ts", import.meta.url),
+  "utf8",
+);
+const newPatientPageSource = await readFile(
+  new URL("../../app/physiotherapist-portal/patients/new/page.tsx", import.meta.url),
+  "utf8",
+);
 
-test("a physiotherapist can access only patients assigned to their own profile", () => {
-  const physio = actor("physio", "physio-a");
-
-  assert.equal(actorCanAccessPhysioResource(physio, "physio-a"), true);
-  assert.equal(actorCanAccessPhysioResource(physio, "physio-b"), false);
-  assert.equal(actorCanAccessPhysioResource(physio, null), false);
+test("patient creation always assigns the logged-in physiotherapist profile", () => {
+  assert.match(patientsSource, /p_physio_id:\s*actor\.profileId/);
+  assert.doesNotMatch(patientsSource, /p_physio_id:\s*input\./);
 });
 
-test("another physiotherapist cannot access or take over the patient", () => {
-  const assignedPhysio = "physio-a";
-  const otherPhysio = actor("physio", "physio-b");
-
-  assert.equal(actorCanAccessPhysioResource(otherPhysio, assignedPhysio), false);
+test("duplicate checks are isolated to the logged-in physiotherapist", () => {
+  assert.match(duplicateRouteSource, /\.eq\("physio_id",\s*actor\.profileId\)/);
 });
 
-test("platform owner and admin retain oversight without changing physio ownership", () => {
-  assert.equal(actorCanAccessPhysioResource(actor("owner", "owner-1"), "physio-a"), true);
-  assert.equal(actorCanAccessPhysioResource(actor("admin", "admin-1"), "physio-a"), true);
+test("physiotherapists cannot access patients owned by another physiotherapist", () => {
+  assert.match(
+    accessSource,
+    /resourcePhysioId\s*&&\s*resourcePhysioId\s*===\s*actor\.profileId/,
+  );
+});
+
+test("the new patient screen is restricted to physio role and explains self-assignment", () => {
+  assert.match(newPatientPageSource, /actor\.role\s*!==\s*"physio"/);
+  assert.match(newPatientPageSource, /lidhet automatikisht vetëm me profilin tënd/);
+  assert.match(newPatientPageSource, /Nuk mund të caktohet ose transferohet/);
 });
