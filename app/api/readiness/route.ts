@@ -44,6 +44,7 @@ export async function GET(request: Request) {
         ...common,
         reason: readiness.reason,
         missingTables: readiness.missingTables,
+        missingColumns: readiness.missingColumns,
         missingFunctions: readiness.missingFunctions,
         checkedAt: readiness.checkedAt,
         deploymentVersion: process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 12) || "unknown",
