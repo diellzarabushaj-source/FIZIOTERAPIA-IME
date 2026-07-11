@@ -20,6 +20,7 @@ const requiredPublicRoutes = [
   "/final-handoff",
   "/patient-handout",
   "/pilot-feedback",
+  "/patient",
   "/patient-portal",
   "/privacy",
   "/terms",
@@ -44,6 +45,7 @@ const requiredApiRoutes = [
   ["/api/mobile/health", join(appDir, "api", "mobile", "health", "route.ts")],
   ["/api/mobile/patient-session", join(appDir, "api", "mobile", "patient-session", "route.ts")],
   ["/api/mobile/save-progress", join(appDir, "api", "mobile", "save-progress", "route.ts")],
+  ["/api/patient/dashboard", join(appDir, "api", "patient", "dashboard", "route.ts")],
 ];
 
 const dynamicRoutes = new Set([
