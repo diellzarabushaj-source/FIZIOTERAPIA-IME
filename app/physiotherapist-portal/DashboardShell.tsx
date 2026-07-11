@@ -3,6 +3,7 @@ import { Activity, ShieldCheck } from "lucide-react";
 import { AuthControls } from "@/components/AuthControls";
 import { PhysioDashboardNav } from "@/components/PhysioDashboardNav";
 import { PhysioGlobalSearch } from "@/components/PhysioGlobalSearch";
+import { PhysioQuickActions } from "@/components/PhysioQuickActions";
 import { requirePhysioActor } from "@/lib/backend/access";
 
 export async function DashboardShell({ children }: { children: React.ReactNode }) {
@@ -53,6 +54,7 @@ export async function DashboardShell({ children }: { children: React.ReactNode }
           </div>
           <PhysioGlobalSearch />
           <div className="pd-topbar-actions">
+            <PhysioQuickActions />
             <span className="pd-secure-status"><ShieldCheck size={16} aria-hidden="true" /> Qasje e sigurt</span>
             <AuthControls />
           </div>
