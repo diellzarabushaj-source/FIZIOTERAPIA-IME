@@ -21,11 +21,12 @@ test("mobile navigation uses a drawer instead of horizontal route scrolling", as
 test("mobile navigation exposes only durable clinical sections", async () => {
   const component = await source("components/PhysioDashboardNav.tsx");
 
-  for (const destination of ["Përmbledhje", "Alarmet", "Pacientët", "Programet", "Ushtrimet", "Pagesat"]) {
+  for (const destination of ["Përmbledhje", "Alarmet", "Pacientët", "Seancat", "Programet", "Ushtrimet", "Pagesat"]) {
     assert.match(component, new RegExp(destination));
   }
   assert.doesNotMatch(component, /label: "Pacient i ri"/);
   assert.match(component, /Krijo plan të ri/);
+  assert.match(component, /"\/physiotherapist-portal\/sessions"/);
 });
 
 test("mobile navigation styles are loaded after dashboard polish", async () => {
