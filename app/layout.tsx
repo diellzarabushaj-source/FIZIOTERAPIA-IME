@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
 import { PublicSiteChrome } from "@/components/PublicSiteChrome";
 import { PublicSiteFooter } from "@/components/PublicSiteFooter";
+import { PostHogAnalytics } from "@/components/PostHogAnalytics";
 import "./globals.css";
 import "./design-system.css";
 import "./brand.css";
@@ -54,6 +55,6 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   const clerkConfigured = Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY);
-  const content = <><PublicSiteChrome />{children}<PublicSiteFooter /></>;
+  const content = <><PostHogAnalytics /><PublicSiteChrome />{children}<PublicSiteFooter /></>;
   return <html lang="sq"><body>{clerkConfigured ? <ClerkProvider>{content}</ClerkProvider> : content}</body></html>;
 }
