@@ -54,6 +54,8 @@ const strictContentSecurityPolicy = [
   "media-src 'self' blob: https:",
   "worker-src 'self' blob:",
   "frame-src 'self' https://*.clerk.accounts.dev",
+  "report-uri /api/security/csp-report",
+  "report-to csp-endpoint",
   ...(isDevelopment ? [] : ["upgrade-insecure-requests"]),
 ].join("; ");
 
@@ -68,7 +70,10 @@ const securityHeaders = [
   { key: "Content-Security-Policy", value: contentSecurityPolicy },
   ...(isDevelopment
     ? []
-    : [{ key: "Content-Security-Policy-Report-Only", value: strictContentSecurityPolicy }]),
+    : [
+        { key: "Reporting-Endpoints", value: 'csp-endpoint="/api/security/csp-report"' },
+        { key: "Content-Security-Policy-Report-Only", value: strictContentSecurityPolicy },
+      ]),
 ];
 
 const privateNoIndexHeaders = [

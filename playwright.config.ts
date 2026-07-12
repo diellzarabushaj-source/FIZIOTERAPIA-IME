@@ -1,31 +1,32 @@
-import { defineConfig, devices } from '@playwright/test';
+import { defineConfig, devices } from "@playwright/test";
 
-const baseURL = process.env.PLAYWRIGHT_BASE_URL ?? 'https://fizioterapia-ime.vercel.app';
+const baseURL = process.env.PLAYWRIGHT_BASE_URL ?? "https://fizioterapia-ime.vercel.app";
 
 export default defineConfig({
-  testDir: './tests/e2e',
+  testDir: "./tests/e2e",
   fullyParallel: true,
   forbidOnly: Boolean(process.env.CI),
   retries: process.env.CI ? 2 : 0,
   workers: process.env.CI ? 1 : undefined,
   reporter: process.env.CI
-    ? [['html', { open: 'never' }], ['github']]
-    : [['list'], ['html', { open: 'never' }]],
+    ? [["html", { open: "never" }], ["github"]]
+    : [["list"], ["html", { open: "never" }]],
+  expect: { timeout: 10_000 },
   use: {
     baseURL,
-    trace: 'on-first-retry',
-    screenshot: 'only-on-failure',
-    video: 'retain-on-failure',
+    trace: "on-first-retry",
+    screenshot: "only-on-failure",
+    video: "retain-on-failure",
     ignoreHTTPSErrors: false,
+    actionTimeout: 15_000,
+    navigationTimeout: 30_000,
   },
   projects: [
-    {
-      name: 'desktop-chromium',
-      use: { ...devices['Desktop Chrome'] },
-    },
-    {
-      name: 'mobile-chromium',
-      use: { ...devices['Pixel 7'] },
-    },
+    { name: "desktop-chromium", use: { ...devices["Desktop Chrome"] } },
+    { name: "desktop-firefox", use: { ...devices["Desktop Firefox"] } },
+    { name: "desktop-webkit", use: { ...devices["Desktop Safari"] } },
+    { name: "mobile-chromium", use: { ...devices["Pixel 7"] } },
+    { name: "mobile-webkit", use: { ...devices["iPhone 13"] } },
+    { name: "tablet-webkit", use: { ...devices["iPad Pro 11"] } },
   ],
 });

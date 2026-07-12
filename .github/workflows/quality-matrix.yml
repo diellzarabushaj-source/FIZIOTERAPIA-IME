@@ -1,0 +1,90 @@
+name: Quality Matrix
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  code-quality:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run check:all
+
+  cross-browser-e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    env:
+      PLAYWRIGHT_BASE_URL: ${{ vars.PLAYWRIGHT_BASE_URL || 'https://fizioterapia-ime.vercel.app' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm install --no-save --package-lock=false @playwright/test@1.55.0
+      - run: npx playwright install --with-deps chromium firefox webkit
+      - run: npm run test:e2e
+      - if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 14
+
+  lighthouse:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      TARGET_URL: ${{ vars.PLAYWRIGHT_BASE_URL || 'https://fizioterapia-ime.vercel.app' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Run Lighthouse CI
+        run: npx --yes @lhci/cli@0.14.0 autorun --collect.url="$TARGET_URL" --collect.numberOfRuns=2 --assert.preset=lighthouse:recommended --upload.target=temporary-public-storage
+
+  zap-baseline:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: OWASP ZAP baseline scan
+        uses: zaproxy/action-baseline@v0.12.0
+        with:
+          target: ${{ vars.PLAYWRIGHT_BASE_URL || 'https://fizioterapia-ime.vercel.app' }}
+          rules_file_name: .zap/rules.tsv
+          cmd_options: '-a -j'
+          allow_issue_writing: false
+
+  controlled-load-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      TARGET_URL: ${{ vars.PLAYWRIGHT_BASE_URL || 'https://fizioterapia-ime.vercel.app' }}
+      K6_VUS: '3'
+      K6_DURATION: '30s'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run low-impact k6 smoke test
+        uses: grafana/k6-action@v0.3.1
+        with:
+          filename: tests/load/smoke.js
