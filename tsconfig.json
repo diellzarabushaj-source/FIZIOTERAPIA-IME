@@ -18,5 +18,5 @@
     "paths": { "@/*": ["./*"] }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", ".next/dev/types/**/*.ts"],
-  "exclude": ["node_modules", "apps/mobile-app", "apps/studio"]
+  "exclude": ["node_modules", "apps/mobile-app", "apps/studio", "playwright.config.ts", "tests/e2e"]
 }

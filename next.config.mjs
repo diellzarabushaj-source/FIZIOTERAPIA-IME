@@ -43,6 +43,36 @@ const securityHeaders = [
   },
 ];
 
+const privateNoIndexHeaders = [
+  { key: "X-Robots-Tag", value: "noindex, nofollow, noarchive, nosnippet" },
+  { key: "Cache-Control", value: "private, no-store, max-age=0" },
+];
+
+const privateRouteSources = [
+  "/patient",
+  "/patient/:path*",
+  "/patient-dashboard",
+  "/patient-dashboard/:path*",
+  "/patient-portal",
+  "/patient-portal/:path*",
+  "/patient-access",
+  "/patient-access/:path*",
+  "/patient-session",
+  "/patient-session/:path*",
+  "/physiotherapist-portal",
+  "/physiotherapist-portal/:path*",
+  "/physiotherapist-dashboard",
+  "/physiotherapist-dashboard/:path*",
+  "/owner-hidden",
+  "/owner-hidden/:path*",
+  "/reports",
+  "/reports/:path*",
+  "/sign-in",
+  "/sign-in/:path*",
+  "/sign-up",
+  "/sign-up/:path*",
+];
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   poweredByHeader: false,
@@ -57,7 +87,10 @@ const nextConfig = {
     serverActions: { bodySizeLimit: "6mb" },
   },
   async headers() {
-    return [{ source: "/(.*)", headers: securityHeaders }];
+    return [
+      { source: "/(.*)", headers: securityHeaders },
+      ...privateRouteSources.map((source) => ({ source, headers: privateNoIndexHeaders })),
+    ];
   },
 };
 
