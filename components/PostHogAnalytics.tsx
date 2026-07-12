@@ -13,7 +13,15 @@ declare global {
 }
 
 const POSTHOG_KEY = process.env.NEXT_PUBLIC_POSTHOG_KEY;
-const POSTHOG_HOST = (process.env.NEXT_PUBLIC_POSTHOG_HOST || "https://eu.i.posthog.com").replace(/\/$/, "");
+const POSTHOG_HOST = (process.env.NEXT_PUBLIC_POSTHOG_HOST || "https://us.i.posthog.com").replace(/\/$/, "");
+const TOKEN_LIKE_SEGMENT = /^(?:\d{4,}|[a-f0-9-]{12,}|[A-Za-z0-9_-]{16,})$/i;
+
+function privacySafePath(pathname: string) {
+  return pathname
+    .split("/")
+    .map((segment) => (TOKEN_LIKE_SEGMENT.test(segment) ? ":id" : segment))
+    .join("/");
+}
 
 export function PostHogAnalytics() {
   const pathname = usePathname();
@@ -29,7 +37,7 @@ export function PostHogAnalytics() {
       window.posthog.init(POSTHOG_KEY, {
         api_host: POSTHOG_HOST,
         capture_pageview: false,
-        capture_pageleave: true,
+        capture_pageleave: false,
         autocapture: false,
         disable_session_recording: true,
         person_profiles: "identified_only",
@@ -49,6 +57,7 @@ export function PostHogAnalytics() {
 
     const script = document.createElement("script");
     script.async = true;
+    script.crossOrigin = "anonymous";
     script.src = `${POSTHOG_HOST.replace(".i.posthog.com", "-assets.i.posthog.com")}/static/array.js`;
     script.onload = initialize;
     script.onerror = () => console.warn("PostHog analytics failed to load.");
@@ -63,9 +72,10 @@ export function PostHogAnalytics() {
   useEffect(() => {
     if (!ready || !window.posthog || !pathname) return;
 
+    const safePath = privacySafePath(pathname);
     window.posthog.capture("$pageview", {
-      $current_url: `${window.location.origin}${pathname}`,
-      page_path: pathname,
+      $current_url: `${window.location.origin}${safePath}`,
+      $pathname: safePath,
     });
   }, [pathname, ready]);
 
