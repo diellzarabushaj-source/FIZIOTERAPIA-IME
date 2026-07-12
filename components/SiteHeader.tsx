@@ -11,6 +11,7 @@ const links = [
   { href: "/clinic-use", label: "Si funksionon", key: "clinic" },
   { href: "/per-fizioterapeutin", label: "Për fizioterapeutin", key: "physio" },
   { href: "/per-pacientin", label: "Për pacientin", key: "patient" },
+  { href: "/blog", label: "Blog", key: "blog" },
   { href: "/cmimi", label: "Çmimi", key: "pricing" },
   { href: "/support", label: "Ndihmë", key: "support" },
 ] as const;
@@ -18,6 +19,7 @@ const links = [
 function linkIsActive(pathname: string, key: (typeof links)[number]["key"]) {
   return (
     (key === "support" && pathname === "/support") ||
+    (key === "blog" && pathname.startsWith("/blog")) ||
     (key === "pricing" && pathname === "/cmimi") ||
     (key === "patient" && pathname === "/per-pacientin") ||
     (key === "physio" && pathname === "/per-fizioterapeutin") ||

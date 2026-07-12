@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { UiIcon, type UiIconName } from "@/components/UiIcon";
 
 type FaqItem = {
   question: string;
@@ -8,15 +9,15 @@ type FaqItem = {
   category?: string | null;
 };
 
-const categoryIcons: Record<string, string> = {
-  "Të gjitha": "✨",
-  Pacienti: "📱",
-  Fizioterapeuti: "🧑‍⚕️",
-  Planet: "📋",
-  Pagesa: "💳",
-  AI: "🤖",
-  Siguria: "🛡️",
-  Llogaria: "🔐",
+const categoryIcons: Record<string, UiIconName> = {
+  "Të gjitha": "book",
+  Pacienti: "smartphone",
+  Fizioterapeuti: "physio",
+  Planet: "document",
+  Pagesa: "payment",
+  AI: "sparkles",
+  Siguria: "shield",
+  Llogaria: "lock",
 };
 
 function normalize(value: string) {
@@ -44,7 +45,7 @@ export function FaqExplorer({ items }: { items: FaqItem[] }) {
   return (
     <div className="fq-explorer">
       <div className="fq-search-wrap">
-        <span aria-hidden="true">⌕</span>
+        <UiIcon name="search" size={18} />
         <input
           type="search"
           value={query}
@@ -63,7 +64,7 @@ export function FaqExplorer({ items }: { items: FaqItem[] }) {
             className={category === item ? "active" : undefined}
             onClick={() => setCategory(item)}
           >
-            <span aria-hidden="true">{categoryIcons[item] || "•"}</span>{item}
+            <UiIcon name={categoryIcons[item] || "help"} size={16} />{item}
           </button>
         ))}
       </div>
@@ -90,7 +91,7 @@ export function FaqExplorer({ items }: { items: FaqItem[] }) {
         </div>
       ) : (
         <div className="fq-empty">
-          <span aria-hidden="true">🔎</span>
+          <UiIcon name="search" />
           <h3>Nuk u gjet përgjigje</h3>
           <p>Provo një fjalë tjetër ose hap Qendrën e Ndihmës.</p>
           <a href="/support">Hap Qendrën e Ndihmës →</a>

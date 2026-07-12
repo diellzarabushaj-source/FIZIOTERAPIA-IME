@@ -1,11 +1,22 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { UiIcon, type UiIconName } from "@/components/UiIcon";
 
-const guides = [
+type SupportGuide = {
+  category: string;
+  icon: UiIconName;
+  title: string;
+  answer: string;
+  keywords: string;
+  href?: string;
+  linkLabel?: string;
+};
+
+const guides: SupportGuide[] = [
   {
     category: "Fillimi",
-    icon: "🚀",
+    icon: "rocket",
     title: "Si filloj si fizioterapeut?",
     answer: "Krijo llogarinë, plotëso profilin dhe shto pacientin e parë. Pastaj zgjidh ushtrimet dhe dërgo planin.",
     keywords: "regjistrim llogari fillim fizioterapeut pacient",
@@ -14,14 +25,14 @@ const guides = [
   },
   {
     category: "Pacientët",
-    icon: "👤",
+    icon: "user",
     title: "Si shtoj një pacient?",
     answer: "Hap portalin e fizioterapeutit, kliko “Shto pacient” dhe shkruaj të dhënat bazë. Sistemi krijon kodin e pacientit.",
     keywords: "shto pacient kod username qr",
   },
   {
     category: "Pacientët",
-    icon: "🔑",
+    icon: "key",
     title: "Pacienti nuk mund të hyjë me kod",
     answer: "Kontrollo që kodi është shkruar saktë dhe që plani është aktiv. Nëse problemi vazhdon, krijo një kod të ri ose na shkruaj.",
     keywords: "hyrje login kod gabim pacient nuk hyn",
@@ -30,7 +41,7 @@ const guides = [
   },
   {
     category: "Planet",
-    icon: "📋",
+    icon: "document",
     title: "Si krijoj një plan ushtrimesh?",
     answer: "Zgjidh pacientin, shto ushtrimet, cakto setet dhe përsëritjet, kontrollo planin dhe kliko “Aprovo dhe dërgo”.",
     keywords: "plan program ushtrime aprovo dergo sete reps",
@@ -39,35 +50,35 @@ const guides = [
   },
   {
     category: "Ushtrimet",
-    icon: "🎥",
+    icon: "video",
     title: "A mund të shtoj videot e mia?",
     answer: "Po. Mund të shtosh ushtrim privat me emër, udhëzim dhe link të videos. Vetëm pacientët që ua cakton ti e shohin.",
     keywords: "video ime ushtrim privat link upload",
   },
   {
     category: "Ushtrimet",
-    icon: "🔎",
+    icon: "search",
     title: "Nuk po e gjej ushtrimin",
     answer: "Kërko me emër tjetër, pjesën e trupit ose diagnozën. Për shembull: bridge, hip bridge ose glute bridge tregojnë të njëjtin ushtrim.",
     keywords: "kerkim emra alternativ ushtrim databaze diagnoze trup",
   },
   {
     category: "Siguria",
-    icon: "❤️",
+    icon: "pain",
     title: "Çfarë bëhet kur dhimbja është 7/10?",
     answer: "Pacienti duhet ta ndalojë ushtrimin dhe ta kontaktojë fizioterapeutin. Platforma nuk e ndryshon planin vetë.",
     keywords: "dhimbje 7 8 9 10 ndalo alert siguri",
   },
   {
     category: "AI",
-    icon: "✨",
+    icon: "sparkles",
     title: "A e krijon AI planin vetë?",
     answer: "Jo. AI vetëm sugjeron ushtrime. Fizioterapeuti i kontrollon, i ndryshon dhe i aprovon para se pacienti t’i shohë.",
     keywords: "ai artificial intelligence sugjerim aprovim fizioterapeut",
   },
   {
     category: "Pagesa",
-    icon: "💳",
+    icon: "payment",
     title: "Sa kushton abonimi?",
     answer: "Çmimi fillestar është 9.90 € në muaj për fizioterapeutin. Pacienti nuk paguan veçmas për planin e vet.",
     keywords: "cmim pagesa abonim 9.90 euro pacient",
@@ -76,7 +87,7 @@ const guides = [
   },
   {
     category: "Llogaria",
-    icon: "⚙️",
+    icon: "settings",
     title: "Si ndryshoj të dhënat e profilit?",
     answer: "Hap profilin në portalin e fizioterapeutit dhe ndrysho emrin, klinikën, telefonin ose të dhënat e tjera.",
     keywords: "profil ndrysho emer klinike telefon llogari",
@@ -101,7 +112,7 @@ export function SupportCenterClient() {
   return (
     <div className="sc-search-area">
       <label className="sc-search-box">
-        <span aria-hidden="true">🔎</span>
+        <UiIcon name="search" size={18} />
         <span className="sr-only">Kërko ndihmë</span>
         <input
           value={query}
@@ -133,7 +144,7 @@ export function SupportCenterClient() {
           {filtered.map((guide) => (
             <details className="sc-guide-card" key={guide.title}>
               <summary>
-                <span className="sc-guide-icon" aria-hidden="true">{guide.icon}</span>
+                <UiIcon className="sc-guide-icon" name={guide.icon} />
                 <span><small>{guide.category}</small><strong>{guide.title}</strong></span>
                 <b aria-hidden="true">+</b>
               </summary>
@@ -146,7 +157,7 @@ export function SupportCenterClient() {
         </div>
       ) : (
         <div className="sc-empty">
-          <span aria-hidden="true">🙂</span>
+          <UiIcon name="help" />
           <h3>Nuk e gjetëm këtë pyetje.</h3>
           <p>Provo me fjalë më të shkurtra ose na shkruaj direkt.</p>
           <a href="mailto:altin.physio@gmail.com">Na shkruaj me email</a>

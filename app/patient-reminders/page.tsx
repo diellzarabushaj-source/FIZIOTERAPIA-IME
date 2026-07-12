@@ -1,5 +1,6 @@
 import { BrandMark } from "@/components/BrandMark";
 import { PatientReminderSettings } from "@/components/PatientReminderSettings";
+import { UiIcon } from "@/components/UiIcon";
 
 export default function PatientRemindersPage() {
   return (
@@ -9,7 +10,7 @@ export default function PatientRemindersPage() {
         <header className="patient-pro-header duo-header">
           <a href="/patient-dashboard" aria-label="Kthehu">‹</a>
           <div><span>Përkujtuesi im</span><small>Rutina e ushtrimeve</small></div>
-          <span>🔔</span>
+          <UiIcon name="clock" />
         </header>
 
         <section className="patient-pro-plan-card duo-lesson-hero">
@@ -25,10 +26,10 @@ export default function PatientRemindersPage() {
         </section>
 
         <nav className="patient-pro-bottom-nav duo-bottom-nav" aria-label="Patient reminder navigation">
-          <a href="/patient-dashboard">⌂<span>Sot</span></a>
-          <a href="/patient-progress">📈<span>Progress</span></a>
-          <a className="active" href="/patient-reminders">🔔<span>Reminder</span></a>
-          <a href="/patient-dashboard#messages">💬<span>Mesazhe</span></a>
+          <a href="/patient-dashboard"><UiIcon name="home" size={18} /><span>Sot</span></a>
+          <a href="/patient-progress"><UiIcon name="progress" size={18} /><span>Progresi</span></a>
+          <a className="active" href="/patient-reminders"><UiIcon name="clock" size={18} /><span>Kujtesa</span></a>
+          <a href="/patient-dashboard#messages"><UiIcon name="message" size={18} /><span>Mesazhe</span></a>
         </nav>
       </div>
     </main>

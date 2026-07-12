@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { CTASection, FAQList, PageSection, SafetyNotice } from "@/components/PublicPageKit";
 import { SupportCenterClient } from "@/components/SupportCenterClient";
+import { UiIcon } from "@/components/UiIcon";
 
 export const metadata: Metadata = {
   title: "Ndihmë dhe Support | Fizioterapia Ime",
@@ -65,19 +66,19 @@ export default function SupportPage() {
       >
         <div className="sc-contact-grid">
           <article className="sc-contact-card pp-reveal">
-            <span aria-hidden="true">✉️</span>
+            <UiIcon name="mail" />
             <h3>Email</h3>
             <p>Për pyetje rreth llogarisë, kodit, planit ose pagesës.</p>
             <a href="mailto:altin.physio@gmail.com?subject=Ndihmë%20-%20Fizioterapia%20Ime">altin.physio@gmail.com →</a>
           </article>
           <article className="sc-contact-card pp-reveal">
-            <span aria-hidden="true">👤</span>
+            <UiIcon name="user" />
             <h3>Je pacient?</h3>
             <p>Hyr me kodin që ta ka dhënë fizioterapeuti dhe shiko planin tënd.</p>
             <a href="/patient-portal">Hyr me kod →</a>
           </article>
           <article className="sc-contact-card pp-reveal">
-            <span aria-hidden="true">🧑‍⚕️</span>
+            <UiIcon name="physio" />
             <h3>Je fizioterapeut?</h3>
             <p>Hap portalin për të shtuar pacientë, plane dhe ushtrime.</p>
             <a href="/physiotherapist-portal">Hap portalin →</a>

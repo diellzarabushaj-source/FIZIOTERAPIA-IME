@@ -1,6 +1,6 @@
 import { currentUser } from "@clerk/nextjs/server";
-import { Activity, ShieldCheck } from "@/components/LucideIcons";
 import { AuthControls } from "@/components/AuthControls";
+import { BrandMark } from "@/components/BrandMark";
 import { PhysioDashboardNav } from "@/components/PhysioDashboardNav";
 import { PhysioGlobalSearch } from "@/components/PhysioGlobalSearch";
 import { PhysioQuickActions } from "@/components/PhysioQuickActions";
@@ -26,11 +26,8 @@ export async function DashboardShell({ children }: { children: React.ReactNode }
 
       <aside className="pd-sidebar" aria-label="Navigimi klinik">
         <div className="pd-brand">
-          <span className="pd-brand-mark" aria-hidden="true"><Activity size={20} /></span>
-          <span>
-            <strong>Fizioterapia ime</strong>
-            <small>Hapësira klinike</small>
-          </span>
+          <BrandMark href="/physiotherapist-portal/overview" />
+          <small>Paneli i fizioterapeutit</small>
         </div>
 
         <PhysioDashboardNav />
@@ -48,14 +45,9 @@ export async function DashboardShell({ children }: { children: React.ReactNode }
 
       <div className="pd-workspace">
         <header className="pd-topbar">
-          <div className="pd-topbar-title">
-            <strong>Dashboard klinik</strong>
-            <small>Pacientë, programe dhe progres në një vend</small>
-          </div>
-          <PhysioGlobalSearch />
+          <div className="pd-topbar-search"><PhysioGlobalSearch /></div>
           <div className="pd-topbar-actions">
             <PhysioQuickActions />
-            <span className="pd-secure-status"><ShieldCheck size={16} aria-hidden="true" /> Qasje e sigurt</span>
             <AuthControls />
           </div>
         </header>

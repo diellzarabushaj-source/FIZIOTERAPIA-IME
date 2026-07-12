@@ -1,16 +1,15 @@
 import Link from "next/link";
-import { BrandMark } from "@/components/BrandMark";
 import { BlogExplorer } from "@/components/BlogExplorer";
 import { hasSanityConfig } from "@/lib/sanity/client";
 import { getBlogPosts } from "@/lib/sanity/queries";
 import styles from "./blog.module.css";
 
 export const metadata = {
-  title: "Knowledge Center | Fizioterapia Ime",
+  title: "Blog | Fizioterapia Ime",
   description: "Artikuj të qartë dhe të rishikuar për dhimbjen, rehabilitimin, ushtrimet në shtëpi dhe sigurinë gjatë fizioterapisë.",
   alternates: { canonical: "/blog" },
   openGraph: {
-    title: "Knowledge Center | Fizioterapia Ime",
+    title: "Blog | Fizioterapia Ime",
     description: "Udhëzime të kuptueshme për pacientë dhe profesionistë të fizioterapisë.",
     type: "website",
   },
@@ -24,19 +23,9 @@ export default async function BlogPage() {
 
   return (
     <main className={styles.page}>
-      <nav className={styles.nav}>
-        <BrandMark />
-        <div className={styles.navLinks}>
-          <Link href="/">Home</Link>
-          <Link href="/blog">Knowledge Center</Link>
-          <Link href="/patient-portal">Pacienti</Link>
-          <Link href="/physiotherapist-portal">Fizioterapeuti</Link>
-        </div>
-      </nav>
-
       <section className={styles.hero}>
         <div>
-          <span className={styles.eyebrow}>✦ Knowledge Center · Fizioterapia Ime</span>
+          <span className={styles.eyebrow}>Blog · Fizioterapia ime</span>
           <h1>Informacion që e bën rehabilitimin më të qartë.</h1>
           <p>
             Artikuj praktikë për pacientë dhe profesionistë: simptoma, ushtrime, rikuperim dhe siguri—

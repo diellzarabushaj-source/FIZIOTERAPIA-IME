@@ -1,6 +1,8 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Image from "next/image";
+import { UiIcon, type UiIconName } from "@/components/UiIcon";
 import styles from "@/app/blog/blog.module.css";
 
 type BlogPostCard = {
@@ -15,23 +17,23 @@ type BlogPostCard = {
   safetyReviewed?: boolean | null;
 };
 
-const categoryIcons: Record<string, string> = {
-  spine: "🦴",
-  knee: "🦵",
-  shoulder: "💪",
-  foot: "🦶",
-  sports: "🏃",
-  elderly: "👵",
-  neurology: "🧠",
-  pediatrics: "👶",
-  pregnancy: "🤰",
-  blog: "✦",
+const categoryIcons: Record<string, UiIconName> = {
+  spine: "bone",
+  knee: "activity",
+  shoulder: "dumbbell",
+  foot: "foot",
+  sports: "activity",
+  elderly: "users",
+  neurology: "sparkles",
+  pediatrics: "baby",
+  pregnancy: "pain",
+  blog: "book",
 };
 
-function iconFor(category: string) {
+function iconFor(category: string): UiIconName {
   const value = category.toLowerCase();
   const match = Object.keys(categoryIcons).find((key) => value.includes(key));
-  return match ? categoryIcons[match] : "✦";
+  return match ? categoryIcons[match] : "book";
 }
 
 function formatDate(value: string) {
@@ -68,7 +70,7 @@ export function BlogExplorer({ posts }: { posts: BlogPostCard[] }) {
     <>
       <section className={styles.searchSection} aria-label="Kërko në blog">
         <label className={styles.searchBox}>
-          <span>⌕</span>
+          <UiIcon name="search" size={18} />
           <input
             value={query}
             onChange={(event) => setQuery(event.target.value)}
@@ -85,7 +87,7 @@ export function BlogExplorer({ posts }: { posts: BlogPostCard[] }) {
               className={category === item ? styles.categoryActive : styles.categoryButton}
               onClick={() => setCategory(item)}
             >
-              <span>{item === "Të gjitha" ? "✦" : iconFor(item)}</span>{item}
+              <UiIcon name={item === "Të gjitha" ? "book" : iconFor(item)} size={16} />{item}
             </button>
           ))}
         </div>
@@ -95,9 +97,9 @@ export function BlogExplorer({ posts }: { posts: BlogPostCard[] }) {
         <section className={styles.featuredCard}>
           <div className={styles.featuredImage}>
             {featured.mainImage?.url ? (
-              <img src={featured.mainImage.url} alt={featured.mainImage.alt || featured.title} />
+              <Image src={featured.mainImage.url} alt={featured.mainImage.alt || featured.title} width={960} height={640} sizes="(max-width: 900px) 100vw, 50vw" />
             ) : (
-              <div className={styles.imageFallback}>{iconFor(featured.category)}</div>
+              <div className={styles.imageFallback}><UiIcon name={iconFor(featured.category)} size={34} /></div>
             )}
           </div>
           <div className={styles.featuredContent}>
@@ -126,7 +128,7 @@ export function BlogExplorer({ posts }: { posts: BlogPostCard[] }) {
             {filtered.map((post) => (
               <article className={styles.articleCard} key={post.slug}>
                 <a href={`/blog/${post.slug}`} className={styles.cardImage} aria-label={post.title}>
-                  {post.mainImage?.url ? <img src={post.mainImage.url} alt={post.mainImage.alt || post.title} /> : <div className={styles.imageFallback}>{iconFor(post.category)}</div>}
+                  {post.mainImage?.url ? <Image src={post.mainImage.url} alt={post.mainImage.alt || post.title} width={720} height={460} sizes="(max-width: 760px) 100vw, 33vw" /> : <div className={styles.imageFallback}><UiIcon name={iconFor(post.category)} size={30} /></div>}
                   <span>{post.category}</span>
                 </a>
                 <div className={styles.cardBody}>
@@ -134,7 +136,7 @@ export function BlogExplorer({ posts }: { posts: BlogPostCard[] }) {
                   <h3><a href={`/blog/${post.slug}`}>{post.title}</a></h3>
                   <p>{post.description}</p>
                   <div className={styles.cardFooter}>
-                    <span>{post.safetyReviewed === false ? "Informacion edukativ" : "✓ I rishikuar klinikisht"}</span>
+                    <span>{post.safetyReviewed === false ? "Informacion edukativ" : "I rishikuar klinikisht"}</span>
                     <a href={`/blog/${post.slug}`}>Lexo →</a>
                   </div>
                 </div>

@@ -7,6 +7,7 @@ const footerSections = [
       ["Kryefaqja", "/"],
       ["Si funksionon", "/clinic-use"],
       ["Për fizioterapeutin", "/per-fizioterapeutin"],
+      ["Blog", "/blog"],
       ["Çmimi", "/cmimi"],
     ],
   },

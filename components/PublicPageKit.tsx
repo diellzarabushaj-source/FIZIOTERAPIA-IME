@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { UiIcon, type UiIconName } from "@/components/UiIcon";
 
 export function PageSection({
   eyebrow,
@@ -27,21 +28,21 @@ export function PageSection({
   );
 }
 
-export function FeatureCard({ icon, title, text }: { icon: string; title: string; text: string }) {
+export function FeatureCard({ icon, title, text }: { icon: UiIconName; title: string; text: string }) {
   return (
     <article className="pp-card pp-reveal">
-      <div className="pp-card-icon" aria-hidden="true">{icon}</div>
+      <UiIcon className="pp-card-icon" name={icon} />
       <h3>{title}</h3>
       <p>{text}</p>
     </article>
   );
 }
 
-export function StepCard({ number, icon, title, text }: { number: string; icon: string; title: string; text: string }) {
+export function StepCard({ number, icon, title, text }: { number: string; icon: UiIconName; title: string; text: string }) {
   return (
     <article className="pp-step pp-reveal">
       <span className="pp-step-number">{number}</span>
-      <div className="pp-card-icon" aria-hidden="true">{icon}</div>
+      <UiIcon className="pp-card-icon" name={icon} />
       <h3>{title}</h3>
       <p>{text}</p>
     </article>
@@ -51,7 +52,7 @@ export function StepCard({ number, icon, title, text }: { number: string; icon: 
 export function SafetyNotice({ title, text }: { title: string; text: string }) {
   return (
     <aside className="pp-safety" role="note">
-      <span aria-hidden="true">🛡️</span>
+      <UiIcon className="pp-safety-icon" name="shield" size={24} />
       <div><h3>{title}</h3><p>{text}</p></div>
     </aside>
   );
@@ -60,7 +61,7 @@ export function SafetyNotice({ title, text }: { title: string; text: string }) {
 export function CTASection({ title, text, href, label }: { title: string; text: string; href: string; label: string }) {
   return (
     <section className="pp-cta pp-reveal">
-      <div><span>Fizioterapia Ime</span><h2>{title}</h2><p>{text}</p></div>
+      <div><span>Fizioterapia ime</span><h2>{title}</h2><p>{text}</p></div>
       <a href={href}>{label} →</a>
     </section>
   );

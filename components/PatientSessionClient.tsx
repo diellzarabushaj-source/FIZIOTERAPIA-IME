@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { completeSessionExerciseAction, skipSessionExerciseAction } from "@/app/patient-session/actions";
+import { UiIcon } from "@/components/UiIcon";
 
 type SessionExercise = {
   id: string;
@@ -26,11 +27,11 @@ type PatientSessionClientProps = {
 };
 
 const moods = [
-  { key: "shume_mire", emoji: "😊", label: "Shumë mirë" },
-  { key: "me_mire", emoji: "🙂", label: "Më mirë se herën e kaluar" },
-  { key: "njejte", emoji: "😐", label: "Njësoj" },
-  { key: "pak_me_keq", emoji: "😣", label: "Pak më keq" },
-  { key: "shume_me_keq", emoji: "🔴", label: "Shumë më keq" },
+  { key: "shume_mire", score: 1, label: "Shumë mirë" },
+  { key: "me_mire", score: 2, label: "Më mirë se herën e kaluar" },
+  { key: "njejte", score: 3, label: "Njësoj" },
+  { key: "pak_me_keq", score: 4, label: "Pak më keq" },
+  { key: "shume_me_keq", score: 5, label: "Shumë më keq" },
 ] as const;
 
 function formatDose(exercise: SessionExercise) {
@@ -123,7 +124,7 @@ export function PatientSessionClient({
         <header className="patient-pro-header duo-header">
           <Link href="/patient-dashboard" aria-label="Kthehu">‹</Link>
           <div><span>Mirë se erdhe, {patientName}</span><small>{physioName}</small></div>
-          <span>👋</span>
+          <UiIcon name="user" />
         </header>
 
         <section className="patient-pro-plan-card duo-lesson-hero">
@@ -147,7 +148,7 @@ export function PatientSessionClient({
                 className={mood === item.key ? "button" : "button secondary"}
                 style={{ justifyContent: "flex-start", textAlign: "left" }}
               >
-                <span style={{ fontSize: 22 }}>{item.emoji}</span> {item.label}
+                <span className="patient-mood-index">{item.score}</span> {item.label}
               </button>
             ))}
           </div>
@@ -166,7 +167,7 @@ export function PatientSessionClient({
             onClick={() => setSessionStarted(true)}
             style={{ width: "100%", marginTop: 18 }}
           >
-            ▶ Fillo seancën e sotme
+            <UiIcon name="play" size={18} /> Fillo seancën e sotme
           </button>
         </section>
       </div>
@@ -178,7 +179,7 @@ export function PatientSessionClient({
       <div className="patient-pro-phone duo-phone" style={{ maxWidth: 720, margin: "0 auto" }}>
         <section className="patient-pro-plan-card duo-lesson-hero" style={{ textAlign: "center" }}>
           <div>
-            <span style={{ fontSize: 48 }}>🎉</span>
+            <UiIcon name="check" size={36} />
             <h1>Seanca e sotme u përfundua</h1>
             <p>Shumë mirë, {patientName}. Progresi është ruajtur për fizioterapeutin.</p>
           </div>
@@ -201,7 +202,7 @@ export function PatientSessionClient({
       <header className="patient-pro-header duo-header">
         <Link href="/patient-dashboard" aria-label="Kthehu">‹</Link>
         <div><span>Seanca e sotme</span><small>{moodLabel}</small></div>
-        <span>🔥</span>
+        <UiIcon name="activity" />
       </header>
 
       <div className="patient-pro-progress-line" style={{ margin: "0 16px" }}><i style={{ width: `${progress}%` }} /></div>
@@ -223,7 +224,7 @@ export function PatientSessionClient({
             {activeExercise.videoUrl ? (
               <video src={activeExercise.videoUrl} controls playsInline style={{ width: "100%", maxHeight: 360 }} />
             ) : (
-              <div style={{ color: "white", textAlign: "center", padding: 24 }}><div style={{ fontSize: 54 }}>🎥</div><b>Video do të shfaqet këtu</b><p>Fizioterapeuti mund ta shtojë video URL në bibliotekë.</p></div>
+              <div style={{ color: "white", textAlign: "center", padding: 24 }}><UiIcon name="video" size={42} /><b>Video do të shfaqet këtu</b><p>Fizioterapeuti mund ta shtojë video URL në bibliotekë.</p></div>
             )}
           </div>
 
@@ -261,16 +262,16 @@ export function PatientSessionClient({
             <label>Dhimbja pas ushtrimit</label>
             <select name="painScore" defaultValue="3">{Array.from({ length: 11 }, (_, score) => <option key={score} value={score}>{score}/10</option>)}</select>
             <label>Sa i vështirë ishte?</label>
-            <select name="difficulty" defaultValue="3">{[1, 2, 3, 4, 5].map((score) => <option key={score} value={score}>{"★".repeat(score)} {score}/5</option>)}</select>
+            <select name="difficulty" defaultValue="3">{[1, 2, 3, 4, 5].map((score) => <option key={score} value={score}>{score}/5</option>)}</select>
             <input name="comment" placeholder="Koment opsional për fizioterapeutin" />
-            <button type="submit">✅ Complete</button>
+            <button type="submit"><UiIcon name="check" size={18} /> Përfundo ushtrimin</button>
           </form>
 
           <form action={skipSessionExerciseAction} style={{ marginTop: 10, display: "grid", gap: 8 }}>
             <input type="hidden" name="planExerciseId" value={activeExercise.id} />
             <input type="hidden" name="mood" value={moodLabel} />
             <input className="input" name="reason" placeholder="Pse po e kalon?" />
-            <button type="submit" className="button secondary">⏭ Skip</button>
+            <button type="submit" className="button secondary">Kalo ushtrimin</button>
           </form>
 
           <div style={{ display: "flex", justifyContent: "space-between", marginTop: 16, gap: 10 }}>

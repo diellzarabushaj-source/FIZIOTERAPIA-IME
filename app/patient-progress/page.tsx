@@ -1,6 +1,6 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { BrandMark } from "@/components/BrandMark";
+import { UiIcon } from "@/components/UiIcon";
 import {
   getActivePatientBySignedCode,
   PATIENT_CODE_COOKIE,
@@ -98,7 +98,7 @@ export default async function PatientProgressPage() {
         <header className="patient-pro-header duo-header">
           <a href="/patient-dashboard" aria-label="Kthehu">‹</a>
           <div><span>Progresi im</span><small>30 ditët e fundit</small></div>
-          <span>📈</span>
+          <UiIcon name="progress" />
         </header>
 
         <section className="patient-pro-plan-card duo-lesson-hero">
@@ -109,7 +109,7 @@ export default async function PatientProgressPage() {
           <article><span>Completed</span><strong>{completed}</strong><small>Ushtrime</small></article>
           <article><span>Skipped</span><strong>{skipped}</strong><small>Ushtrime</small></article>
           <article><span>Pain trend</span><strong>{averagePain !== null ? `${averagePain}/10` : "—"}</strong><small>Mesatare</small></article>
-          <article><span>Streak</span><strong>{streak} 🔥</strong><small>Ditë radhazi</small></article>
+          <article><span>Ditë radhazi</span><strong>{streak}</strong><small>Me ushtrime të kryera</small></article>
         </section>
 
         <section className="clinic-panel" style={{ margin: 16 }}>
@@ -119,7 +119,7 @@ export default async function PatientProgressPage() {
             {calendar.map((day) => (
               <div key={day.key} style={{ border: "1px solid #e2e8f0", borderRadius: 14, padding: 10, textAlign: "center", background: day.state === "done" ? "#ecfdf5" : day.state === "alert" ? "#fef2f2" : day.state === "skipped" ? "#fffbeb" : "#f8fafc" }}>
                 <small>{day.label}</small>
-                <div style={{ fontSize: 24, margin: "6px 0" }}>{day.state === "done" ? "🟢" : day.state === "alert" ? "🔴" : day.state === "skipped" ? "🟡" : "⚪"}</div>
+                <span className={`patient-status-dot ${day.state}`} aria-label={day.state} />
                 <b>{day.completed}/{day.completed + day.skipped}</b>
                 <small style={{ display: "block" }}>{day.pain !== null ? `${day.pain}/10` : "—"}</small>
               </div>
@@ -143,10 +143,10 @@ export default async function PatientProgressPage() {
         </section>
 
         <nav className="patient-pro-bottom-nav duo-bottom-nav" aria-label="Patient progress navigation">
-          <a href="/patient-dashboard">⌂<span>Sot</span></a>
-          <a className="active" href="/patient-progress">📈<span>Progress</span></a>
-          <a href="/patient-reminders">🔔<span>Reminder</span></a>
-          <a href="/patient-dashboard#messages">💬<span>Mesazhe</span></a>
+          <a href="/patient-dashboard"><UiIcon name="home" size={18} /><span>Sot</span></a>
+          <a className="active" href="/patient-progress"><UiIcon name="progress" size={18} /><span>Progresi</span></a>
+          <a href="/patient-reminders"><UiIcon name="clock" size={18} /><span>Kujtesa</span></a>
+          <a href="/patient-dashboard#messages"><UiIcon name="message" size={18} /><span>Mesazhe</span></a>
         </nav>
       </div>
     </main>

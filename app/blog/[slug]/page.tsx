@@ -1,8 +1,9 @@
 import Link from "next/link";
+import Image from "next/image";
 import { notFound } from "next/navigation";
-import { BrandMark } from "@/components/BrandMark";
 import { PortableContentRenderer } from "@/components/PortableContentRenderer";
 import { ArticleTools } from "@/components/ArticleTools";
+import { UiIcon } from "@/components/UiIcon";
 import { getBlogPostBySlug, getBlogPosts, getBlogSlugs, type SanityBlock } from "@/lib/sanity/queries";
 import styles from "../blog.module.css";
 
@@ -89,19 +90,10 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
       <ArticleTools title={post.title} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
 
-      <nav className={styles.nav}>
-        <BrandMark />
-        <div className={styles.navLinks}>
-          <Link href="/">Home</Link>
-          <Link href="/blog">Knowledge Center</Link>
-          <Link href="/patient-portal">Plani im</Link>
-        </div>
-      </nav>
-
       <article>
         <header className={styles.articleHero}>
           <div className={styles.breadcrumb}>
-            <Link href="/">Home</Link><span>›</span><Link href="/blog">Blog</Link><span>›</span><span>{post.category}</span>
+            <Link href="/">Ballina</Link><span>›</span><Link href="/blog">Blog</Link><span>›</span><span>{post.category}</span>
           </div>
           <span className={styles.eyebrow}>{post.category} · {post.readingTime}</span>
           <h1>{post.title}</h1>
@@ -111,11 +103,11 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
             <span>•</span>
             <span>{formatDate(post.date)}</span>
             <span>•</span>
-            <span>{post.safetyReviewed === false ? "Informacion edukativ" : "✓ I rishikuar klinikisht"}</span>
+            <span>{post.safetyReviewed === false ? "Informacion edukativ" : "I rishikuar klinikisht"}</span>
           </div>
         </header>
 
-        {heroImage && <div className={styles.articleImage}><img src={heroImage} alt={heroAlt} /></div>}
+        {heroImage && <div className={styles.articleImage}><Image src={heroImage} alt={heroAlt} width={1440} height={820} sizes="(max-width: 900px) 100vw, 1200px" priority /></div>}
 
         <div className={styles.articleLayout}>
           <section className={styles.articleBody}>
@@ -163,7 +155,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
             {fallbackRelated.map((item) => (
               <article className={styles.articleCard} key={item.slug}>
                 <Link className={styles.cardImage} href={`/blog/${item.slug}`}>
-                  {item.mainImage?.url ? <img src={item.mainImage.url} alt={item.mainImage.alt || item.title} /> : <div className={styles.imageFallback}>✦</div>}
+                  {item.mainImage?.url ? <Image src={item.mainImage.url} alt={item.mainImage.alt || item.title} width={720} height={460} sizes="(max-width: 760px) 100vw, 33vw" /> : <div className={styles.imageFallback}><UiIcon name="book" size={30} /></div>}
                   <span>{item.category}</span>
                 </Link>
                 <div className={styles.cardBody}><div className={styles.cardMeta}><span>{item.readingTime}</span></div><h3><Link href={`/blog/${item.slug}`}>{item.title}</Link></h3><p>{item.description}</p></div>

@@ -1,0 +1,206 @@
+:root {
+  --ui-ink: #102a2e;
+  --ui-muted: #60777b;
+  --ui-teal: #0f766e;
+  --ui-teal-dark: #0b5f59;
+  --ui-teal-soft: #e8f5f1;
+  --ui-line: #dce8e5;
+  --ui-surface: #ffffff;
+  --ui-canvas: #f7faf9;
+  --ui-radius-sm: 12px;
+  --ui-radius-md: 18px;
+  --ui-radius-lg: 28px;
+  --ui-shadow: 0 18px 48px rgba(17, 48, 52, 0.08);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--ui-canvas);
+  color: var(--ui-ink);
+}
+
+.ui-icon-token {
+  color: currentColor;
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 auto;
+}
+
+.ui-icon-token svg {
+  display: block;
+}
+
+.pp-card-icon.ui-icon-token {
+  color: var(--ui-teal);
+}
+
+.pp-safety-icon.ui-icon-token {
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  background: #ffffff;
+  color: var(--ui-teal);
+}
+
+.pp-video {
+  color: var(--ui-teal);
+}
+
+.pp-complete {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.pp-mood {
+  align-content: center;
+  gap: 7px;
+  font-size: inherit;
+}
+
+.pp-mood strong {
+  width: 30px;
+  height: 30px;
+  border-radius: 999px;
+  background: #e5eeeb;
+  color: #526761;
+  font-size: 13px;
+  display: grid;
+  place-items: center;
+}
+
+.pp-mood-good strong {
+  background: #dff4ec;
+  color: #0b6b5f;
+}
+
+.pp-mood-warning strong {
+  background: #fff0cf;
+  color: #8a6100;
+}
+
+.pp-mood-danger strong {
+  background: #fde4e1;
+  color: #a8322d;
+}
+
+.patient-status-dot {
+  width: 16px;
+  height: 16px;
+  margin: 9px auto;
+  border: 2px solid #cad8d4;
+  border-radius: 999px;
+  background: #ffffff;
+  display: block;
+}
+
+.patient-status-dot.done {
+  border-color: #75c8b7;
+  background: #2f9e87;
+}
+
+.patient-status-dot.alert {
+  border-color: #e5a09a;
+  background: #c84b44;
+}
+
+.patient-status-dot.skipped {
+  border-color: #e8c16c;
+  background: #d79b1e;
+}
+
+.patient-mood-index {
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  background: rgba(15, 118, 110, 0.12);
+  color: #0b655e;
+  font-size: 12px;
+  font-weight: 850;
+  display: inline-grid;
+  place-items: center;
+}
+
+.pp-hero-note > span,
+.public-fact {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pp-hero-note > span::before,
+.public-fact::before {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: #30b5a8;
+  content: "";
+  flex: 0 0 auto;
+}
+
+.public-site-chrome {
+  position: relative;
+  z-index: 70;
+}
+
+.public-site-header {
+  max-width: 1240px;
+  margin-inline: auto;
+}
+
+.public-site-nav-actions > a,
+.public-site-mobile-links a {
+  text-decoration: none;
+}
+
+.public-site-nav-actions > a:hover,
+.public-site-mobile-links a:hover {
+  color: var(--ui-teal-dark);
+  background: var(--ui-teal-soft);
+}
+
+.site-footer {
+  border-top-color: var(--ui-line);
+  background: #edf5f2;
+}
+
+:where(.pp-page, .sc-page, .legal-page) :where(a, button, input, textarea, select):focus-visible,
+.public-site-header :where(a, button):focus-visible,
+.site-footer a:focus-visible {
+  outline: 0;
+  box-shadow: 0 0 0 4px rgba(15, 118, 110, 0.16);
+}
+
+:where(.pp-page, .sc-page, .legal-page) h1,
+:where(.pp-page, .sc-page, .legal-page) h2,
+:where(.pp-page, .sc-page, .legal-page) h3 {
+  text-wrap: balance;
+}
+
+:where(.pp-card, .pp-step, .sc-guide-card, .sc-contact-card, .legal-summary, .legal-content) {
+  border-color: var(--ui-line);
+  box-shadow: var(--ui-shadow);
+}
+
+@media (max-width: 1100px) {
+  .public-site-nav-actions > a {
+    padding-inline: 7px;
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 900px) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}

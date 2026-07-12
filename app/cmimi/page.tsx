@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import styles from "./pricing.module.css";
+import { UiIcon } from "@/components/UiIcon";
 
 export const metadata: Metadata = {
   title: "Çmimi | Fizioterapia Ime",
@@ -22,21 +23,21 @@ const included = [
 
 const valueCards = [
   {
-    icon: "⏱️",
+    icon: "clock",
     title: "Më pak kohë me mesazhe",
     text: "Nuk ke nevojë t’i dërgosh videot një nga një në WhatsApp.",
   },
   {
-    icon: "📈",
+    icon: "progress",
     title: "Më shumë kontroll",
     text: "Sheh nëse pacienti i ka bërë ushtrimet dhe si është ndier.",
   },
   {
-    icon: "📱",
+    icon: "smartphone",
     title: "Më e lehtë për pacientin",
     text: "Pacienti hap planin nga telefoni dhe sheh vetëm atë që i ke caktuar.",
   },
-];
+] as const;
 
 const faqs = [
   {
@@ -80,9 +81,9 @@ export default function PricingPage() {
             <a className={styles.secondaryButton} href="/clinic-use">Shiko si përdoret</a>
           </div>
           <div className={styles.quickFacts} aria-label="Pikat kryesore të çmimit">
-            <span>✓ Abonim mujor</span>
-            <span>✓ Pacientët pa pagesë veçmas</span>
-            <span>✓ Gjithçka në një vend</span>
+            <span className="public-fact">Abonim mujor</span>
+            <span className="public-fact">Pacientët pa pagesë veçmas</span>
+            <span className="public-fact">Gjithçka në një vend</span>
           </div>
         </div>
 
@@ -100,10 +101,10 @@ export default function PricingPage() {
             <a className={styles.cardButton} href="/physiotherapist-portal">Krijo llogarinë</a>
             <div className={styles.cardDivider} />
             <ul>
-              {included.slice(0, 6).map((item) => <li key={item}>✓ {item}</li>)}
+              {included.slice(0, 6).map((item) => <li key={item}><UiIcon name="check" size={16} /> {item}</li>)}
             </ul>
           </article>
-          <div className={styles.floatingNote}>Pacienti hyn me kod ✓</div>
+          <div className={styles.floatingNote}>Pacienti hyn me kod</div>
           <div className={styles.floatingNoteAlt}>AI sugjeron. Ti vendos.</div>
         </div>
       </section>
@@ -118,7 +119,7 @@ export default function PricingPage() {
           <div className={styles.valueGrid}>
             {valueCards.map((item) => (
               <article className={styles.valueCard} key={item.title}>
-                <div>{item.icon}</div>
+                <div><UiIcon name={item.icon} /></div>
                 <h3>{item.title}</h3>
                 <p>{item.text}</p>
               </article>
@@ -138,7 +139,7 @@ export default function PricingPage() {
             <div className={styles.includedList}>
               {included.map((item) => (
                 <div key={item}>
-                  <span>✓</span>
+                  <UiIcon name="check" size={18} />
                   <p>{item}</p>
                 </div>
               ))}
@@ -150,7 +151,7 @@ export default function PricingPage() {
       <section className={styles.safetySection}>
         <div className={styles.container}>
           <div className={styles.safetyCard}>
-            <div className={styles.safetyIcon}>🤖</div>
+            <div className={styles.safetyIcon}><UiIcon name="sparkles" size={26} /></div>
             <div>
               <span>AI me kontroll njerëzor</span>
               <h2>AI të ndihmon. Vendimin e merr ti.</h2>

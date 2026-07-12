@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { PatientNetworkStatus } from "@/components/PatientNetworkStatus";
+import { UiIcon } from "@/components/UiIcon";
 import { getCurrentPatientSession } from "@/lib/patient-session";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import "./patient-safety.css";
@@ -38,7 +39,7 @@ export default async function PatientDashboardLayout({ children }: { children: R
         href="/patient-contact"
         aria-label="Kontakto fizioterapeutin"
       >
-        <span aria-hidden="true">☎</span>
+        <UiIcon name="phone" size={17} />
         Kontakto fizioterapeutin
       </a>
     </>

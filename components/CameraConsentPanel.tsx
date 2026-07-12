@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { UiIcon } from "@/components/UiIcon";
 
 const checks = [
   "E kuptoj se kamera përdoret vetëm kur e aktivizoj vetë.",
@@ -27,7 +28,7 @@ export function CameraConsentPanel() {
   return (
     <section className="camera-consent-card" aria-labelledby="camera-consent-title">
       <div className="camera-consent-head">
-        <span aria-hidden="true">📷</span>
+        <UiIcon name="camera" />
         <div>
           <p>Pëlqim i informuar</p>
           <h3 id="camera-consent-title">Para se ta aktivizosh kamerën</h3>
@@ -43,7 +44,7 @@ export function CameraConsentPanel() {
               checked={accepted[index]}
               onChange={() => toggle(index)}
             />
-            <span className="camera-checkmark" aria-hidden="true">✓</span>
+            <UiIcon className="camera-checkmark" name="check" size={16} />
             <span>{label}</span>
           </label>
         ))}
@@ -58,7 +59,7 @@ export function CameraConsentPanel() {
 
       {saved && (
         <p className="camera-consent-success" role="status">
-          ✓ Konfirmimi u regjistrua në këtë ekran. Leja e kamerës jepet veçmas nga browser-i kur e aktivizon funksionin.
+          <UiIcon name="check" size={16} /> Konfirmimi u regjistrua në këtë ekran. Leja e kamerës jepet veçmas nga browser-i kur e aktivizon funksionin.
         </p>
       )}
     </section>

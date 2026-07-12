@@ -1,4 +1,5 @@
 import styles from "./physio.module.css";
+import { UiIcon } from "@/components/UiIcon";
 
 export const metadata = {
   title: "Për fizioterapeutin | Fizioterapia Ime",
@@ -7,20 +8,20 @@ export const metadata = {
 };
 
 const problems = [
-  ["📱", "Video të humbura në WhatsApp"],
-  ["📄", "Fletë që pacienti nuk i gjen"],
-  ["📞", "Pyetje të njëjta gjatë gjithë ditës"],
-  ["❓", "Nuk e di nëse ushtrimet janë bërë"],
-];
+  ["smartphone", "Video të humbura në WhatsApp"],
+  ["document", "Fletë që pacienti nuk i gjen"],
+  ["phone", "Pyetje të njëjta gjatë gjithë ditës"],
+  ["help", "Nuk e di nëse ushtrimet janë bërë"],
+] as const;
 
 const benefits = [
-  ["⏱️", "Kursen kohë", "Krijon planin një herë dhe pacienti e ka gjithmonë në telefon."],
-  ["📈", "Sheh progresin", "Shikon ushtrimet e kryera, dhimbjen dhe komentet e pacientit."],
-  ["📚", "Zgjedh ushtrimet", "Përdor bankën e ushtrimeve ose shto ushtrimet e tua."],
-  ["🤖", "Merr sugjerime", "AI të ndihmon me ide. Vendimin e merr gjithmonë ti."],
-  ["📄", "Krijon raporte", "Përgatit një përmbledhje të qartë për rikontroll ose dokumentim."],
-  ["🔒", "Mban kontrollin", "Pacienti sheh vetëm planin që ti ke miratuar."],
-];
+  ["clock", "Kursen kohë", "Krijon planin një herë dhe pacienti e ka gjithmonë në telefon."],
+  ["progress", "Sheh progresin", "Shikon ushtrimet e kryera, dhimbjen dhe komentet e pacientit."],
+  ["library", "Zgjedh ushtrimet", "Përdor bankën e ushtrimeve ose shto ushtrimet e tua."],
+  ["sparkles", "Merr sugjerime", "AI të ndihmon me ide. Vendimin e merr gjithmonë ti."],
+  ["document", "Krijon raporte", "Përgatit një përmbledhje të qartë për rikontroll ose dokumentim."],
+  ["lock", "Mban kontrollin", "Pacienti sheh vetëm planin që ti ke miratuar."],
+] as const;
 
 const faq = [
   ["A mund të shtoj ushtrimet e mia?", "Po. Mund të shtosh emrin, udhëzimin, dozën dhe videon tënde."],
@@ -45,9 +46,9 @@ export default function PhysioPage() {
             <a className={styles.secondary} href="/clinic-use">Shiko si përdoret</a>
           </div>
           <div className={styles.quickFacts}>
-            <span>✓ Pa kontratë afatgjatë</span>
-            <span>✓ Punon në telefon</span>
-            <span>✓ Ti aprovon çdo plan</span>
+            <span className="public-fact">Pa kontratë afatgjatë</span>
+            <span className="public-fact">Punon në telefon</span>
+            <span className="public-fact">Ti aprovon çdo plan</span>
           </div>
         </div>
 
@@ -74,7 +75,7 @@ export default function PhysioPage() {
           <h2>Probleme të vogla që marrin shumë kohë.</h2>
         </div>
         <div className={styles.problemGrid}>
-          {problems.map(([icon, text]) => <article key={text}><span>{icon}</span><h3>{text}</h3></article>)}
+          {problems.map(([icon, text]) => <article key={text}><UiIcon name={icon} /><h3>{text}</h3></article>)}
         </div>
       </section>
 
@@ -97,7 +98,7 @@ export default function PhysioPage() {
         </div>
         <div className={styles.benefitGrid}>
           {benefits.map(([icon, title, text]) => (
-            <article key={title}><span>{icon}</span><h3>{title}</h3><p>{text}</p></article>
+            <article key={title}><UiIcon name={icon} /><h3>{title}</h3><p>{text}</p></article>
           ))}
         </div>
       </section>
@@ -122,10 +123,10 @@ export default function PhysioPage() {
           <h2>Përshtatet me mënyrën si punon ti.</h2>
         </div>
         <div className={styles.useGrid}>
-          <article>🏥<h3>Klinikë</h3><p>Për ekip me disa fizioterapeutë.</p></article>
-          <article>🧑‍⚕️<h3>Ordinancë private</h3><p>Për punë të organizuar me pacientët e tu.</p></article>
-          <article>⚽<h3>Fizioterapi sportive</h3><p>Për programe dhe kthim në aktivitet.</p></article>
-          <article>🏠<h3>Vizita në shtëpi</h3><p>Për plan të qartë edhe pas vizitës.</p></article>
+          <article><UiIcon name="building" /><h3>Klinikë</h3><p>Për ekip me disa fizioterapeutë.</p></article>
+          <article><UiIcon name="physio" /><h3>Ordinancë private</h3><p>Për punë të organizuar me pacientët e tu.</p></article>
+          <article><UiIcon name="activity" /><h3>Fizioterapi sportive</h3><p>Për programe dhe kthim në aktivitet.</p></article>
+          <article><UiIcon name="home" /><h3>Vizita në shtëpi</h3><p>Për plan të qartë edhe pas vizitës.</p></article>
         </div>
       </section>
 

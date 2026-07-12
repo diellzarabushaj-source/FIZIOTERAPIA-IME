@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { UiIcon, type UiIconName } from "@/components/UiIcon";
 
 type LegalSection = {
   title: string;
@@ -33,12 +34,22 @@ export function LegalPage({ badge, title, intro, lastUpdated = "Korrik 2026", se
   const isDeletion = documentText.includes("fshir") || documentText.includes("deletion");
   const isCamera = documentText.includes("camera") || documentText.includes("kamer");
 
-  const summary = isTerms
+  const summary: {
+    label: string;
+    title: string;
+    text: string;
+    icon: UiIconName;
+    noteTitle: string;
+    noteText: string;
+    contactTitle: string;
+    subject: string;
+    actionLabel: string;
+  } = isTerms
     ? {
         label: "Me pak fjalë",
         title: "Përdore platformën në mënyrë të sigurt dhe të përgjegjshme.",
         text: "Këto kushte shpjegojnë rolin e pacientit, fizioterapeutit dhe platformës.",
-        icon: "✓",
+        icon: "check",
         noteTitle: "Vendimi klinik mbetet te profesionisti.",
         noteText: "Platforma ndihmon me organizimin dhe ndjekjen e planit, por nuk zëvendëson vlerësimin profesional.",
         contactTitle: "Ke pyetje për kushtet?",
@@ -50,7 +61,7 @@ export function LegalPage({ badge, title, intro, lastUpdated = "Korrik 2026", se
           label: "E rëndësishme",
           title: "Platforma nuk ofron diagnozë ose shërbim emergjent.",
           text: "Udhëzimet digjitale përdoren vetëm si pjesë e planit të caktuar nga profesionisti.",
-          icon: "⚕️",
+          icon: "physio",
           noteTitle: "Në simptoma të forta, ndalo.",
           noteText: "Kontakto fizioterapeutin ose shërbimet emergjente kur situata kërkon ndihmë të menjëhershme.",
           contactTitle: "Ke pyetje mjekësore për përdorimin?",
@@ -62,7 +73,7 @@ export function LegalPage({ badge, title, intro, lastUpdated = "Korrik 2026", se
             label: "Kontrolli yt",
             title: "Mund të kërkosh qasje, korrigjim ose fshirje.",
             text: "Kjo faqe shpjegon si bëhet kërkesa dhe çfarë mund të duhet të ruhet sipas ligjit.",
-            icon: "🗑️",
+            icon: "trash",
             noteTitle: "Kërkesa verifikohet për sigurinë tënde.",
             noteText: "Mund të kërkohet konfirmim i identitetit para se të ndryshohen ose fshihen të dhënat.",
             contactTitle: "Ke pyetje për kërkesën?",
@@ -74,7 +85,7 @@ export function LegalPage({ badge, title, intro, lastUpdated = "Korrik 2026", se
               label: "Ti vendos",
               title: "Kamera aktivizohet vetëm me lejen tënde.",
               text: "Mund ta refuzosh kamerën dhe ta vazhdosh planin pa AI Movement Check.",
-              icon: "📷",
+              icon: "camera",
               noteTitle: "Videoja live nuk është diagnozë.",
               noteText: "Sistemi analizon lëvizjen për feedback teknik; fizioterapeuti mbetet përgjegjës për vendimet klinike.",
               contactTitle: "Ke pyetje për kamerën?",
@@ -85,7 +96,7 @@ export function LegalPage({ badge, title, intro, lastUpdated = "Korrik 2026", se
               label: "Me pak fjalë",
               title: "Të dhënat e tua trajtohen me kujdes.",
               text: "Ky dokument shpjegon çfarë mbledhim, pse e përdorim dhe cilat të drejta ke.",
-              icon: "🔐",
+              icon: "lock",
               noteTitle: "Kontrolli mbetet te ti.",
               noteText: "Mund të kërkosh qasje, korrigjim ose fshirje të të dhënave sipas rregullave që zbatohen.",
               contactTitle: "Ke pyetje për privatësinë?",
@@ -133,7 +144,7 @@ export function LegalPage({ badge, title, intro, lastUpdated = "Korrik 2026", se
           </div>
 
           <div className="legal-note">
-            <span aria-hidden="true">{summary.icon}</span>
+            <UiIcon name={summary.icon} />
             <div>
               <strong>{summary.noteTitle}</strong><br />
               {summary.noteText}

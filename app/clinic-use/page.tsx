@@ -1,4 +1,5 @@
 import styles from "./clinic-use.module.css";
+import { UiIcon } from "@/components/UiIcon";
 
 export const metadata = {
   title: "Si funksionon në klinikë | Fizioterapia Ime",
@@ -7,12 +8,12 @@ export const metadata = {
 };
 
 const steps = [
-  { icon: "👤", title: "Shto pacientin", text: "Shkruaj emrin dhe problemin kryesor. Mbarove." },
-  { icon: "📚", title: "Zgjidh ushtrimet", text: "Përdor bankën e ushtrimeve ose shiko sugjerimet e AI." },
-  { icon: "📲", title: "Dërgo planin", text: "Pacienti merr kodin, QR ose linkun e vet." },
-  { icon: "🏃", title: "Pacienti ushtron", text: "Shikon videon, bën ushtrimin dhe shënon dhimbjen." },
-  { icon: "📈", title: "Shiko progresin", text: "Ti sheh çfarë ka bërë dhe kur duhet ta ndryshosh planin." },
-];
+  { icon: "user", title: "Shto pacientin", text: "Shkruaj emrin dhe problemin kryesor. Mbarove." },
+  { icon: "library", title: "Zgjidh ushtrimet", text: "Përdor bankën e ushtrimeve ose shiko sugjerimet e AI." },
+  { icon: "qr", title: "Dërgo planin", text: "Pacienti merr kodin, QR ose linkun e vet." },
+  { icon: "activity", title: "Pacienti ushtron", text: "Shikon videon, bën ushtrimin dhe shënon dhimbjen." },
+  { icon: "progress", title: "Shiko progresin", text: "Ti sheh çfarë ka bërë dhe kur duhet ta ndryshosh planin." },
+] as const;
 
 const faqs = [
   ["A duhet pacienti të krijojë llogari?", "Jo. Pacienti mund të hyjë me kodin personal ose QR që ia jep fizioterapeuti."],
@@ -40,7 +41,7 @@ export default function ClinicUsePage() {
         </div>
 
         <div className={styles.heroVisual} aria-label="Pamje e planit të pacientit">
-          <div className={`${styles.floatCard} ${styles.floatOne}`}>Plani u dërgua ✓<small>Kodi dhe QR janë gati</small></div>
+          <div className={`${styles.floatCard} ${styles.floatOne}`}>Plani u dërgua<small>Kodi dhe QR janë gati</small></div>
           <div className={styles.phone}>
             <div className={styles.phoneTop} />
             <small>Sot</small>
@@ -64,7 +65,7 @@ export default function ClinicUsePage() {
           {steps.map((step, index) => (
             <article className={styles.step} key={step.title}>
               <span className={styles.stepNum}>{index + 1}</span>
-              <div className={styles.stepIcon}>{step.icon}</div>
+              <div className={styles.stepIcon}><UiIcon name={step.icon} /></div>
               <h3>{step.title}</h3>
               <p>{step.text}</p>
             </article>
@@ -77,20 +78,20 @@ export default function ClinicUsePage() {
           <article className={styles.panel}>
             <h3>Çfarë bën fizioterapeuti?</h3>
             <div className={styles.list}>
-              <div><i>👤</i><span><b>Shton pacientin</b><small>Emri, diagnoza dhe shënimet kryesore.</small></span></div>
-              <div><i>📚</i><span><b>Zgjedh ushtrimet</b><small>Sete, përsëritje, ditë dhe udhëzime.</small></span></div>
-              <div><i>✅</i><span><b>Kontrollon dhe aprovon</b><small>Asnjë plan nuk dërgohet pa miratimin e tij.</small></span></div>
-              <div><i>📈</i><span><b>Sheh progresin</b><small>Ushtrimet e kryera, dhimbjen dhe komentet.</small></span></div>
+              <div><UiIcon name="user" /><span><b>Shton pacientin</b><small>Emri, diagnoza dhe shënimet kryesore.</small></span></div>
+              <div><UiIcon name="library" /><span><b>Zgjedh ushtrimet</b><small>Sete, përsëritje, ditë dhe udhëzime.</small></span></div>
+              <div><UiIcon name="check" /><span><b>Kontrollon dhe aprovon</b><small>Asnjë plan nuk dërgohet pa miratimin e tij.</small></span></div>
+              <div><UiIcon name="progress" /><span><b>Sheh progresin</b><small>Ushtrimet e kryera, dhimbjen dhe komentet.</small></span></div>
             </div>
           </article>
 
           <article className={styles.panel}>
             <h3>Çfarë sheh pacienti?</h3>
             <div className={styles.list}>
-              <div><i>🎥</i><span><b>Videon e ushtrimit</b><small>Udhëzim i qartë, pa kërkuar mesazhe të vjetra.</small></span></div>
-              <div><i>🔢</i><span><b>Sa duhet të bëjë</b><small>Sete, përsëritje dhe kohën e pushimit.</small></span></div>
-              <div><i>❤️</i><span><b>Dhimbjen 0–10</b><small>Pacienti tregon si u ndje pas ushtrimit.</small></span></div>
-              <div><i>📅</i><span><b>Progresin e vet</b><small>Ditët e kryera dhe planin e përditësuar.</small></span></div>
+              <div><UiIcon name="video" /><span><b>Videon e ushtrimit</b><small>Udhëzim i qartë, pa kërkuar mesazhe të vjetra.</small></span></div>
+              <div><UiIcon name="document" /><span><b>Sa duhet të bëjë</b><small>Sete, përsëritje dhe kohën e pushimit.</small></span></div>
+              <div><UiIcon name="pain" /><span><b>Dhimbjen 0–10</b><small>Pacienti tregon si u ndje pas ushtrimit.</small></span></div>
+              <div><UiIcon name="calendar" /><span><b>Progresin e vet</b><small>Ditët e kryera dhe planin e përditësuar.</small></span></div>
             </div>
           </article>
         </div>
@@ -104,9 +105,9 @@ export default function ClinicUsePage() {
             <p>AI mund të sugjerojë ushtrime, por nuk krijon dhe nuk dërgon planin vetë. Vendimi final mbetet gjithmonë te fizioterapeuti.</p>
           </div>
           <div className={styles.aiFlow}>
-            <div><span>🤖</span><strong>AI sugjeron</strong></div>
-            <div><span>👨‍⚕️</span><strong>Fizioterapeuti kontrollon</strong></div>
-            <div><span>🧑</span><strong>Pacienti ndjek planin</strong></div>
+            <div><UiIcon name="sparkles" /><strong>AI sugjeron</strong></div>
+            <div><UiIcon name="physio" /><strong>Fizioterapeuti kontrollon</strong></div>
+            <div><UiIcon name="user" /><strong>Pacienti ndjek planin</strong></div>
           </div>
         </div>
       </section>
@@ -120,21 +121,21 @@ export default function ClinicUsePage() {
           <div className={styles.compareCol}>
             <h3>Me WhatsApp</h3>
             <ul>
-              <li>✕ Videot humbin mes mesazheve.</li>
-              <li>✕ Nuk dihet a janë bërë ushtrimet.</li>
-              <li>✕ Pacienti harron dozimin.</li>
-              <li>✕ Nuk ka progres të qartë.</li>
-              <li>✕ Raporti duhet bërë veçmas.</li>
+              <li><UiIcon name="remove" size={18} /> Videot humbin mes mesazheve.</li>
+              <li><UiIcon name="remove" size={18} /> Nuk dihet a janë bërë ushtrimet.</li>
+              <li><UiIcon name="remove" size={18} /> Pacienti harron dozimin.</li>
+              <li><UiIcon name="remove" size={18} /> Nuk ka progres të qartë.</li>
+              <li><UiIcon name="remove" size={18} /> Raporti duhet bërë veçmas.</li>
             </ul>
           </div>
           <div className={styles.compareCol}>
             <h3>Me Fizioterapia Ime</h3>
             <ul>
-              <li>✓ Çdo ushtrim ka videon dhe udhëzimin.</li>
-              <li>✓ Sheh kur pacienti e përfundon.</li>
-              <li>✓ Setet dhe përsëritjet janë të qarta.</li>
-              <li>✓ Dhimbja dhe progresi ruhen.</li>
-              <li>✓ Plani dhe raporti janë në një vend.</li>
+              <li><UiIcon name="check" size={18} /> Çdo ushtrim ka videon dhe udhëzimin.</li>
+              <li><UiIcon name="check" size={18} /> Sheh kur pacienti e përfundon.</li>
+              <li><UiIcon name="check" size={18} /> Setet dhe përsëritjet janë të qarta.</li>
+              <li><UiIcon name="check" size={18} /> Dhimbja dhe progresi ruhen.</li>
+              <li><UiIcon name="check" size={18} /> Plani dhe raporti janë në një vend.</li>
             </ul>
           </div>
         </div>

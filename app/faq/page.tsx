@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { FaqExplorer } from "@/components/FaqExplorer";
 import { SafetyNotice } from "@/components/PublicPageKit";
+import { UiIcon } from "@/components/UiIcon";
 import { getFaqItems } from "@/lib/sanity/queries";
 import styles from "./faq.module.css";
 
@@ -40,15 +41,15 @@ export default async function FaqPage() {
         <h1>Përgjigje të qarta.<span> Pa fjalë të komplikuara.</span></h1>
         <p>Kërko pyetjen tënde ose zgjidh një kategori. Përgjigjet përditësohen pa e prishur përmbajtjen që menaxhohet nga Sanity.</p>
         <div className={styles.trust}>
-          <span>✓ Për pacientë</span><span>✓ Për fizioterapeutë</span><span>✓ Siguri klinike</span>
+          <span className="public-fact">Për pacientë</span><span className="public-fact">Për fizioterapeutë</span><span className="public-fact">Siguri klinike</span>
         </div>
       </section>
 
       <section className={styles.body}>
         <div className={styles.introGrid}>
-          <article className={styles.introCard}><span>📱</span><h2>Për pacientin</h2><p>Kodi, videot, përparimi dhe dhimbja.</p></article>
-          <article className={styles.introCard}><span>🧑‍⚕️</span><h2>Për fizioterapeutin</h2><p>Pacientët, planet, ushtrimet dhe raportet.</p></article>
-          <article className={styles.introCard}><span>🛡️</span><h2>Për sigurinë</h2><p>Kur duhet ndalur ushtrimi dhe kërkuar ndihmë.</p></article>
+          <article className={styles.introCard}><UiIcon name="smartphone" /><h2>Për pacientin</h2><p>Kodi, videot, përparimi dhe dhimbja.</p></article>
+          <article className={styles.introCard}><UiIcon name="physio" /><h2>Për fizioterapeutin</h2><p>Pacientët, planet, ushtrimet dhe raportet.</p></article>
+          <article className={styles.introCard}><UiIcon name="shield" /><h2>Për sigurinë</h2><p>Kur duhet ndalur ushtrimi dhe kërkuar ndihmë.</p></article>
         </div>
 
         <FaqExplorer items={faqs} />

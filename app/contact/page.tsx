@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { ContactFormClient } from "@/components/ContactFormClient";
+import { UiIcon } from "@/components/UiIcon";
 import styles from "./contact.module.css";
 
 export const metadata: Metadata = {
@@ -10,27 +11,27 @@ export const metadata: Metadata = {
 
 const contactOptions = [
   {
-    icon: "✉️",
+    icon: "mail",
     title: "Email",
     text: "Për pyetje rreth platformës, pagesës ose llogarisë.",
     href: "mailto:altin.physio@gmail.com?subject=Kontakt%20-%20Fizioterapia%20Ime",
     label: "altin.physio@gmail.com",
   },
   {
-    icon: "💬",
+    icon: "message",
     title: "Support Center",
     text: "Përgjigje të shpejta për problemet më të zakonshme.",
     href: "/support",
     label: "Hap qendrën e ndihmës",
   },
   {
-    icon: "🧑‍⚕️",
+    icon: "physio",
     title: "Për fizioterapeutë",
     text: "Shiko si funksionon platforma për klinikën tënde.",
     href: "/per-fizioterapeutin",
     label: "Shiko platformën",
   },
-];
+] as const;
 
 const faqs = [
   ["Sa shpejt përgjigjeni?", "Synojmë t’u përgjigjemi mesazheve sa më shpejt gjatë ditëve të punës."],
@@ -81,7 +82,7 @@ export default function ContactPage() {
           <div className={styles.optionGrid}>
             {contactOptions.map((option) => (
               <article className={styles.optionCard} key={option.title}>
-                <div className={styles.optionIcon}>{option.icon}</div>
+                <div className={styles.optionIcon}><UiIcon name={option.icon} /></div>
                 <h3>{option.title}</h3>
                 <p>{option.text}</p>
                 <a href={option.href}>{option.label} →</a>

@@ -47,6 +47,9 @@ const securityHeaders = [
 const nextConfig = {
   poweredByHeader: false,
   reactStrictMode: true,
+  images: {
+    remotePatterns: [{ protocol: "https", hostname: "cdn.sanity.io" }],
+  },
   turbopack: {
     root: projectRoot,
   },
