@@ -41,6 +41,25 @@ export function isOwnerOrAdmin(role: unknown): role is "owner" | "admin" {
   return role === "owner" || role === "admin";
 }
 
+export function actorCanAccessPhysioResource(
+  role: WorkspaceRole,
+  actorProfileId: string,
+  resourcePhysioId: string | null | undefined,
+): boolean {
+  return isOwnerOrAdmin(role) || Boolean(resourcePhysioId && resourcePhysioId === actorProfileId);
+}
+
+export function assertPhysioResourceAccess(
+  role: WorkspaceRole,
+  actorProfileId: string,
+  resourcePhysioId: string | null | undefined,
+  resourceName = "resource",
+): void {
+  if (!actorCanAccessPhysioResource(role, actorProfileId, resourcePhysioId)) {
+    throw new Error(`Forbidden ${resourceName} access.`);
+  }
+}
+
 const planTransitions: Record<PlanStatus, readonly PlanStatus[]> = {
   draft: ["pending_review", "archived"],
   pending_review: ["draft", "approved", "archived"],
