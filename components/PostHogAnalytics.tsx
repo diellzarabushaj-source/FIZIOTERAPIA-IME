@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 
 declare global {
@@ -8,7 +8,6 @@ declare global {
     posthog?: {
       init: (key: string, options: Record<string, unknown>) => void;
       capture: (event: string, properties?: Record<string, unknown>) => void;
-      opt_out_capturing?: () => void;
     };
   }
 }
@@ -19,6 +18,7 @@ const POSTHOG_HOST = (process.env.NEXT_PUBLIC_POSTHOG_HOST || "https://eu.i.post
 export function PostHogAnalytics() {
   const pathname = usePathname();
   const initialized = useRef(false);
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
     if (!POSTHOG_KEY || initialized.current || typeof window === "undefined") return;
@@ -36,16 +36,10 @@ export function PostHogAnalytics() {
         persistence: "localStorage+cookie",
         secure_cookie: window.location.protocol === "https:",
         respect_dnt: true,
-        sanitize_properties: (properties: Record<string, unknown>) => {
-          const safe = { ...properties };
-          delete safe.$current_url;
-          delete safe.$referrer;
-          delete safe.$referring_domain;
-          return safe;
-        },
       });
 
       initialized.current = true;
+      setReady(true);
     };
 
     if (window.posthog) {
@@ -67,13 +61,13 @@ export function PostHogAnalytics() {
   }, []);
 
   useEffect(() => {
-    if (!initialized.current || !window.posthog || !pathname) return;
+    if (!ready || !window.posthog || !pathname) return;
 
     window.posthog.capture("$pageview", {
       $current_url: `${window.location.origin}${pathname}`,
       page_path: pathname,
     });
-  }, [pathname]);
+  }, [pathname, ready]);
 
   return null;
 }
