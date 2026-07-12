@@ -27,6 +27,8 @@
     "check:recovery": "node scripts/data-recovery-contract-check.mjs",
     "check:database-schema": "node scripts/database-schema-contract-check.mjs",
     "check:all": "npm run check:dependencies && npm run preflight:routes && npm run check:security && npm run check:env:contract && npm run check:database-schema && npm run check:recovery && npm run test:backend && npm run lint && npm run typecheck && npm run build",
+    "check:ci": "npm run check:all && npm run test:e2e",
+    "check:production": "npm run check:env:production && npm run check:all",
     "smoke:production": "node scripts/smoke-test-production.mjs",
     "qa:production:security": "node scripts/qa-production-security.mjs",
     "monitor:production": "node scripts/monitor-production-health.mjs",
