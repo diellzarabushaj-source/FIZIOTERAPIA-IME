@@ -1,5 +1,7 @@
 import { createHmac, timingSafeEqual } from "crypto";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { clinicalRules, getVersionedAiAlert } from "./backend/clinical-rules.ts";
+import { logServerError } from "./backend/safe-logger.ts";
 import { validatePatientSession } from "./backend/patient-sessions.ts";
 import { normalizePatientCode } from "./supabase-admin.ts";
 
@@ -9,11 +11,11 @@ export const PATIENT_SESSION_COOKIE = "fizioplan_patient_session";
 export const PATIENT_SESSION_MAX_AGE_SECONDS = 60 * 60 * 24 * 7;
 export const PATIENT_SESSION_SECRET_MIN_LENGTH = 43;
 
-export const MAX_PATIENT_COMMENT_LENGTH = 500;
-export const MAX_AI_FEEDBACK_LENGTH = 600;
-export const MAX_CLINICAL_TEXT_LENGTH = 1_500;
-export const HIGH_PAIN_THRESHOLD = 7;
-export const LOW_AI_SCORE_THRESHOLD = 60;
+export const MAX_PATIENT_COMMENT_LENGTH = clinicalRules.patientCommentMaxLength;
+export const MAX_AI_FEEDBACK_LENGTH = clinicalRules.aiFeedbackMaxLength;
+export const MAX_CLINICAL_TEXT_LENGTH = clinicalRules.clinicalTextMaxLength;
+export const HIGH_PAIN_THRESHOLD = clinicalRules.highPainThreshold;
+export const LOW_AI_SCORE_THRESHOLD = clinicalRules.lowAiScoreThreshold;
 
 export type ProfileRole = "owner" | "admin" | "physio";
 
@@ -110,9 +112,7 @@ export function normalizeFrequency(value: FormDataEntryValue | null) {
 }
 
 export function getAiAlertType(score: number) {
-  if (score < LOW_AI_SCORE_THRESHOLD) return "contact_physio";
-  if (score < 80) return "needs_attention";
-  return "good";
+  return getVersionedAiAlert(score).alertType;
 }
 
 export async function getActivePatientBySignedCode({
@@ -140,6 +140,7 @@ export async function getActivePatientBySignedCode({
     .maybeSingle<ActivePatientSession>();
 
   if (error) {
+    logServerError("patient_session_lookup_failed", error, { requireRegisteredSession });
     throw new Error("Pacienti nuk mund të verifikohet për momentin.");
   }
   if (!patient) return null;
@@ -178,6 +179,7 @@ export async function requireAssignedPlanExercise({
 
   const { data: planExercise, error } = await query.maybeSingle();
   if (error) {
+    logServerError("assigned_exercise_lookup_failed", error, { aiOnly });
     throw new Error("Ushtrimi nuk mund të verifikohet për momentin.");
   }
   if (!planExercise) {
