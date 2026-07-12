@@ -1,0 +1,6 @@
+# ZAP rule id	action	comment
+10015	WARN	Incomplete or mixed cache-control headers
+10020	WARN	Anti-clickjacking is also enforced through CSP frame-ancestors
+10021	WARN	Legacy X-Content-Type-Options warning
+10038	WARN	Content Security Policy findings remain visible during nonce rollout
+10063	WARN	Permissions-Policy review
