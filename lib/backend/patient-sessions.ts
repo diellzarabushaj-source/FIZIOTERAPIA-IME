@@ -3,6 +3,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 export const PATIENT_SESSION_REGISTRY_COOKIE = "fizioplan_patient_registry";
 export const PATIENT_SESSION_REGISTRY_MAX_AGE_SECONDS = 60 * 60 * 24 * 7;
+export const PATIENT_SESSION_IDLE_TIMEOUT_SECONDS = 60 * 60 * 24;
 export const PATIENT_AUTH_SESSIONS_TABLE = "patient_auth_sessions";
 
 export function patientSessionRegistryEnabled(env: NodeJS.ProcessEnv = process.env) {
@@ -26,6 +27,29 @@ type PatientSessionRow = {
   last_used_at: string;
   revoked_at: string | null;
 };
+
+async function revokeSessionById({
+  supabase,
+  sessionId,
+  reason,
+  now,
+}: {
+  supabase: SupabaseClient;
+  sessionId: string;
+  reason: string;
+  now: Date;
+}) {
+  const { error } = await supabase
+    .from(PATIENT_AUTH_SESSIONS_TABLE)
+    .update({
+      revoked_at: now.toISOString(),
+      revoked_reason: reason.slice(0, 100),
+    })
+    .eq("id", sessionId)
+    .is("revoked_at", null);
+
+  return !error;
+}
 
 export async function createPatientSession({
   supabase,
@@ -83,12 +107,35 @@ export async function validatePatientSession({
   if (error || !data) return false;
 
   const lastUsedAt = Date.parse(data.last_used_at);
-  if (!Number.isFinite(lastUsedAt) || now.getTime() - lastUsedAt >= 15 * 60 * 1000) {
-    await supabase
+  if (!Number.isFinite(lastUsedAt)) {
+    await revokeSessionById({
+      supabase,
+      sessionId: data.id,
+      reason: "invalid_last_used_at",
+      now,
+    });
+    return false;
+  }
+
+  const idleMilliseconds = now.getTime() - lastUsedAt;
+  if (idleMilliseconds >= PATIENT_SESSION_IDLE_TIMEOUT_SECONDS * 1000) {
+    await revokeSessionById({
+      supabase,
+      sessionId: data.id,
+      reason: "idle_timeout",
+      now,
+    });
+    return false;
+  }
+
+  if (idleMilliseconds >= 15 * 60 * 1000) {
+    const { error: touchError } = await supabase
       .from(PATIENT_AUTH_SESSIONS_TABLE)
       .update({ last_used_at: now.toISOString() })
       .eq("id", data.id)
       .is("revoked_at", null);
+
+    if (touchError) return false;
   }
 
   return true;
