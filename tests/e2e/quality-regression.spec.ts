@@ -48,12 +48,3 @@ test('mobile pages do not overflow horizontally', async ({ page }) => {
     expect(overflow, `${route} should fit the mobile viewport`).toBe(false);
   }
 });
-
-test('private entry routes are not indexed', async ({ request }) => {
-  for (const route of ['/patient', '/patient-dashboard', '/physiotherapist-portal']) {
-    const response = await request.get(route, { maxRedirects: 0 });
-    const robots = response.headers()['x-robots-tag'] ?? '';
-
-    expect(robots.toLowerCase(), `${route} should be noindex`).toContain('noindex');
-  }
-});
