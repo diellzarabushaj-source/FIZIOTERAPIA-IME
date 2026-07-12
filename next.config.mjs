@@ -63,10 +63,13 @@ const privateRouteSources = [
   "/physiotherapist-portal/:path*",
   "/physiotherapist-dashboard",
   "/physiotherapist-dashboard/:path*",
-  "/admin-:path*",
+  "/owner-hidden",
   "/owner-hidden/:path*",
+  "/reports",
   "/reports/:path*",
+  "/sign-in",
   "/sign-in/:path*",
+  "/sign-up",
   "/sign-up/:path*",
 ];
 
