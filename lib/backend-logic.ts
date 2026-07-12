@@ -55,7 +55,7 @@ export function getPatientSessionSecret(env: NodeJS.ProcessEnv = process.env) {
   if (secret.length >= PATIENT_SESSION_SECRET_MIN_LENGTH) return secret;
   if (env.NODE_ENV === "production") {
     throw new Error(
-      `Patient session signing requires PATIENT_SESSION_SECRET or a configured SUPABASE_SERVICE_ROLE_KEY with at least ${PATIENT_SESSION_SECRET_MIN_LENGTH} characters.`,
+      `Patient session signing secret must contain at least ${PATIENT_SESSION_SECRET_MIN_LENGTH} characters. Configure PATIENT_SESSION_SECRET or a server-only SUPABASE_SERVICE_ROLE_KEY fallback.`,
     );
   }
   return "dev-only-patient-session-secret-change-me";

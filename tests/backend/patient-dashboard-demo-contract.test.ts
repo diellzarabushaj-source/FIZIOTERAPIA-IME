@@ -25,6 +25,18 @@ test("patient portal exposes a safe dashboard demo without bypassing real login"
   assert.match(login, /signPatientCode/);
 });
 
+test("patient demo uses the current responsive dashboard design", async () => {
+  const demo = await source("app/patient-dashboard/demo/page.tsx");
+
+  assert.match(demo, /patient-dashboard-shell/);
+  assert.match(demo, /patient-dashboard-layout/);
+  assert.match(demo, /patient-mobile-nav/);
+  assert.match(demo, /patient-exercise-card/);
+  assert.match(demo, /role="progressbar"/);
+  assert.doesNotMatch(demo, /patient-simple-page/);
+  assert.doesNotMatch(demo, /patient-simple-header/);
+});
+
 test("system login failures explain that database security configuration is incomplete", async () => {
   const portal = await source("app/patient-portal/page.tsx");
   assert.match(portal, /Hyrja me kod nuk është konfiguruar plotësisht në databazë/);
