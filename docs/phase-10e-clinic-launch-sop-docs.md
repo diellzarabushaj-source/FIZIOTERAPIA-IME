@@ -56,7 +56,7 @@ Covers:
 Covers:
 
 - manual billing
-- 29.90 EUR/month rule
+- 9.90 EUR/month rule
 - subscription activation
 - suspension
 - monthly billing checklist
@@ -112,7 +112,7 @@ Covers:
 - One patient code belongs to one patient only.
 - Patient does not create plan.
 - Physiotherapist controls the plan.
-- Physiotherapist access requires active 29.90 EUR/month subscription.
+- Physiotherapist access requires active 9.90 EUR/month subscription.
 - AI does not diagnose.
 - AI does not prescribe therapy.
 - AI does not replace physiotherapist.

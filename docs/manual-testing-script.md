@@ -121,7 +121,7 @@ Steps:
 4. Suspend/block one test physiotherapist.
 
 Pass criteria:
-- Price remains 29.90 EUR/month.
+- Price remains 9.90 EUR/month.
 - Subscription state updates correctly.
 - Non-admin users cannot access admin-only actions.
 

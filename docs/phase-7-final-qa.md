@@ -92,7 +92,7 @@ Some pages require Clerk or patient cookies and must be tested manually in brows
 
 - Supabase logic was not changed during UI polish phases.
 - Clerk auth is active in production.
-- Billing rule remains `29.90 EUR / month`.
+- Billing rule remains `9.90 EUR / month`.
 - AI remains movement-quality feedback only.
 - AI does not diagnose and does not replace the physiotherapist.
 - Low AI score and high pain alerts continue using the existing notification flow.

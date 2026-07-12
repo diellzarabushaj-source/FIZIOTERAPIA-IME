@@ -61,18 +61,20 @@ function redirectNewPlanCreation(request: Parameters<NextProxy>[0]) {
   return NextResponse.redirect(url);
 }
 
-const protectedProxy = clerkMiddleware(async (auth, req) => {
-  if (!matchesPath(req.nextUrl.pathname, protectedRoutePrefixes)) return NextResponse.next();
+const protectedProxy = isClerkConfigured
+  ? clerkMiddleware(async (auth, req) => {
+      if (!matchesPath(req.nextUrl.pathname, protectedRoutePrefixes)) return NextResponse.next();
 
-  const { userId } = await auth();
-  if (userId) return NextResponse.next();
+      const { userId } = await auth();
+      if (userId) return NextResponse.next();
 
-  const signInUrl = req.nextUrl.clone();
-  signInUrl.pathname = "/sign-in";
-  signInUrl.search = "";
-  signInUrl.searchParams.set("redirect_url", `${req.nextUrl.pathname}${req.nextUrl.search}`);
-  return NextResponse.redirect(signInUrl);
-});
+      const signInUrl = req.nextUrl.clone();
+      signInUrl.pathname = "/sign-in";
+      signInUrl.search = "";
+      signInUrl.searchParams.set("redirect_url", `${req.nextUrl.pathname}${req.nextUrl.search}`);
+      return NextResponse.redirect(signInUrl);
+    })
+  : null;
 
 export const proxy: NextProxy = (request, event) => {
   const { pathname } = request.nextUrl;
@@ -88,7 +90,7 @@ export const proxy: NextProxy = (request, event) => {
   const newPlanRedirect = redirectNewPlanCreation(request);
   if (newPlanRedirect) return newPlanRedirect;
 
-  return protectedProxy(request, event);
+  return protectedProxy ? protectedProxy(request, event) : NextResponse.next();
 };
 
 export const config = {

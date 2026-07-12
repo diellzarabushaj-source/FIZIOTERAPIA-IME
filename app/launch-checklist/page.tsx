@@ -23,7 +23,7 @@ const checklist = [
   {
     group: "Billing",
     items: [
-      "Çmimi për fizioterapeutë është 29.90 EUR / muaj.",
+      "Çmimi për fizioterapeutë është 9.90 EUR / muaj.",
       "Pagesa MVP aktivizohet manualisht nga admini.",
       "Pa pagesë aktive, dashboard-i bllokohet për fizioterapeutin.",
       "Owner/admin ka qasje operative për menaxhim.",

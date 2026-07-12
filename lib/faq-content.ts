@@ -32,7 +32,7 @@ export const fallbackFaqs: FaqItem[] = [
   },
   {
     question: "Sa kushton për fizioterapeutë?",
-    answer: "Qasja për fizioterapeutë kushton 29.90 EUR në muaj. Për MVP pagesa është manuale/local-bank dhe admini e aktivizon qasjen nga paneli /admin-billing.",
+    answer: "Qasja për fizioterapeutë kushton 9.90 EUR në muaj. Për MVP pagesa bëhet manualisht me transfer bankar dhe admini e aktivizon pas konfirmimit.",
     category: "pagesa",
     order: 5,
   },

@@ -12,7 +12,7 @@ Create a physiotherapy platform with three connected experiences:
 2. Physiotherapist dashboard
 3. Owner/admin dashboard
 
-The app must stay clinically safe, simple for patients, useful for physiotherapists, and ready for launch with a 29.90 EUR/month physiotherapist subscription model.
+The app must stay clinically safe, simple for patients, useful for physiotherapists, and ready for launch with a 9.90 EUR/month physiotherapist subscription model.
 
 ## Non-negotiable rules
 
@@ -23,7 +23,7 @@ These rules must never be removed without explicit approval:
 - Physiotherapist/admin login uses Clerk.
 - Supabase service role key is server-only.
 - No service role key in browser or mobile app.
-- Physiotherapists must pay 29.90 EUR/month for access.
+- Physiotherapists must pay 9.90 EUR/month for access.
 - Unpaid physiotherapists cannot create patients, exercises, or plans.
 - AI Movement Check only gives movement-quality feedback.
 - AI does not diagnose.

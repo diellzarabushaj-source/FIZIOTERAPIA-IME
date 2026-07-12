@@ -77,7 +77,7 @@ npm run preflight:routes
 npm run build
 
 Fix exact build/type/route errors only.
-Preserve price 29.90 EUR/month, manual billing, patient username + code, AI feedback only, no diagnosis, no camera video storage, and no secrets.
+Preserve price 9.90 EUR/month, manual billing, patient username + code, AI feedback only, no diagnosis, no camera video storage, and no secrets.
 ```
 
 ## Stop list before pilot
@@ -94,7 +94,7 @@ Do not start pilot if:
 
 ## Locked product rules
 
-- 29.90 EUR/month price.
+- 9.90 EUR/month price.
 - Manual/local-bank billing MVP.
 - Patient login with username + code.
 - Patient cannot create own plan.

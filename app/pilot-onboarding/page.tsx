@@ -12,7 +12,7 @@ const pilotSteps = [
   },
   {
     title: "3. Aktivizo billing manual",
-    body: "Në MVP pagesa 29.90 EUR/muaj aktivizohet manualisht te Admin Billing.",
+    body: "Në MVP pagesa 9.90 EUR/muaj aktivizohet manualisht te Admin Billing.",
   },
   {
     title: "4. Krijo pacientin e parë testues",

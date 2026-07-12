@@ -67,7 +67,7 @@ Status: First real camera version implemented.
 
 Status: Manual/local-bank model implemented for MVP.
 
-- Access price: 29.90 EUR per month for each physiotherapist.
+- Access price: 9.90 EUR per month for each physiotherapist.
 - Stripe is not required now.
 - Added `/admin-billing` owner page.
 - Admin can activate +1 month manually after payment.

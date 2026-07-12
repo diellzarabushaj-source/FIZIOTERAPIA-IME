@@ -11,7 +11,7 @@ The Replit project contains `.agents/memory/` with durable decisions for the app
 - Physiotherapist/admin auth uses Clerk
 - Supabase service-role key is server-only
 - Billing access is enforced in server actions
-- Price is `29.90 EUR / muaj`
+- Price is `9.90 EUR / muaj`
 - Pain score `>= 7/10` triggers physiotherapist alert
 - AI score `< 60` triggers physiotherapist alert
 - AI must never diagnose or prescribe therapy
@@ -120,7 +120,7 @@ Do not change these without explicit approval:
 
 - no patient Clerk login
 - no service-role key in client/mobile
-- physiotherapist pays `29.90 EUR / muaj`
+- physiotherapist pays `9.90 EUR / muaj`
 - patient enters username + code
 - AI only gives movement-quality feedback
 - pain `7/10` or more means stop/contact physiotherapist

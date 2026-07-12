@@ -22,7 +22,7 @@ Fix only build/type/lint errors and route issues needed for production.
 
 Do not change core product rules:
 - Brand stays `Fizioterapia ime`.
-- Price stays `29.90 EUR / muaj`.
+- Price stays `9.90 EUR / muaj`.
 - Billing remains manual/local-bank MVP; do not make Stripe required.
 - Patient login stays username + code.
 - Patients must not create their own plans.

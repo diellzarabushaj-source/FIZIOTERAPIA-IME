@@ -448,7 +448,7 @@ Admin must do:
 Billing rule:
 
 ```text
-Physiotherapist access = 29.90 EUR / month
+Physiotherapist access = 9.90 EUR / month
 ```
 
 Admin app can remain simple for now.

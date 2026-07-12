@@ -48,7 +48,7 @@ const qaGroups = [
       "Open /admin-billing.",
       "Activate one physiotherapist for +1 month.",
       "Block/suspend a physiotherapist and confirm dashboard lock behavior.",
-      "Confirm price remains 29.90 EUR/month.",
+      "Confirm price remains 9.90 EUR/month.",
     ],
   },
   {

@@ -9,7 +9,7 @@ This SOP explains how admin manages physiotherapist access and monthly billing.
 Current model:
 
 ```text
-29.90 EUR / month per physiotherapist
+9.90 EUR / month per physiotherapist
 ```
 
 Payment is manual for now. Later it can be connected to local bank or payment provider.

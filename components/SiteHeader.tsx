@@ -8,19 +8,15 @@ import { AuthControls } from "@/components/AuthControls";
 import { BrandMark } from "@/components/BrandMark";
 
 const links = [
-  { href: "/clinic-use", label: "Si përdoret", key: "clinic" },
-  { href: "/per-pacientin", label: "Për pacientin", key: "patient" },
+  { href: "/clinic-use", label: "Si funksionon", key: "clinic" },
   { href: "/per-fizioterapeutin", label: "Për fizioterapeutin", key: "physio" },
+  { href: "/per-pacientin", label: "Për pacientin", key: "patient" },
   { href: "/cmimi", label: "Çmimi", key: "pricing" },
   { href: "/support", label: "Ndihmë", key: "support" },
-  { href: "/contact", label: "Kontakt", key: "contact" },
-  { href: "/blog", label: "Blog", key: "blog" },
 ] as const;
 
 function linkIsActive(pathname: string, key: (typeof links)[number]["key"]) {
   return (
-    (key === "blog" && pathname.startsWith("/blog")) ||
-    (key === "contact" && pathname === "/contact") ||
     (key === "support" && pathname === "/support") ||
     (key === "pricing" && pathname === "/cmimi") ||
     (key === "patient" && pathname === "/per-pacientin") ||

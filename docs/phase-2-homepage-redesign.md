@@ -32,7 +32,7 @@ Removed the old table-heavy MVP homepage and replaced it with:
 - clean workflow section
 - AI Movement Check section
 - safety disclaimer
-- 29.90 EUR/month pricing section
+- 9.90 EUR/month pricing section
 - final CTA section
 
 ## Rules preserved
@@ -41,7 +41,7 @@ Removed the old table-heavy MVP homepage and replaced it with:
 - Clerk auth was not touched.
 - Server actions were not touched.
 - Environment variables were not changed.
-- Billing rule remains `29.90 EUR / month`.
+- Billing rule remains `9.90 EUR / month`.
 - AI remains movement-quality feedback only.
 - AI does not diagnose or replace the physiotherapist.
 - Pain score 7/10 or higher remains a safety stop rule.

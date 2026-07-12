@@ -37,7 +37,7 @@
     "extra": {
       "apiBaseUrl": "https://fizioterapia-ime.vercel.app",
       "appName": "Fizioterapia ime",
-      "monthlyPhysioPrice": "29.90 EUR"
+      "monthlyPhysioPrice": "9.90 EUR"
     }
   }
 }

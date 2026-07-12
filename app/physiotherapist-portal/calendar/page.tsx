@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { CalendarDays, ChevronLeft, ChevronRight, Clock3, UserRound } from "lucide-react";
+import { CalendarDays, ChevronLeft, ChevronRight, Clock3, UserRound } from "@/components/LucideIcons";
 import { requirePhysioActor } from "@/lib/backend/access";
 import { CLINIC_TIME_ZONE } from "@/lib/backend/time-zone";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";

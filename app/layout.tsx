@@ -17,9 +17,6 @@ import "./clinic-pro.css";
 import "./patient-pro.css";
 import "./duo-app.css";
 import "./patient-dashboard-mobile-panels.css";
-import "./workflow-illustrations.css";
-import "./homepage-workflow.css";
-import "./home-premium.css";
 import "./ui-friendly.css";
 import "./patient-login-refresh.css";
 import "./physio-dashboard-refresh.css";
@@ -37,23 +34,21 @@ const siteUrl = process.env.NEXT_PUBLIC_APP_URL || "https://fizioterapia-ime.ver
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
-  title: "Fizioterapia Ime – Platformë digjitale për fizioterapi",
-  description: "Website dhe platformë digjitale për plane fizioterapie, udhëzime të qarta për pacientë dhe mbështetje për fizioterapeutë.",
+  title: "Fizioterapia ime – Platformë për fizioterapeutë",
+  description: "Krijo planin e ushtrimeve, dërgoja pacientit me kod ose QR dhe përcill progresin, dhimbjen dhe komentet në një panel.",
   alternates: { canonical: "/" },
-  icons: { icon: "/brand-mark.svg", shortcut: "/brand-mark.svg", apple: "/app-icon.svg" },
+  icons: { icon: "/fizioterapia-ime-icon.svg", shortcut: "/fizioterapia-ime-icon.svg", apple: "/fizioterapia-ime-icon.svg" },
   openGraph: {
     type: "website",
     url: "/",
-    siteName: "Fizioterapia Ime",
-    title: "Fizioterapia Ime",
-    description: "Lëviz më mirë, jeto më mirë. Website dhe platformë moderne për fizioterapi digjitale.",
-    images: ["/app-icon.svg"],
+    siteName: "Fizioterapia ime",
+    title: "Fizioterapia ime",
+    description: "Krijo planin. Dërgoja pacientit. Përcill progresin.",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Fizioterapia Ime",
-    description: "Website dhe platformë moderne për fizioterapi digjitale.",
-    images: ["/app-icon.svg"],
+    title: "Fizioterapia ime",
+    description: "Krijo planin. Dërgoja pacientit. Përcill progresin.",
   },
 };
 

@@ -70,7 +70,7 @@ const handoffSections = [
     title: "6 · Business rules locked",
     status: "Do not change",
     items: [
-      "Price remains 29.90 EUR/month for physiotherapists.",
+      "Price remains 9.90 EUR/month for physiotherapists.",
       "Billing remains manual/local-bank MVP.",
       "No Stripe requirement before pilot.",
       "Admin activates subscription access manually.",
@@ -124,7 +124,7 @@ npm run preflight:routes
 npm run build
 
 Fix exact build/type/route errors only.
-Preserve price 29.90 EUR/month, manual billing, patient username + code, AI feedback only, no diagnosis, no camera video storage, and no secrets.`;
+Preserve price 9.90 EUR/month, manual billing, patient username + code, AI feedback only, no diagnosis, no camera video storage, and no secrets.`;
 
 export default function FinalHandoffPage() {
   return (

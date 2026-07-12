@@ -20,7 +20,7 @@ import {
   Sparkles,
   Stethoscope,
   UserRound,
-} from "lucide-react";
+} from "@/components/LucideIcons";
 import { BrandMark } from "@/components/BrandMark";
 import { PatientExerciseCompletionForm } from "@/components/PatientExerciseCompletionForm";
 import { getCurrentPatientSession } from "@/lib/patient-session";

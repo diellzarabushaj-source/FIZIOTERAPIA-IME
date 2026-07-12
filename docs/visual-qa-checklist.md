@@ -31,7 +31,7 @@ npm run smoke:production
 - Phone mockup and dashboard preview do not overlap on desktop.
 - On mobile, CTA buttons stack vertically and the phone preview remains readable.
 - Safety section clearly says AI is feedback only.
-- Pricing card still shows 29.90 EUR/month.
+- Pricing card still shows 9.90 EUR/month.
 
 ### Patient portal `/patient-portal`
 

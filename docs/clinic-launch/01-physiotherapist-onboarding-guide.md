@@ -25,7 +25,7 @@ Admin must confirm:
 - physiotherapist profile exists in `profiles`
 - physiotherapist email is correct
 - subscription is active
-- subscription price is 29.90 EUR/month
+- subscription price is 9.90 EUR/month
 - physiotherapist understands AI safety rules
 
 ## Step 1 — Sign in

@@ -2,31 +2,31 @@ import { BrandMark } from "./BrandMark";
 
 const footerSections = [
   {
-    title: "Website",
+    title: "Platforma",
     links: [
-      ["Home", "/"],
-      ["Blog", "/blog"],
-      ["FAQ", "/faq"],
-      ["Si përdoret në klinikë", "/clinic-use"],
+      ["Kryefaqja", "/"],
+      ["Si funksionon", "/clinic-use"],
+      ["Për fizioterapeutin", "/per-fizioterapeutin"],
+      ["Çmimi", "/cmimi"],
     ],
   },
   {
-    title: "Support",
+    title: "Ndihmë",
     links: [
-      ["Support Center", "/support"],
-      ["Patient Handout", "/patient-handout"],
-      ["Pilot onboarding", "/pilot-onboarding"],
-      ["Contact", "/support"],
+      ["Qendra e ndihmës", "/support"],
+      ["Për pacientin", "/per-pacientin"],
+      ["Pyetje të shpeshta", "/faq"],
+      ["Kontakt", "/contact"],
     ],
   },
   {
-    title: "Legal & safety",
+    title: "Ligjore dhe siguria",
     links: [
-      ["Privacy", "/privacy"],
-      ["Terms", "/terms"],
-      ["Medical Disclaimer", "/medical-disclaimer"],
-      ["Camera Consent", "/camera-consent"],
-      ["Data Deletion", "/data-deletion"],
+      ["Privatësia", "/privacy"],
+      ["Kushtet", "/terms"],
+      ["Njoftimi mjekësor", "/medical-disclaimer"],
+      ["Pëlqimi për kamerën", "/camera-consent"],
+      ["Fshirja e të dhënave", "/data-deletion"],
     ],
   },
 ];
@@ -38,11 +38,11 @@ export function SiteFooter() {
         <div className="footer-brand-card">
           <BrandMark />
           <p>
-            Website dhe pilot i kontrolluar për fizioterapi digjitale: udhëzime më të qarta për pacientë,
-            support për fizioterapeutë dhe rregulla të qarta klinike para lansimit të plotë.
+            Platformë digjitale për plane ushtrimesh, qasje të thjeshtë të pacientit dhe
+            përcjellje më të qartë të progresit.
           </p>
           <div className="footer-status-row">
-            <span>Website-first launch</span>
+            <span>Plan i qartë për pacientin</span>
             <span>Fizioterapeuti mbetet vendimmarrësi klinik</span>
           </div>
         </div>
@@ -60,7 +60,7 @@ export function SiteFooter() {
       </div>
 
       <div className="footer-bottom">
-        <p>© {new Date().getFullYear()} Fizioterapia Ime. Lëviz më mirë, jeto më mirë.</p>
+        <p>© {new Date().getFullYear()} Fizioterapia ime. Lëviz më mirë, jeto më mirë.</p>
         <p>Nuk jep diagnozë dhe nuk zëvendëson fizioterapeutin. Në urgjencë kontakto shërbimet emergjente.</p>
       </div>
     </footer>

@@ -8,7 +8,7 @@ import {
   Clock3,
   ShieldAlert,
   Users,
-} from "lucide-react";
+} from "@/components/LucideIcons";
 import { requirePhysioActor } from "@/lib/backend/access";
 import { CLINIC_TIME_ZONE, getUtcDayRange } from "@/lib/backend/time-zone";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";

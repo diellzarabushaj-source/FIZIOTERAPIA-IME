@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { FileText, Palette, QrCode, Search } from "lucide-react";
+import { FileText, Palette, QrCode, Search } from "@/components/LucideIcons";
 import { requirePhysioActor } from "@/lib/backend/access";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 

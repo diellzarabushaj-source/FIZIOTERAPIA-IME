@@ -7,7 +7,7 @@ import {
   Play,
   UserRound,
   XCircle,
-} from "lucide-react";
+} from "@/components/LucideIcons";
 import { SessionActionButton } from "@/components/SessionActionButton";
 import { requirePhysioActor } from "@/lib/backend/access";
 import {

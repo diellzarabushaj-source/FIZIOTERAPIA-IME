@@ -1,9 +1,23 @@
-<svg width="980" height="180" viewBox="0 0 980 180" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
-  <title id="title">Fizioterapia ime logo</title>
-  <desc id="desc">Transparent Fizioterapia ime wordmark in navy and teal.</desc>
-  <text x="8" y="119" fill="#14325F" font-family="Inter, Avenir Next, Segoe UI, Arial, sans-serif" font-size="92" font-weight="300" letter-spacing="8">fizioterapia</text>
-  <text x="742" y="119" fill="#16A6B4" font-family="Inter, Avenir Next, Segoe UI, Arial, sans-serif" font-size="92" font-weight="300" letter-spacing="6">ime</text>
-  <circle cx="714" cy="56" r="6" fill="#16A6B4"/>
-  <path d="M352 78 C374 91 398 91 420 78" stroke="#16A6B4" stroke-width="11" stroke-linecap="round"/>
-  <path d="M360 45 L360 127" stroke="#14325F" stroke-width="8" stroke-linecap="round"/>
+<svg width="520" height="104" viewBox="0 0 520 104" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">Fizioterapia ime</title>
+  <desc id="desc">Logo e Fizioterapia ime me simbolin e lëvizjes.</desc>
+  <defs>
+    <linearGradient id="background" x1="6" y1="7" x2="91" y2="95" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0A5F59"/>
+      <stop offset="1" stop-color="#0F8177"/>
+    </linearGradient>
+  </defs>
+  <g transform="translate(4 4) scale(1.5)">
+    <rect x="1" y="1" width="62" height="62" rx="19" fill="url(#background)"/>
+    <rect x="1.75" y="1.75" width="60.5" height="60.5" rx="18.25" stroke="white" stroke-opacity="0.18" stroke-width="1.5"/>
+    <circle cx="34" cy="14.5" r="4.5" fill="white"/>
+    <path d="M33.5 22C28 25.5 26.7 31.4 29.3 36.6C31.5 41 36.5 43.5 41.5 41.4" stroke="white" stroke-width="4.2" stroke-linecap="round"/>
+    <path d="M29.6 28.8L20 35.5M35.7 27.3L45.4 22.8M32.6 41L24.2 50.8M37.6 42.6L45.8 50.3" stroke="white" stroke-width="3.6" stroke-linecap="round"/>
+    <circle cx="29.1" cy="29" r="1.65" fill="#A7F3D0"/>
+    <circle cx="29.2" cy="34" r="1.65" fill="#A7F3D0"/>
+    <circle cx="31.5" cy="38.5" r="1.65" fill="#A7F3D0"/>
+    <path d="M16 43.8C23.2 52.2 35.5 55.1 45.9 49.6" stroke="#A7F3D0" stroke-width="3" stroke-linecap="round"/>
+  </g>
+  <text x="116" y="63" fill="#102A2E" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="42" font-weight="800" letter-spacing="-1.8">Fizioterapia</text>
+  <text x="385" y="63" fill="#0F766E" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="42" font-weight="800" font-style="italic" letter-spacing="-1.5">ime</text>
 </svg>

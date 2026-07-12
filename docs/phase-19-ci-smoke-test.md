@@ -87,7 +87,7 @@ Codex should now:
 
 ## Product rules unchanged
 
-- Price remains 29.90 EUR/month.
+- Price remains 9.90 EUR/month.
 - Billing remains manual/local-bank MVP.
 - AI remains feedback only.
 - Pain 7/10 remains stop rule.

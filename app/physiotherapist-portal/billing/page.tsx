@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { CalendarDays, CheckCircle2, CreditCard, LifeBuoy, Users } from "lucide-react";
+import { CalendarDays, CheckCircle2, CreditCard, LifeBuoy, Users } from "@/components/LucideIcons";
 import { requirePhysioActor } from "@/lib/backend/access";
 import {
   FREE_PATIENT_LIMIT,

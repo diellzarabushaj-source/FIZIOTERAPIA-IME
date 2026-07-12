@@ -16,7 +16,7 @@ Then do this task:
 5. Do not change patient code-only access.
 6. Do not reintroduce username as required patient login.
 7. Do not change /p/[code], /patient-access/[code], or /api/patient/access-qr/[code].
-8. Do not change billing price 29.90 EUR/month.
+8. Do not change billing price 9.90 EUR/month.
 9. Do not expose secrets.
 10. Keep Supabase service-role server-only.
 11. Keep AI safety wording: AI is movement-quality feedback only, not diagnosis and not a replacement for physiotherapist.

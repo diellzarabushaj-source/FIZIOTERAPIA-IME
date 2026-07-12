@@ -7,7 +7,7 @@ import {
   Eye,
   ShieldAlert,
   UserRound,
-} from "lucide-react";
+} from "@/components/LucideIcons";
 import { requirePhysioActor } from "@/lib/backend/access";
 import {
   listClinicalAlertsForActor,

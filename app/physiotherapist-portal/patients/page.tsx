@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ClipboardPlus, Plus, QrCode, Search, UserRound } from "lucide-react";
+import { ClipboardPlus, Plus, QrCode, Search, UserRound } from "@/components/LucideIcons";
 import { requirePhysioActor } from "@/lib/backend/access";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import styles from "../dashboard.module.css";

@@ -6,7 +6,7 @@ import {
   LockKeyhole,
   Plus,
   Search,
-} from "lucide-react";
+} from "@/components/LucideIcons";
 import { ExerciseMediaPreview } from "@/components/ExerciseMediaPreview";
 import { PrivateExerciseForm } from "@/components/PrivateExerciseForm";
 import { requirePhysioActor } from "@/lib/backend/access";

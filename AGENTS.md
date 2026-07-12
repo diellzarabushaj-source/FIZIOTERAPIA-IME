@@ -55,7 +55,7 @@ Do not change these without explicit approval:
 
 - Brand name: `Fizioterapia ime`
 - Tagline: `Lëviz më mirë, jeto më mirë`
-- Physiotherapist price: `29.90 EUR / muaj`
+- Physiotherapist price: `9.90 EUR / muaj`
 - Billing MVP: manual/local-bank, no mandatory Stripe now
 - Patient access is code-only.
 - Patient does not create an account.

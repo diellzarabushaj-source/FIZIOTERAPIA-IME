@@ -2,7 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import QRCode from "qrcode";
-import { ArrowLeft, CalendarDays, KeyRound, QrCode } from "lucide-react";
+import { ArrowLeft, CalendarDays, KeyRound, QrCode } from "@/components/LucideIcons";
 import { requirePhysioActor } from "@/lib/backend/access";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import { PrintReportButton } from "./PrintReportButton";

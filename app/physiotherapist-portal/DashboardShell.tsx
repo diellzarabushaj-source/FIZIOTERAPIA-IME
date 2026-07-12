@@ -1,5 +1,5 @@
 import { currentUser } from "@clerk/nextjs/server";
-import { Activity, ShieldCheck } from "lucide-react";
+import { Activity, ShieldCheck } from "@/components/LucideIcons";
 import { AuthControls } from "@/components/AuthControls";
 import { PhysioDashboardNav } from "@/components/PhysioDashboardNav";
 import { PhysioGlobalSearch } from "@/components/PhysioGlobalSearch";

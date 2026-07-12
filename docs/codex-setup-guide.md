@@ -77,7 +77,7 @@ Then run npm install and npm run build.
 Fix only build/type errors.
 Do not redesign the product.
 Do not change patient code-only access.
-Do not change billing price 29.90 EUR/month.
+Do not change billing price 9.90 EUR/month.
 Do not expose secrets.
 After finishing, report files changed, build status, routes checked, and remaining blockers.
 ```

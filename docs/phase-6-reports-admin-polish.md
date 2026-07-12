@@ -42,7 +42,7 @@ Improve the PDF report and admin billing screens so they look clean, professiona
 - Clerk owner/admin access was not changed.
 - Server actions were not changed.
 - Billing activation/suspension actions were not changed.
-- Price remains `29.90 EUR / month`.
+- Price remains `9.90 EUR / month`.
 - Report still checks physiotherapist ownership/admin role.
 - Print/PDF still uses the existing `PrintReportButton`.
 

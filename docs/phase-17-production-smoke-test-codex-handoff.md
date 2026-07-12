@@ -39,7 +39,7 @@ Open the repo in Codex and start with:
 
 ## Codex must preserve
 
-- 29.90 EUR/month physiotherapist pricing.
+- 9.90 EUR/month physiotherapist pricing.
 - Manual/local-bank billing MVP.
 - Patient login with username + code.
 - Patient does not create own plan.

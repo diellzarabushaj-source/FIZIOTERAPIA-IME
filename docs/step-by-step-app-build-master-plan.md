@@ -42,7 +42,7 @@ These rules must stay the same in web app, mobile app and website.
 4. Patient sees only their assigned plan.
 5. Patient cannot create or change plan.
 6. Physiotherapist creates and controls plan.
-7. Physiotherapist access costs 29.90 EUR/month.
+7. Physiotherapist access costs 9.90 EUR/month.
 8. AI gives movement-quality feedback only.
 9. AI does not diagnose.
 10. AI does not prescribe therapy.
@@ -70,7 +70,7 @@ Must include:
 PATIENT_CODE_COOKIE = fizioplan_patient_code
 PAIN_STOP_THRESHOLD = 7
 AI_LOW_SCORE_THRESHOLD = 60
-PHYSIO_MONTHLY_PRICE_EUR = 29.90
+PHYSIO_MONTHLY_PRICE_EUR = 9.90
 ```
 
 ## 0.2 Create clinical safety helpers
@@ -810,7 +810,7 @@ usage
 Rule:
 
 ```text
-29.90 EUR/month per physiotherapist
+9.90 EUR/month per physiotherapist
 ```
 
 Actions:

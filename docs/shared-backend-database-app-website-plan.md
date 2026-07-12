@@ -393,7 +393,7 @@ created_at
 Rules:
 
 - active subscription unlocks physio write actions
-- monthly price is 29.90 EUR
+- monthly price is 9.90 EUR
 - owner/admin bypass can exist
 - unpaid physiotherapist cannot create patients/plans
 
@@ -734,7 +734,7 @@ lib/shared/routes.ts
 ## constants.ts
 
 ```text
-PHYSIO_PRICE_EUR = 29.90
+PHYSIO_PRICE_EUR = 9.90
 PAIN_STOP_THRESHOLD = 7
 AI_LOW_SCORE_THRESHOLD = 60
 PATIENT_CODE_COOKIE = fizioplan_patient_code

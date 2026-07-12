@@ -56,7 +56,7 @@ insert into subscriptions (
 select
   id,
   'Fizioterapeut Monthly · Demo',
-  29.90,
+  9.90,
   'EUR',
   'active',
   now(),

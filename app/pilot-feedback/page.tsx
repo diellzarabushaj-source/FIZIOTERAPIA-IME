@@ -8,7 +8,7 @@ const ratingFields = [
   ["patient_login_score", "Hyrja e pacientit me username + kod"],
   ["ai_clarity_score", "Qartësia e AI Movement Check"],
   ["report_usefulness_score", "Dobishmëria e raportit PDF"],
-  ["payment_readiness_score", "Gatishmëria për pagesë 29.90 EUR/muaj"],
+  ["payment_readiness_score", "Gatishmëria për pagesë 9.90 EUR/muaj"],
 ];
 
 function RatingSelect({ name, label }: { name: string; label: string }) {

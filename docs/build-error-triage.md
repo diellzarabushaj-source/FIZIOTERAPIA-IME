@@ -76,7 +76,7 @@ If footer links return 404:
 
 ## Product rules that must not be changed
 
-- price stays 29.90 EUR/month
+- price stays 9.90 EUR/month
 - manual/local-bank billing stays MVP
 - patient login stays username + code
 - patient cannot create own plan

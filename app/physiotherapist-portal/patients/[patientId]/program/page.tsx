@@ -7,7 +7,7 @@ import {
   ExternalLink,
   Plus,
   QrCode,
-} from "lucide-react";
+} from "@/components/LucideIcons";
 import { requirePhysioActor } from "@/lib/backend/access";
 import { getPatientForActor } from "@/lib/backend/patients";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";

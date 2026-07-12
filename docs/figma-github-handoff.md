@@ -58,7 +58,7 @@ Figma is the visual source of truth. GitHub is the implementation source of trut
 
 ## Billing rule
 
-Physiotherapist access costs `29.90 EUR / month`.
+Physiotherapist access costs `9.90 EUR / month`.
 
 MVP uses manual/local-bank payment. Admin activates access in `/admin-billing`.
 

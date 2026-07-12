@@ -11,7 +11,7 @@ import {
   Send,
   Sparkles,
   UserRound,
-} from "lucide-react";
+} from "@/components/LucideIcons";
 import { ExerciseMediaPreview } from "@/components/ExerciseMediaPreview";
 import { ExerciseMediaUploadField } from "@/components/ExerciseMediaUploadField";
 import { requirePhysioActor } from "@/lib/backend/access";

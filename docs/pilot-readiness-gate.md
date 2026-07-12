@@ -85,7 +85,7 @@ First pilot scope:
 
 Must remain:
 
-- 29.90 EUR/month
+- 9.90 EUR/month
 - manual/local-bank MVP
 - no required Stripe dependency
 - admin manually activates access

@@ -37,7 +37,7 @@ npm run build
 
 ## Do not change
 
-- `29.90 EUR / muaj`
+- `9.90 EUR / muaj`
 - manual/local-bank billing MVP
 - username + code patient login
 - AI disclaimer

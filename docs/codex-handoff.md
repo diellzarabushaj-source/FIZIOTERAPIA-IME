@@ -33,7 +33,7 @@ Environment variables must remain only in Vercel/Supabase/Clerk/Resend settings,
 
 - Brand name: `Fizioterapia ime`
 - Tagline: `Lëviz më mirë, jeto më mirë`
-- Physiotherapist price: `29.90 EUR / muaj`
+- Physiotherapist price: `9.90 EUR / muaj`
 - Billing MVP: manual/local bank, admin activates access manually.
 - Patient login: username + code from physiotherapist.
 - Patient does not create their own plan.
@@ -185,7 +185,7 @@ npm run generate:assets
 
 ## What not to change without approval
 
-- Do not change pricing from 29.90 EUR/month.
+- Do not change pricing from 9.90 EUR/month.
 - Do not introduce Stripe as required payment now.
 - Do not remove AI disclaimers.
 - Do not store camera video.

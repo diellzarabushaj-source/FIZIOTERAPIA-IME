@@ -16,7 +16,7 @@ This folder contains practical operating documents for launching and using Fizio
 
 3. `03-admin-billing-sop.md`
    - Manual admin billing procedure.
-   - 29.90 EUR/month subscription activation/suspension.
+   - 9.90 EUR/month subscription activation/suspension.
 
 4. `04-ai-safety-sop.md`
    - Safety rules for AI Movement Check.
@@ -38,7 +38,7 @@ This folder contains practical operating documents for launching and using Fizio
 - Physiotherapist creates and controls the plan.
 - Physiotherapist/admin login uses Clerk.
 - Patient login does not use Clerk.
-- Physiotherapist access requires active 29.90 EUR/month subscription.
+- Physiotherapist access requires active 9.90 EUR/month subscription.
 - AI Movement Check does not diagnose.
 - AI Movement Check does not prescribe treatment.
 - AI Movement Check does not replace the physiotherapist.

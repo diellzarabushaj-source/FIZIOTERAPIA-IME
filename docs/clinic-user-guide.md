@@ -37,7 +37,7 @@ The physiotherapist can:
 The physiotherapist needs active access:
 
 ```text
-29.90 EUR / month
+9.90 EUR / month
 ```
 
 ### Patient

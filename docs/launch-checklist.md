@@ -19,7 +19,7 @@ Use this checklist before giving the app to a real clinic, physiotherapist, or p
 - [ ] RLS is enabled on production tables.
 - [ ] Default exercise library exists.
 - [ ] At least one AI-enabled exercise exists.
-- [ ] `subscriptions` table supports 29.90 EUR/month billing.
+- [ ] `subscriptions` table supports 9.90 EUR/month billing.
 - [ ] `notification_logs` table exists.
 - [ ] Demo patient seed was tested only with non-real data.
 
@@ -36,7 +36,7 @@ Use this checklist before giving the app to a real clinic, physiotherapist, or p
 - [ ] Physiotherapist without active subscription sees paywall.
 - [ ] Owner can activate +1 month in `/admin-billing`.
 - [ ] Active subscription unlocks `/physiotherapist-portal`.
-- [ ] Price shown as `29.90 EUR / month`.
+- [ ] Price shown as `9.90 EUR / month`.
 - [ ] Manual/local-bank billing text is clear.
 
 ## 5. Physiotherapist workflow

@@ -10,7 +10,7 @@ export function AuthControls() {
     return (
       <div className="auth-controls">
         <Link className="auth-button auth-button-secondary" href="/physiotherapist-portal">Hyr</Link>
-        <Link className="auth-button" href="/support">Kërko qasje</Link>
+        <Link className="auth-button" href="/physiotherapist-portal">Fillo</Link>
       </div>
     );
   }
@@ -22,7 +22,7 @@ export function AuthControls() {
           <button type="button" className="auth-button auth-button-secondary">Hyr</button>
         </SignInButton>
         <SignUpButton mode="modal">
-          <button type="button" className="auth-button">Krijo llogari</button>
+          <button type="button" className="auth-button">Fillo</button>
         </SignUpButton>
       </Show>
       <Show when="signed-in">

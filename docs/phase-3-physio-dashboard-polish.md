@@ -32,7 +32,7 @@ Make the physiotherapist dashboard smoother, clearer, and more premium without t
 - Clerk auth was not changed.
 - Server actions were not changed.
 - Environment variables were not changed.
-- Billing rule remains `29.90 EUR / month`.
+- Billing rule remains `9.90 EUR / month`.
 - Paywall still blocks unpaid physiotherapists.
 - AI remains movement-quality feedback only.
 - Pain score 7/10 or higher remains a safety stop rule.

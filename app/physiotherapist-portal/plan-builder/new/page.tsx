@@ -8,7 +8,7 @@ import {
   Library,
   Plus,
   Sparkles,
-} from "lucide-react";
+} from "@/components/LucideIcons";
 import { requirePhysioActor } from "@/lib/backend/access";
 import { listExercisesForActor } from "@/lib/backend/exercises";
 import { listPatientsForActor } from "@/lib/backend/patients";

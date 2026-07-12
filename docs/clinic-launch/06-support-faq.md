@@ -95,7 +95,7 @@ This protects against IDOR/access mistakes.
 ### What is the price?
 
 ```text
-29.90 EUR / month per physiotherapist
+9.90 EUR / month per physiotherapist
 ```
 
 ### Is billing automatic?

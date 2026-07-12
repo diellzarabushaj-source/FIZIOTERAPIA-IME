@@ -16,7 +16,7 @@ Skripti mund të ekzekutohet disa herë pa krijuar pacientë të dyfishtë.
 - Emri: `Xhavit Rabushaj`
 - Klinika: `Fizioterapia Ime · Demo Clinic`
 - Subscription: `active`
-- Çmimi demonstrues: `29.90 EUR / muaj`
+- Çmimi demonstrues: `9.90 EUR / muaj`
 - Vlefshmëria: 12 muaj nga momenti kur ekzekutohet seed-i
 
 Për ta testuar portalin e fizioterapistit, përdor ose krijo një përdorues Clerk me këtë email dhe bëj sign in. Në hyrjen e parë, sistemi e lidh automatikisht `clerk_user_id` me profilin ekzistues sipas emailit.

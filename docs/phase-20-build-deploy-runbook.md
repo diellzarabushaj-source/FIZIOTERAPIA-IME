@@ -58,7 +58,7 @@ npm run smoke:production
 
 ## Product rules preserved
 
-- 29.90 EUR/month price.
+- 9.90 EUR/month price.
 - Manual/local-bank billing MVP.
 - Patient login with username + code.
 - Patient cannot create own plan.

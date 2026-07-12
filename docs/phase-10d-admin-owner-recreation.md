@@ -73,7 +73,7 @@ Added:
 - Clerk remains required for owner/admin when configured.
 - Patient login remains username + code.
 - Supabase service role stays server-side only.
-- Billing remains 29.90 EUR/month.
+- Billing remains 9.90 EUR/month.
 - AI remains movement-quality feedback only.
 - Pain 7/10 or higher remains stop/contact physiotherapist.
 

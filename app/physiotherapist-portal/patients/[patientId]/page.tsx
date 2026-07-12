@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { CalendarClock, ClipboardPlus, History, QrCode } from "lucide-react";
+import { CalendarClock, ClipboardPlus, History, QrCode } from "@/components/LucideIcons";
 import { requirePhysioActor } from "@/lib/backend/access";
 import { getClinicalSessionForActor } from "@/lib/backend/clinical-sessions";
 import { getPatientForActor } from "@/lib/backend/patients";

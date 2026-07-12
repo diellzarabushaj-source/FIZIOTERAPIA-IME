@@ -8,7 +8,7 @@ import {
   Plus,
   Send,
   UserRound,
-} from "lucide-react";
+} from "@/components/LucideIcons";
 import { requirePhysioActor } from "@/lib/backend/access";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import dashboardStyles from "../dashboard.module.css";

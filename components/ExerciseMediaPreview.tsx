@@ -1,4 +1,4 @@
-import { ExternalLink, Image as ImageIcon, PlayCircle } from "lucide-react";
+import { ExternalLink, Image as ImageIcon, PlayCircle } from "@/components/LucideIcons";
 import styles from "./ExerciseMediaPreview.module.css";
 
 type ExerciseMediaPreviewProps = {

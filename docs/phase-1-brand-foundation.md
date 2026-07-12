@@ -108,7 +108,7 @@ Added:
 - patient dashboard uses the reusable BrandMark component
 - admin dashboard uses the reusable BrandMark component
 - admin billing uses the reusable BrandMark component
-- admin dashboard pricing copy is aligned to `29.90 EUR / month`
+- admin dashboard pricing copy is aligned to `9.90 EUR / month`
 
 ## Figma implementation
 

@@ -36,7 +36,7 @@ test("mobile navigation styles are loaded after dashboard polish", async () => {
     source("app/physiotherapist-portal/dashboard-mobile.css"),
   ]);
 
-  assert.match(layout, /dashboard-polish\.css";\nimport "\.\/dashboard-mobile\.css/);
+  assert.match(layout, /dashboard-polish\.css";\r?\nimport "\.\/dashboard-mobile\.css/);
   assert.match(css, /@media \(max-width: 980px\)/);
   assert.match(css, /@media \(max-width: 700px\)/);
   assert.match(css, /min-height: 48px/);

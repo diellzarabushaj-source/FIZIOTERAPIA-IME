@@ -27,7 +27,7 @@ Fix exact errors only. Do not add new features.
 
 Preserve these locked rules:
 - Brand: Fizioterapia ime
-- Price: 29.90 EUR/month
+- Price: 9.90 EUR/month
 - Billing: manual/local-bank MVP
 - Patient login: code-only
 - Patient does not use Clerk

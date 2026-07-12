@@ -1,4 +1,4 @@
-import { CheckCircle2, Image as ImageIcon, Palette } from "lucide-react";
+import { CheckCircle2, Image as ImageIcon, Palette } from "@/components/LucideIcons";
 import { requirePhysioActor } from "@/lib/backend/access";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import { saveBrandingAction } from "./actions";

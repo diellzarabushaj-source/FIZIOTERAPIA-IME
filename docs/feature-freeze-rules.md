@@ -42,7 +42,7 @@ npm run smoke:report
 
 ## Locked rules
 
-- Price stays 29.90 EUR/month.
+- Price stays 9.90 EUR/month.
 - Billing remains manual/local-bank MVP.
 - Patient login remains username + code.
 - Patient cannot create own plan.

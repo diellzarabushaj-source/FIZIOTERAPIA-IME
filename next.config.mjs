@@ -1,5 +1,9 @@
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
 /** @type {import('next').NextConfig} */
 const isDevelopment = process.env.NODE_ENV === "development";
+const projectRoot = path.dirname(fileURLToPath(import.meta.url));
 const scriptSources = [
   "'self'",
   "'unsafe-inline'",
@@ -32,7 +36,7 @@ const securityHeaders = [
       "media-src 'self' blob: https:",
       "worker-src 'self' blob:",
       "frame-src 'self' https://*.clerk.accounts.dev",
-      "upgrade-insecure-requests",
+      ...(isDevelopment ? [] : ["upgrade-insecure-requests"]),
     ].join("; "),
   },
 ];
@@ -41,6 +45,9 @@ const securityHeaders = [
 const nextConfig = {
   poweredByHeader: false,
   reactStrictMode: true,
+  turbopack: {
+    root: projectRoot,
+  },
   experimental: {
     serverActions: { bodySizeLimit: "6mb" },
   },

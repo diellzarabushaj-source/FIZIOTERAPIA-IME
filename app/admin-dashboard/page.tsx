@@ -199,7 +199,7 @@ export default async function AdminDashboardPage() {
           <p>Hidden admin · {adminEmail}</p>
           <div className="generated-box">
             <b>Platform rules</b><br />
-            29.90 EUR / muaj<br />Patient login: username + code<br />AI: feedback only
+            9.90 EUR / muaj<br />Patient login: username + code<br />AI: feedback only
           </div>
           <div className="side-menu">
             <a className="active" href="#overview">Overview</a>
@@ -383,7 +383,7 @@ export default async function AdminDashboardPage() {
                     <tbody>
                       <tr><td>Patient login</td><td>Username + code, jo Clerk</td><td>Active</td></tr>
                       <tr><td>Physio/Admin login</td><td>Clerk</td><td>Active</td></tr>
-                      <tr><td>Billing</td><td>29.90 EUR / muaj</td><td>Required</td></tr>
+                      <tr><td>Billing</td><td>9.90 EUR / muaj</td><td>Required</td></tr>
                       <tr><td>AI</td><td>Movement feedback only, no diagnosis</td><td>Locked</td></tr>
                       <tr><td>Pain rule</td><td>7/10 ose më shumë = stop + contact physio</td><td>Locked</td></tr>
                     </tbody>

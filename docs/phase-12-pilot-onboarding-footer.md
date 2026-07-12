@@ -64,7 +64,7 @@ The page includes:
 - AI does not diagnose.
 - AI does not replace the physiotherapist.
 - Pain score 7/10 or higher remains a warning condition.
-- Physiotherapist access remains 29.90 EUR/month.
+- Physiotherapist access remains 9.90 EUR/month.
 
 ## Next phase
 Phase 13 — first pilot feedback form and feedback database/table plan.

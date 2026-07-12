@@ -60,7 +60,7 @@ Physiotherapist uses web app first, later mobile/tablet app.
 Physiotherapist can:
 
 - sign in with Clerk
-- pay/activate 29.90 EUR/month access
+- pay/activate 9.90 EUR/month access
 - create patient
 - generate unique patient code
 - print/share QR card

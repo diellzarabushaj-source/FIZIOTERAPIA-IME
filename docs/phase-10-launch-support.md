@@ -24,7 +24,7 @@ Covers:
 - production access
 - Clerk/Supabase safety
 - clinical workflow
-- 29.90 EUR/month billing
+- 9.90 EUR/month billing
 - mobile app readiness
 - support/legal readiness
 
@@ -44,7 +44,7 @@ Existing support center remains the public help page for patients and physiother
 - AI does not diagnose and does not replace the physiotherapist.
 - Pain score 7/10 or higher remains a warning condition.
 - Camera video is not stored in MVP.
-- Physiotherapist access remains 29.90 EUR/month.
+- Physiotherapist access remains 9.90 EUR/month.
 - Manual billing remains the MVP payment model.
 
 ## Next QA links

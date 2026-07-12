@@ -60,7 +60,7 @@ const gateGroups = [
     title: "Billing & access",
     status: "Manual MVP",
     items: [
-      "Price remains 29.90 EUR/month",
+      "Price remains 9.90 EUR/month",
       "Admin activates access manually",
       "No mandatory Stripe dependency",
       "Physio dashboard locks inactive access",

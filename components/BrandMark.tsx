@@ -1,3 +1,6 @@
+import Link from "next/link";
+import Image from "next/image";
+
 type BrandMarkProps = {
   compact?: boolean;
   href?: string;
@@ -5,12 +8,20 @@ type BrandMarkProps = {
 
 export function BrandMark({ compact = false, href = "/" }: BrandMarkProps) {
   return (
-    <a className={compact ? "brand-mark compact" : "brand-mark"} href={href} aria-label="Fizioterapia ime">
-      <img
-        className={compact ? "brand-image brand-image-icon" : "brand-image brand-image-logo"}
-        src={compact ? "/fizioterapia-ime-icon.svg" : "/fizioterapia-ime-logo.svg"}
-        alt="Fizioterapia ime"
+    <Link className={compact ? "brand-mark compact" : "brand-mark"} href={href} aria-label="Fizioterapia ime">
+      <Image
+        className="brand-lockup-icon"
+        src="/fizioterapia-ime-icon.svg"
+        alt=""
+        width={42}
+        height={42}
       />
-    </a>
+      {!compact && (
+        <span className="brand-lockup-name" aria-hidden="true">
+          <strong>Fizioterapia</strong>
+          <em>ime</em>
+        </span>
+      )}
+    </Link>
   );
 }
