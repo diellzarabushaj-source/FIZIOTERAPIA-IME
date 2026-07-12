@@ -1,6 +1,13 @@
 import { currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
-import { canEnterWorkspace, isOwnerOrAdmin, type WorkspaceRole } from "@/lib/backend/domain";
+import {
+  canEnterWorkspace,
+  isOwnerOrAdmin,
+  isProfileStatus,
+  isWorkspaceRole,
+  type ProfileStatus,
+  type WorkspaceRole,
+} from "@/lib/backend/domain";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 
 export type ActorContext = {
@@ -8,7 +15,7 @@ export type ActorContext = {
   clerkUserId: string;
   email: string;
   role: WorkspaceRole;
-  status: string;
+  status: ProfileStatus;
 };
 
 type ProfileRow = {
@@ -26,7 +33,7 @@ export async function getActorContext(): Promise<ActorContext | null> {
   if (!user?.id || !email || primaryEmail?.verification?.status !== "verified") return null;
 
   const supabase = getSupabaseAdmin();
-  if (!supabase) return null;
+  if (!supabase) throw new Error("Server authorization is not configured.");
 
   const { data: profile, error } = await supabase
     .from("profiles")
@@ -34,8 +41,11 @@ export async function getActorContext(): Promise<ActorContext | null> {
     .eq("email", email)
     .maybeSingle<ProfileRow>();
 
-  if (error || !profile) return null;
+  if (error) throw new Error("Authorization profile lookup failed.");
+  if (!profile) return null;
+
   const status = profile.status || "pending";
+  if (!isWorkspaceRole(profile.role) || !isProfileStatus(status)) return null;
   if (!canEnterWorkspace(profile.role, status)) return null;
 
   if (!profile.clerk_user_id) {
@@ -44,7 +54,8 @@ export async function getActorContext(): Promise<ActorContext | null> {
       p_email: email,
       p_clerk_user_id: user.id,
     });
-    if (linkError || linked !== true) return null;
+    if (linkError) throw new Error("Clerk identity linking failed.");
+    if (linked !== true) return null;
   } else if (profile.clerk_user_id !== user.id) {
     return null;
   }
@@ -53,7 +64,7 @@ export async function getActorContext(): Promise<ActorContext | null> {
     profileId: profile.id,
     clerkUserId: user.id,
     email,
-    role: profile.role as WorkspaceRole,
+    role: profile.role,
     status,
   };
 }
