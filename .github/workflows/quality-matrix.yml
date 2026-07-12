@@ -73,3 +73,17 @@ jobs:
           rules_file_name: .zap/rules.tsv
           cmd_options: '-a -j'
           allow_issue_writing: false
+
+  controlled-load-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      TARGET_URL: ${{ vars.PLAYWRIGHT_BASE_URL || 'https://fizioterapia-ime.vercel.app' }}
+      K6_VUS: '3'
+      K6_DURATION: '30s'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run low-impact k6 smoke test
+        uses: grafana/k6-action@v0.3.1
+        with:
+          filename: tests/load/smoke.js
