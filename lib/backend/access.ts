@@ -1,6 +1,8 @@
 import { currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import {
+  actorCanAccessPhysioResource as domainActorCanAccessPhysioResource,
+  assertPhysioResourceAccess,
   canEnterWorkspace,
   isOwnerOrAdmin,
   isProfileStatus,
@@ -92,7 +94,7 @@ export async function requireOwnerActor(): Promise<ActorContext> {
 }
 
 export function actorCanAccessPhysioResource(actor: ActorContext, resourcePhysioId: string | null | undefined): boolean {
-  return isOwnerOrAdmin(actor.role) || Boolean(resourcePhysioId && resourcePhysioId === actor.profileId);
+  return domainActorCanAccessPhysioResource(actor.role, actor.profileId, resourcePhysioId);
 }
 
 export function assertPhysioOwnership(
@@ -100,7 +102,5 @@ export function assertPhysioOwnership(
   resourcePhysioId: string | null | undefined,
   resourceName = "resource",
 ): void {
-  if (!actorCanAccessPhysioResource(actor, resourcePhysioId)) {
-    throw new Error(`Forbidden ${resourceName} access.`);
-  }
+  assertPhysioResourceAccess(actor.role, actor.profileId, resourcePhysioId, resourceName);
 }
