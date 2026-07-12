@@ -1,6 +1,7 @@
 import { createHmac, timingSafeEqual } from "crypto";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { clinicalRules, getVersionedAiAlert } from "./backend/clinical-rules.ts";
+import { DatabaseError, ForbiddenError } from "./backend/errors.ts";
 import { logServerError } from "./backend/safe-logger.ts";
 import { validatePatientSession } from "./backend/patient-sessions.ts";
 import { normalizePatientCode } from "./supabase-admin.ts";
@@ -141,7 +142,7 @@ export async function getActivePatientBySignedCode({
 
   if (error) {
     logServerError("patient_session_lookup_failed", error, { requireRegisteredSession });
-    throw new Error("Pacienti nuk mund të verifikohet për momentin.");
+    throw new DatabaseError("Pacienti nuk mund të verifikohet për momentin.");
   }
   if (!patient) return null;
 
@@ -180,10 +181,14 @@ export async function requireAssignedPlanExercise({
   const { data: planExercise, error } = await query.maybeSingle();
   if (error) {
     logServerError("assigned_exercise_lookup_failed", error, { aiOnly });
-    throw new Error("Ushtrimi nuk mund të verifikohet për momentin.");
+    throw new DatabaseError("Ushtrimi nuk mund të verifikohet për momentin.");
   }
   if (!planExercise) {
-    throw new Error(aiOnly ? "Ky ushtrim nuk ka AI check aktiv për këtë pacient." : "Ky ushtrim nuk është caktuar në planin aktiv të pacientit.");
+    throw new ForbiddenError(
+      aiOnly
+        ? "Ky ushtrim nuk ka AI check aktiv për këtë pacient."
+        : "Ky ushtrim nuk është caktuar në planin aktiv të pacientit.",
+    );
   }
   return planExercise;
 }
