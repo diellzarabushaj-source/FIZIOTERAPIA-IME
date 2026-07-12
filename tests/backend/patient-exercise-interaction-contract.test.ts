@@ -33,9 +33,11 @@ test("high pain completion stops at physiotherapist contact", async () => {
   assert.match(action, /physio-contact/);
 });
 
-test("patient video remains embedded in the exercise card", async () => {
+test("patient video remains embedded and accessible in the exercise card", async () => {
   const page = await read("app/patient-dashboard/page.tsx");
   assert.match(page, /youtube-nocookie\.com\/embed/);
   assert.match(page, /controls playsInline/);
-  assert.match(page, /Shiko videon para se ta fillosh/);
+  assert.match(page, /className="patient-exercise-media"/);
+  assert.match(page, /title=\{`Video: \$\{title\}`\}/);
+  assert.match(page, /loading="lazy"/);
 });
