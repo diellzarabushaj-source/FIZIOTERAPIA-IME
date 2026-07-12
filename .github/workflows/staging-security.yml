@@ -1,0 +1,52 @@
+name: Staging Security Verification
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '17 3 * * 1'
+
+permissions:
+  contents: read
+
+jobs:
+  rls-audit:
+    if: ${{ secrets.STAGING_DATABASE_URL != '' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      PGURL: ${{ secrets.STAGING_DATABASE_URL }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install PostgreSQL client
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+      - name: Verify RLS and policies
+        run: psql "$PGURL" -v ON_ERROR_STOP=1 -f tests/security/rls-audit.sql
+
+  real-role-boundaries:
+    if: ${{ secrets.E2E_OWNER_STORAGE_STATE_B64 != '' && secrets.E2E_PHYSIO_A_STORAGE_STATE_B64 != '' && secrets.E2E_PHYSIO_B_STORAGE_STATE_B64 != '' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      PLAYWRIGHT_BASE_URL: ${{ vars.STAGING_APP_URL }}
+      E2E_OWNER_STORAGE_STATE_B64: ${{ secrets.E2E_OWNER_STORAGE_STATE_B64 }}
+      E2E_PHYSIO_A_STORAGE_STATE_B64: ${{ secrets.E2E_PHYSIO_A_STORAGE_STATE_B64 }}
+      E2E_PHYSIO_B_STORAGE_STATE_B64: ${{ secrets.E2E_PHYSIO_B_STORAGE_STATE_B64 }}
+      E2E_PHYSIO_A_PATIENT_PATH: ${{ vars.E2E_PHYSIO_A_PATIENT_PATH }}
+      E2E_PHYSIO_B_PATIENT_PATH: ${{ vars.E2E_PHYSIO_B_PATIENT_PATH }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Materialize encrypted test sessions
+        run: |
+          mkdir -p test-results/auth
+          echo "$E2E_OWNER_STORAGE_STATE_B64" | base64 --decode > test-results/auth/owner.json
+          echo "$E2E_PHYSIO_A_STORAGE_STATE_B64" | base64 --decode > test-results/auth/physio-a.json
+          echo "$E2E_PHYSIO_B_STORAGE_STATE_B64" | base64 --decode > test-results/auth/physio-b.json
+      - run: npx playwright test tests/e2e/real-role-boundaries.spec.ts --project=desktop-chromium
+      - if: always()
+        run: rm -rf test-results/auth
