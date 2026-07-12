@@ -15,7 +15,7 @@ test.describe('Public production smoke tests', () => {
 
     expect(response.ok(), `Health endpoint returned ${response.status()}`).toBeTruthy();
     const body = await response.json();
-    expect(body).toMatchObject({ ok: true });
+    expect(body).toMatchObject({ status: 'ok', failedChecks: [] });
   });
 
   test('patient entry route does not crash', async ({ page }) => {
