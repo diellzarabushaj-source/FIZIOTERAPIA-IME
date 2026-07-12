@@ -29,20 +29,8 @@ export function isAdminRole(role?: string | null) {
 }
 
 function configuredPatientSessionSecret(env: NodeJS.ProcessEnv = process.env) {
-  const explicitSecret = env.PATIENT_SESSION_SECRET?.trim() || "";
-  if (explicitSecret.length >= PATIENT_SESSION_SECRET_MIN_LENGTH) return explicitSecret;
-
-  // Production-safe compatibility fallback. The Supabase service role key is already
-  // a private, stable, server-only secret and is never exposed to the browser.
-  // A dedicated PATIENT_SESSION_SECRET remains preferred and can replace this at any time.
-  const serviceRoleKey = env.SUPABASE_SERVICE_ROLE_KEY?.trim() || "";
-  if (serviceRoleKey.length >= PATIENT_SESSION_SECRET_MIN_LENGTH) {
-    return createHmac("sha256", serviceRoleKey)
-      .update("fizioterapia-ime:patient-session-signing:v1")
-      .digest("hex");
-  }
-
-  return "";
+  const secret = env.PATIENT_SESSION_SECRET?.trim() || "";
+  return secret.length >= PATIENT_SESSION_SECRET_MIN_LENGTH ? secret : "";
 }
 
 export function patientSessionSigningConfigured(env: NodeJS.ProcessEnv = process.env) {
@@ -55,7 +43,7 @@ export function getPatientSessionSecret(env: NodeJS.ProcessEnv = process.env) {
   if (secret.length >= PATIENT_SESSION_SECRET_MIN_LENGTH) return secret;
   if (env.NODE_ENV === "production") {
     throw new Error(
-      `Patient session signing secret must contain at least ${PATIENT_SESSION_SECRET_MIN_LENGTH} characters. Configure PATIENT_SESSION_SECRET or a server-only SUPABASE_SERVICE_ROLE_KEY fallback.`,
+      `PATIENT_SESSION_SECRET must contain at least ${PATIENT_SESSION_SECRET_MIN_LENGTH} characters in production.`,
     );
   }
   return "dev-only-patient-session-secret-change-me";
@@ -91,12 +79,19 @@ export function verifyPatientCodeSignature(code: string, signature?: string | nu
 export function parseRequiredText(value: FormDataEntryValue | null, label: string, maxLength = 200) {
   const text = String(value || "").trim();
   if (!text) throw new Error(`${label} është e detyrueshme.`);
-  return text.slice(0, maxLength);
+  if (text.length > maxLength) {
+    throw new Error(`${label} nuk mund të ketë më shumë se ${maxLength} karaktere.`);
+  }
+  return text;
 }
 
 export function parseOptionalText(value: FormDataEntryValue | null, maxLength = 500) {
   const text = String(value || "").trim();
-  return text ? text.slice(0, maxLength) : "";
+  if (!text) return "";
+  if (text.length > maxLength) {
+    throw new Error(`Teksti nuk mund të ketë më shumë se ${maxLength} karaktere.`);
+  }
+  return text;
 }
 
 export function parseBoundedNumber(value: FormDataEntryValue | null, fallback: number | null, min: number, max: number, label: string) {
@@ -137,13 +132,16 @@ export async function getActivePatientBySignedCode({
 
   if (!verifyPatientCodeSignature(normalizedCode, signature)) return null;
 
-  const { data: patient } = await supabase
+  const { data: patient, error } = await supabase
     .from("patients")
     .select("id,patient_username,patient_code,status")
     .eq("patient_code", normalizedCode)
     .eq("status", "active")
     .maybeSingle<ActivePatientSession>();
 
+  if (error) {
+    throw new Error("Pacienti nuk mund të verifikohet për momentin.");
+  }
   if (!patient) return null;
 
   if (requireRegisteredSession) {
@@ -178,7 +176,10 @@ export async function requireAssignedPlanExercise({
 
   if (aiOnly) query = query.eq("exercise_library.ai_enabled", true);
 
-  const { data: planExercise } = await query.maybeSingle();
+  const { data: planExercise, error } = await query.maybeSingle();
+  if (error) {
+    throw new Error("Ushtrimi nuk mund të verifikohet për momentin.");
+  }
   if (!planExercise) {
     throw new Error(aiOnly ? "Ky ushtrim nuk ka AI check aktiv për këtë pacient." : "Ky ushtrim nuk është caktuar në planin aktiv të pacientit.");
   }
