@@ -1,3 +1,5 @@
+import 'react-native-url-polyfill/auto';
+
 declare const process: { env: Record<string, string | undefined> };
 
 const REQUEST_TIMEOUT_MS = 15_000;
