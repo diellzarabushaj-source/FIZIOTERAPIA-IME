@@ -15,9 +15,9 @@ const physioB: Actor = { profileId: "physio-b", role: "physio", state: "active" 
 
 test("only active profiles enter protected workspaces", () => {
   assert.equal(canEnterProtectedWorkspace(physioA), true);
-  assert.equal(canEnterProtectedWorkspace({ ...physioA, state: "pending" }), false);
-  assert.equal(canEnterProtectedWorkspace({ ...physioA, state: "suspended" }), false);
-  assert.equal(canEnterProtectedWorkspace({ ...physioA, state: "disabled" }), false);
+  for (const state of ["pending", "inactive", "suspended", "blocked", "deleted"] as const) {
+    assert.equal(canEnterProtectedWorkspace({ ...physioA, state }), false, `${state} must fail closed`);
+  }
   assert.equal(canEnterProtectedWorkspace(null), false);
 });
 
@@ -33,6 +33,7 @@ test("physiotherapist can access only owned clinical resources", () => {
   assert.equal(canAccessOwnedClinicalResource(physioA, { physioId: "physio-a" }), true);
   assert.equal(canAccessOwnedClinicalResource(physioA, { physioId: "physio-b" }), false);
   assert.equal(canAccessOwnedClinicalResource(physioB, { physioId: "physio-a" }), false);
+  assert.equal(canAccessOwnedClinicalResource(physioA, { physioId: null }), false);
 });
 
 test("suspended actors fail closed even for owned resources", () => {
