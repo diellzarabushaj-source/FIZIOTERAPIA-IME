@@ -3,7 +3,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import {
   sendTransactionalEmail,
   type EmailTemplate,
-} from "@/src/server/email/service";
+} from "../src/server/email/service.ts";
 
 type AlertEmailInput = {
   supabase: SupabaseClient;
