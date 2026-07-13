@@ -1,9 +1,6 @@
 import { createHash } from "node:crypto";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import {
-  sendTransactionalEmail,
-  type EmailTemplate,
-} from "../src/server/email/service.ts";
+import type { EmailTemplate } from "../src/server/email/service.ts";
 
 type AlertEmailInput = {
   supabase: SupabaseClient;
@@ -128,6 +125,7 @@ export async function sendAlertEmail(input: AlertEmailInput) {
     return { ok: false, skipped: true, error: "missing_recipient" };
   }
 
+  const { sendTransactionalEmail } = await import("../src/server/email/service.ts");
   const delivery = await sendTransactionalEmail({
     to: recipient,
     template: alertTemplate,
