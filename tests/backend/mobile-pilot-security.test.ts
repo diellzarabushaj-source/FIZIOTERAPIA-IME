@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { readFile } from "node:fs/promises";
+import { access, readFile } from "node:fs/promises";
 import test from "node:test";
 import {
   MOBILE_PAIN_STOP_THRESHOLD,
@@ -32,6 +32,16 @@ test("mobile runtime contains no fake patient, exercise or AI outcome", async ()
   assert.match(app, /mustStopExerciseForPain/);
 });
 
+test("mobile client has no direct database module or Supabase dependency", async () => {
+  await assert.rejects(
+    access(new URL("../../apps/mobile-app/lib/supabase.ts", import.meta.url)),
+  );
+  const packageJson = JSON.parse(await source("apps/mobile-app/package.json")) as {
+    dependencies?: Record<string, string>;
+  };
+  assert.equal(packageJson.dependencies?.["@supabase/supabase-js"], undefined);
+});
+
 test("mobile client requires explicit environment config and uses authorization headers", async () => {
   const api = await source("apps/mobile-app/lib/api.ts");
 
@@ -54,4 +64,14 @@ test("mobile routes issue, validate and revoke registry sessions", async () => {
   assert.match(progressRoute, /requireAssignedPlanExercise/);
   assert.match(progressRoute, /evaluatePainSafety/);
   assert.doesNotMatch(progressRoute, /alertType:\s*body\.alertType/);
+});
+
+test("mobile health exposes only a minimal public contract", async () => {
+  const healthRoute = await source("app/api/mobile/health/route.ts");
+
+  assert.match(healthRoute, /hasValidMonitorSecret/);
+  assert.match(healthRoute, /canSeeDetails/);
+  assert.match(healthRoute, /"Cache-Control": "no-store, max-age=0"/);
+  assert.doesNotMatch(healthRoute, /app:\s*"Fizioterapia ime"/);
+  assert.doesNotMatch(healthRoute, /note:\s*"Safe/);
 });
