@@ -1,9 +1,9 @@
 import type { ActorContext } from "@/lib/backend/access";
 import { writeAuditEvent } from "@/lib/backend/audit";
 import { fail, ok, type BackendResult } from "@/lib/backend/result";
-import { cleanText, optionalText } from "@/lib/backend/validation";
 import { getPatientForActor, type PatientRecord } from "@/lib/backend/patients";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
+import { validatePatientProfile } from "@/src/features/patients/domain/patient-profile";
 
 export type UpdatePatientInput = {
   firstName: unknown;
@@ -23,34 +23,22 @@ export async function updatePatientForActor(
     return fail(currentResult.error.code, currentResult.error.message, currentResult.error);
   }
 
-  const firstName = cleanText(input.firstName, 80);
-  const lastName = cleanText(input.lastName, 80);
-  const dateOfBirth = cleanText(input.dateOfBirth, 10);
-  const fieldErrors: Record<string, string> = {};
-
-  if (firstName.length < 2) fieldErrors.firstName = "Shkruaj së paku 2 karaktere.";
-  if (lastName.length < 2) fieldErrors.lastName = "Shkruaj së paku 2 karaktere.";
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(dateOfBirth)) fieldErrors.dateOfBirth = "Zgjidh datëlindjen e saktë.";
-
-  const birthDate = new Date(`${dateOfBirth}T00:00:00Z`);
-  const today = new Date();
-  if (!Number.isNaN(birthDate.getTime()) && birthDate > today) {
-    fieldErrors.dateOfBirth = "Datëlindja nuk mund të jetë në të ardhmen.";
-  }
-
-  if (Object.keys(fieldErrors).length) {
-    return fail("VALIDATION_ERROR", "Kontrollo fushat e shënuara.", { fieldErrors });
+  const validation = validatePatientProfile(input);
+  if (validation.ok === false) {
+    return fail("VALIDATION_ERROR", "Kontrollo fushat e shënuara.", {
+      fieldErrors: validation.fieldErrors,
+    });
   }
 
   const supabase = getSupabaseAdmin();
   if (!supabase) return fail("DATABASE_ERROR", "Databaza nuk është konfiguruar.");
 
   const payload = {
-    first_name: firstName,
-    last_name: lastName,
-    date_of_birth: dateOfBirth,
-    phone: optionalText(input.phone, 40),
-    diagnosis: optionalText(input.diagnosis, 1500),
+    first_name: validation.data.firstName,
+    last_name: validation.data.lastName,
+    date_of_birth: validation.data.dateOfBirth,
+    phone: validation.data.phone,
+    diagnosis: validation.data.diagnosis,
     updated_at: new Date().toISOString(),
   };
 
