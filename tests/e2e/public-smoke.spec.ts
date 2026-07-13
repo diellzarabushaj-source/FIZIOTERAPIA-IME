@@ -1,6 +1,8 @@
 import { expect, test } from '@playwright/test';
 
-test.describe('Public production smoke tests', () => {
+const healthMode = process.env.E2E_HEALTH_MODE ?? 'contract';
+
+test.describe('Public application smoke tests', () => {
   test('homepage loads without a server error', async ({ page }) => {
     const response = await page.goto('/', { waitUntil: 'domcontentloaded' });
 
@@ -10,12 +12,35 @@ test.describe('Public production smoke tests', () => {
     await expect(page).toHaveTitle(/.+/);
   });
 
-  test('health endpoint reports a healthy application', async ({ request }) => {
+  test('health endpoint follows the configured readiness contract', async ({ request }) => {
     const response = await request.get('/api/health');
-
-    expect(response.ok(), `Health endpoint returned ${response.status()}`).toBeTruthy();
     const body = await response.json();
-    expect(body).toMatchObject({ status: 'ok', failedChecks: [] });
+
+    expect(body).toMatchObject({
+      status: expect.stringMatching(/^(ok|degraded)$/),
+      timestamp: expect.any(String),
+      failedChecks: expect.any(Array),
+    });
+
+    if (healthMode === 'healthy') {
+      expect(response.ok(), `Health endpoint returned ${response.status()}`).toBeTruthy();
+      expect(body).toMatchObject({ status: 'ok', failedChecks: [] });
+      return;
+    }
+
+    if (healthMode === 'degraded') {
+      expect(response.status(), 'Unconfigured branch server must fail closed').toBe(503);
+      expect(body.status).toBe('degraded');
+      expect(body.failedChecks.length).toBeGreaterThan(0);
+      expect(body).not.toHaveProperty('checks');
+      expect(body).not.toHaveProperty('environment');
+      expect(body).not.toHaveProperty('version');
+      return;
+    }
+
+    expect([200, 503]).toContain(response.status());
+    expect(body.status === 'ok').toBe(response.status() === 200);
+    expect(body.failedChecks.length === 0).toBe(response.status() === 200);
   });
 
   test('patient entry route does not crash', async ({ page }) => {
