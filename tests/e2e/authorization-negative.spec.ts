@@ -100,6 +100,7 @@ test.describe("Negative authorization and privacy boundaries", () => {
         "Content-Type": "application/json",
       },
       data: {
+        patientId: UNKNOWN_PATIENT_ID,
         planExerciseId: UNKNOWN_PATIENT_ID,
         completed: true,
         painScore: 0,
