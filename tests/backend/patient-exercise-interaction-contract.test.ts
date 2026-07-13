@@ -38,6 +38,6 @@ test("patient video remains embedded and accessible in the exercise card", async
   assert.match(page, /youtube-nocookie\.com\/embed/);
   assert.match(page, /controls playsInline/);
   assert.match(page, /className="patient-exercise-media"/);
-  assert.match(page, /title=\{`Video: \$\{title\}`\}/);
+  assert.match(page, /title=\{`Video: \$\{exercise\.library\?\.name \|\| "Ushtrimi"\}`\}/);
   assert.match(page, /loading="lazy"/);
 });
