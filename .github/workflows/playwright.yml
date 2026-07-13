@@ -14,7 +14,7 @@ jobs:
   e2e:
     name: Branch E2E / production smoke
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
 
     steps:
       - name: Checkout repository
@@ -38,12 +38,12 @@ jobs:
       - name: Install Chromium
         run: npx playwright install --with-deps chromium
 
-      - name: Run branch E2E against local application
+      - name: Run branch E2E against production-mode branch build
         if: github.event_name == 'pull_request'
         run: npm run test:e2e
         env:
           PLAYWRIGHT_BASE_URL: http://127.0.0.1:3000
-          PLAYWRIGHT_WEB_SERVER_COMMAND: npm run dev
+          PLAYWRIGHT_WEB_SERVER_COMMAND: npm run build && npm run start
           E2E_HEALTH_MODE: degraded
 
       - name: Run production smoke tests
