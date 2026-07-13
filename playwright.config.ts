@@ -24,7 +24,7 @@ export default defineConfig({
         command: webServerCommand,
         url: baseURL,
         reuseExistingServer: !process.env.CI,
-        timeout: 180_000,
+        timeout: 300_000,
         stdout: 'pipe',
         stderr: 'pipe',
       }
