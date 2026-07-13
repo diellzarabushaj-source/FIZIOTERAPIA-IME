@@ -16,10 +16,16 @@ test("patient completion always validates signed session and active plan ownersh
   assert.match(service, /HIGH_PAIN_THRESHOLD\s*=\s*7/);
 });
 
-test("patient dashboard queries active plans only", async () => {
-  const dashboard = await source("app/patient-dashboard/page.tsx");
-  assert.match(dashboard, /\.eq\("status",\s*"active"\)/);
-  assert.match(dashboard, /\.in\("plan_exercise_id",\s*planExerciseIds\)/);
+test("patient dashboard queries active plans only through the typed server boundary", async () => {
+  const page = await source("app/patient-dashboard/page.tsx");
+  const dashboardService = await source("src/features/patients/server/patient-dashboard.ts");
+
+  assert.match(page, /getPatientDashboardData/);
+  assert.doesNotMatch(page, /getSupabaseAdmin/);
+  assert.match(dashboardService, /getCurrentPatientSession/);
+  assert.match(dashboardService, /\.from\("plans"\)/);
+  assert.match(dashboardService, /\.eq\("status",\s*"active"\)/);
+  assert.match(dashboardService, /\.in\("plan_exercise_id",\s*exerciseIds\)/);
 });
 
 test("admin routes use centralized owner guard", async () => {
