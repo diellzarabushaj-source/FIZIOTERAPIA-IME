@@ -3,6 +3,7 @@ import { readFile } from "node:fs/promises";
 const files = {
   service: "lib/backend/schema-readiness.ts",
   route: "app/api/readiness/route.ts",
+  monitorAuth: "src/server/monitoring/monitor-auth.ts",
   baseMigration: "supabase/migrations/20260711_database_schema_readiness.sql",
   sessionMigration: "supabase/migrations/20260711_patient_session_registry.sql",
   latestMigration: "supabase/migrations/20260711_zz_exercise_library_readiness.sql",
@@ -52,7 +53,9 @@ const rules = [
   ["route reports missing columns to protected monitors", content.route.includes("missingColumns: readiness.missingColumns")],
   ["route fails closed with HTTP 503", content.route.includes("status: readiness.ready ? 200 : 503")],
   ["route disables caching", content.route.includes('"Cache-Control": "no-store, max-age=0"')],
-  ["route protects diagnostics with monitor secret", content.route.includes("HEALTH_MONITOR_SECRET")],
+  ["route uses centralized monitor authentication", content.route.includes("hasValidMonitorSecret")],
+  ["monitor authentication reads the dedicated secret", content.monitorAuth.includes("HEALTH_MONITOR_SECRET")],
+  ["monitor authentication uses constant-time comparison", content.monitorAuth.includes("timingSafeEqual")],
 ];
 
 console.table(rules.map(([rule, passed]) => ({ rule, status: passed ? "pass" : "fail" })));
