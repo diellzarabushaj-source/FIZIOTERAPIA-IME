@@ -59,13 +59,10 @@ export type SaveProgressResult = {
 };
 
 export type MobileHealth = {
-  app: string;
   service: "mobile-api";
-  ok: boolean;
-  status: "ready" | "missing-required-env";
-  checks: Record<string, boolean>;
+  status: "ready" | "not_ready";
   timestamp: string;
-  note: string;
+  failedChecks: string[];
 };
 
 export class MobileApiError extends Error {
