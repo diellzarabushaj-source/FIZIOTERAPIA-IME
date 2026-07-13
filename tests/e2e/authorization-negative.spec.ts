@@ -53,6 +53,19 @@ test.describe("Negative authorization and privacy boundaries", () => {
     expect(body).not.toContain(UNKNOWN_PATIENT_ID);
   });
 
+  test("development patient fixtures are not reachable in production mode", async ({ page }) => {
+    const response = await page.goto("/patient-dashboard/demo", {
+      waitUntil: "domcontentloaded",
+    });
+
+    expect(response).not.toBeNull();
+    expect(response?.status()).toBe(404);
+    const body = await page.locator("body").innerText();
+    expect(body).not.toContain("PACIENTI DEMO");
+    expect(body).not.toContain("Arta");
+    expect(body).not.toContain("Heel slides");
+  });
+
   test("AI result endpoint rejects a cross-origin write before data access", async ({ request }) => {
     const response = await request.post("/api/patient/ai-check", {
       headers: {
