@@ -1,5 +1,13 @@
-export type PlatformRole = "owner" | "admin" | "physio";
-export type ProfileState = "active" | "pending" | "suspended" | "disabled";
+import {
+  actorCanAccessPhysioResource,
+  canEnterWorkspace,
+  isOwnerOrAdmin,
+  type ProfileStatus,
+  type WorkspaceRole,
+} from "../../../lib/backend/domain.ts";
+
+export type PlatformRole = WorkspaceRole;
+export type ProfileState = ProfileStatus;
 
 export type Actor = {
   profileId: string;
@@ -8,15 +16,15 @@ export type Actor = {
 };
 
 export type OwnedResource = {
-  physioId: string;
+  physioId: string | null | undefined;
 };
 
 export function canEnterProtectedWorkspace(actor: Actor | null): actor is Actor {
-  return actor !== null && actor.state === "active";
+  return actor !== null && canEnterWorkspace(actor.role, actor.state);
 }
 
 export function canManagePlatform(actor: Actor | null) {
-  return canEnterProtectedWorkspace(actor) && (actor.role === "owner" || actor.role === "admin");
+  return canEnterProtectedWorkspace(actor) && isOwnerOrAdmin(actor.role);
 }
 
 export function canManageBilling(actor: Actor | null) {
@@ -25,8 +33,7 @@ export function canManageBilling(actor: Actor | null) {
 
 export function canAccessOwnedClinicalResource(actor: Actor | null, resource: OwnedResource) {
   if (!canEnterProtectedWorkspace(actor)) return false;
-  if (actor.role === "owner" || actor.role === "admin") return true;
-  return actor.role === "physio" && actor.profileId === resource.physioId;
+  return actorCanAccessPhysioResource(actor.role, actor.profileId, resource.physioId);
 }
 
 export function assertOwnedClinicalResource(actor: Actor | null, resource: OwnedResource) {
