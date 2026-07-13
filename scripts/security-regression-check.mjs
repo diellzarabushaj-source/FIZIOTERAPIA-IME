@@ -3,9 +3,20 @@ import { readFileSync } from "node:fs";
 const checks = [
   {
     file: "app/patient-dashboard/page.tsx",
-    mustContain: ["getCurrentPatientSession"],
+    mustContain: ["getPatientDashboardData"],
+    mustNotContain: ["fizioplan_patient_code", "getSupabaseAdmin"],
+    label: "Patient dashboard delegates clinical data access to the typed server boundary",
+  },
+  {
+    file: "src/features/patients/server/patient-dashboard.ts",
+    mustContain: [
+      'import "server-only"',
+      "getCurrentPatientSession",
+      '.eq("status", "active")',
+      '.is("archived_at", null)',
+    ],
     mustNotContain: ["fizioplan_patient_code"],
-    label: "Patient dashboard requires the shared signed-session guard",
+    label: "Patient dashboard server boundary requires the shared signed session and active patient ownership",
   },
   {
     file: "app/api/patient/ai-check/route.ts",
@@ -61,20 +72,15 @@ const checks = [
       "PATIENT_SESSION_SECRET_MIN_LENGTH",
       "timingSafeEqual",
       "must contain at least",
-      ".eq(\"plans.status\", \"active\")",
+      '.eq("plans.status", "active")',
     ],
     mustNotContain: ["CLERK_SECRET_KEY ||", "SUPABASE_SERVICE_ROLE_KEY ||"],
     label: "Patient sessions expire, require a dedicated strong secret, fail closed, and enforce active-plan ownership",
   },
   {
     file: "app/api/patient/access-qr/[code]/route.ts",
-    mustContain: ["actorCanAccessPhysioResource", ".eq(\"status\", \"active\")"],
+    mustContain: ["actorCanAccessPhysioResource", '.eq("status", "active")'],
     label: "QR generation checks operator authentication, patient ownership, and status",
-  },
-  {
-    file: "app/patient-dashboard/page.tsx",
-    mustContain: ["getCurrentPatientSession"],
-    label: "Public patient routes protect clinical data at the server session layer",
   },
   {
     file: "next.config.mjs",
@@ -113,10 +119,14 @@ for (const check of checks) {
   }
 
   for (const token of check.mustContain || []) {
-    if (!source.includes(token)) failures.push(`${check.label}: ${check.file} is missing ${JSON.stringify(token)}`);
+    if (!source.includes(token)) {
+      failures.push(`${check.label}: ${check.file} is missing ${JSON.stringify(token)}`);
+    }
   }
   for (const token of check.mustNotContain || []) {
-    if (source.includes(token)) failures.push(`${check.label}: ${check.file} contains forbidden ${JSON.stringify(token)}`);
+    if (source.includes(token)) {
+      failures.push(`${check.label}: ${check.file} contains forbidden ${JSON.stringify(token)}`);
+    }
   }
 }
 
