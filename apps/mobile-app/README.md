@@ -1,72 +1,91 @@
-# Fizioterapia ime Mobile App
+# Fizioterapia ime — mobile patient pilot
 
-Expo React Native patient app for Fizioterapia ime.
+Expo React Native pilot for the patient experience. The mobile application talks only to the authenticated web API; it does not connect directly to PostgreSQL/Supabase and does not contain production demo patients, fabricated exercises or simulated AI results.
 
-This folder contains the mobile patient app that shares the same Supabase backend with the web dashboard.
+## Implemented pilot flow
 
-## Included flow
+- Patient login with the personal code issued by the physiotherapist.
+- Rate-limited server authentication.
+- Revocable patient-session registry when `PATIENT_SESSION_REGISTRY_ENABLED=1`.
+- Migration-compatible signed-session fallback while the registry migration is being rolled out.
+- Active treatment-plan and assigned-exercise loading from the web API.
+- Exercise instructions and daily completion state.
+- Pain score from 0 to 10.
+- Mandatory stop-and-contact warning at pain score 7/10 or higher.
+- Server-authorized progress write.
+- Explicit logout and server-side session revocation.
+- Loading, empty, network, timeout and expired-session states.
+- Accessible touch targets, labels and progress indicators.
 
-- Patient login with code `ARB-4821`
-- 14-day physiotherapy plan overview
-- Exercise cards and exercise detail screen
-- AI Movement Check preparation screen
-- Mock camera analysis with countdown
-- AI result with score, feedback and clinical disclaimer
-- Pain score 0-10 safety step
-- Warning if pain score is 7 or higher
-- Supabase save helper for `ai_checks` and `exercise_logs`
+## Not enabled in this pilot
 
-## Preview on phone with Expo Go
+The mobile pilot does not activate the camera or produce an AI score. AI Movement Check remains available only in the supported web flow where MediaPipe Pose Landmarker, camera consent and browser fallback behavior are implemented. No fake camera result is shown as a substitute.
+
+The application does not diagnose, prescribe treatment or replace the responsible physiotherapist.
+
+## Environment
+
+Create `apps/mobile-app/.env` from `.env.example`:
+
+```bash
+EXPO_PUBLIC_API_BASE_URL=https://your-preview-or-production-domain.example
+```
+
+Rules:
+
+- Use HTTPS outside local development.
+- Never add `SUPABASE_SERVICE_ROLE_KEY`, `CLERK_SECRET_KEY`, `PATIENT_SESSION_SECRET`, `RESEND_API_KEY` or any other server secret.
+- The mobile application does not need Supabase URL/anon credentials because all data access goes through the web API.
+- Preview builds must use an isolated non-production backend and non-production patient fixtures.
+
+Validate configuration:
 
 ```bash
 cd apps/mobile-app
-npm install
-npm run generate:assets
-npx expo start
+npm install --no-audit --no-fund
+npm run check:env
+npm run typecheck
 ```
 
-Then install **Expo Go** on iPhone or Android and scan the QR code.
+## Local development
 
-## Environment variables
-
-Create `.env` from `.env.example`:
+Run the Next.js application first, then point the mobile app to it:
 
 ```bash
-EXPO_PUBLIC_SUPABASE_URL=https://squgbcmzyaclafnioczq.supabase.co
-EXPO_PUBLIC_SUPABASE_ANON_KEY=your_publishable_or_anon_key_here
+# apps/mobile-app/.env
+EXPO_PUBLIC_API_BASE_URL=http://localhost:3000
 ```
 
-Use only the Supabase publishable/anon key. Never put the Supabase service role key in the mobile app.
+For a physical phone, `localhost` refers to the phone itself. Use a secure development tunnel or a reachable development host rather than exposing a production database.
 
-## Mobile assets
-
-Source SVG assets are included in:
-
-```text
-assets/source/app-icon.svg
-assets/source/adaptive-icon-foreground.svg
-assets/source/splash.svg
-```
-
-Generate PNG assets before EAS build:
+Start Expo:
 
 ```bash
+cd apps/mobile-app
+npm install --no-audit --no-fund
 npm run generate:assets
+npm start
 ```
 
-Expected generated files:
+## API contract
 
-```text
-assets/generated/app-icon.png
-assets/generated/adaptive-icon-foreground.png
-assets/generated/splash.png
-```
+The pilot uses:
 
-The build scripts automatically run asset generation before EAS build.
+- `POST /api/mobile/patient-session` — verifies the patient code and issues a patient session.
+- `DELETE /api/mobile/patient-session` — revokes the current registry session.
+- `POST /api/mobile/save-progress` — validates the Bearer session, patient identity, active plan and assigned exercise before writing progress.
+- `GET /api/mobile/health` — returns a safe readiness summary; protected diagnostics require the monitor secret.
 
-## App Store / Play Store preparation
+Patient-session tokens are held only in application memory in this pilot and are sent in the `Authorization: Bearer` header. They are not placed in URLs, logs or analytics payloads.
 
-The app is configured for EAS builds:
+## Clinical safety
+
+- Pain 7/10 or higher: stop the exercise and contact the physiotherapist.
+- Plans and instructions come from the responsible professional.
+- The platform provides tracking and movement-quality support only.
+- No autonomous diagnosis or treatment recommendation is permitted.
+
+## Build preparation
 
 ```bash
 npm run build:preview
@@ -74,7 +93,9 @@ npm run build:ios
 npm run build:android
 ```
 
-Current app identifiers:
+Each build command validates `EXPO_PUBLIC_API_BASE_URL` and generates application assets first.
+
+Current identifiers:
 
 ```text
 App name: Fizioterapia ime
@@ -82,20 +103,4 @@ iOS bundle ID: com.fizioterapiaime.patient
 Android package: com.fizioterapiaime.patient
 ```
 
-Store drafts are included:
-
-- `store-listing.md`
-- `app-privacy.md`
-- `eas.json`
-- `submission-checklist.md`
-- `assets/README.md`
-
-Before submitting, add real screenshots:
-
-- iPhone screenshots
-- Android screenshots
-- reviewer demo patient username + code
-
-## Clinical safety
-
-The AI flow is movement-quality feedback only. It does not diagnose, prescribe therapy, or replace the physiotherapist.
+Store drafts and operational checklists remain under this directory. Do not submit the pilot until authenticated flows, session revocation, offline/error states and clinical-safety behavior have been tested on iOS and Android with non-production data.
