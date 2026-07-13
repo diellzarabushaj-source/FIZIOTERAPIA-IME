@@ -2,7 +2,8 @@ import { readdir, readFile, writeFile } from "node:fs/promises";
 import { relative, resolve, sep } from "node:path";
 
 const root = process.cwd();
-const outputPath = resolve(root, "docs/rebuild/repository-inventory.generated.md");
+const generatedRepositoryPath = "docs/rebuild/repository-inventory.generated.md";
+const outputPath = resolve(root, generatedRepositoryPath);
 const ignoredDirectories = new Set([
   ".git",
   ".next",
@@ -13,7 +14,17 @@ const ignoredDirectories = new Set([
   "test-results",
 ]);
 const textExtensions = new Set([
-  ".css", ".js", ".jsx", ".json", ".md", ".mjs", ".sql", ".ts", ".tsx", ".yaml", ".yml",
+  ".css",
+  ".js",
+  ".jsx",
+  ".json",
+  ".md",
+  ".mjs",
+  ".sql",
+  ".ts",
+  ".tsx",
+  ".yaml",
+  ".yml",
 ]);
 
 function repositoryPath(absolutePath) {
@@ -39,8 +50,10 @@ async function walk(directory) {
   return paths;
 }
 
-function routeFromPage(path) {
-  const withoutPrefix = path.replace(/^app\//, "").replace(/\/(?:page|route)\.(?:[cm]?[jt]sx?)$/, "");
+function routeFromAppFile(path) {
+  const withoutPrefix = path
+    .replace(/^app\//, "")
+    .replace(/(^|\/)(?:page|route)\.(?:[cm]?[jt]sx?)$/, "");
   const segments = withoutPrefix
     .split("/")
     .filter(Boolean)
@@ -57,17 +70,24 @@ function markdownList(values) {
 function markdownTable(headers, rows) {
   const header = `| ${headers.join(" | ")} |`;
   const separator = `| ${headers.map(() => "---").join(" | ")} |`;
-  if (rows.length === 0) return `${header}\n${separator}\n| ${headers.map((_, index) => index === 0 ? "None found" : "").join(" | ")} |`;
+  if (rows.length === 0) {
+    return `${header}\n${separator}\n| ${headers
+      .map((_, index) => (index === 0 ? "None found" : ""))
+      .join(" | ")} |`;
+  }
   return [header, separator, ...rows.map((row) => `| ${row.join(" | ")} |`)].join("\n");
 }
 
 const absoluteFiles = await walk(root);
-const files = absoluteFiles.map(repositoryPath).sort();
+const files = absoluteFiles
+  .map(repositoryPath)
+  .filter((path) => path !== generatedRepositoryPath)
+  .sort();
 const sourceByPath = new Map();
 
 for (const absolutePath of absoluteFiles) {
   const path = repositoryPath(absolutePath);
-  if (!textExtensions.has(extension(path))) continue;
+  if (path === generatedRepositoryPath || !textExtensions.has(extension(path))) continue;
   try {
     sourceByPath.set(path, await readFile(absolutePath, "utf8"));
   } catch {
@@ -78,7 +98,11 @@ for (const absolutePath of absoluteFiles) {
 const appFiles = files.filter((path) => path.startsWith("app/"));
 const routeEntries = appFiles
   .filter((path) => /\/(page|route)\.(?:[cm]?[jt]sx?)$/.test(path))
-  .map((path) => [routeFromPage(path), path.endsWith("/route.ts") || path.endsWith("/route.js") ? "route handler" : "page", path])
+  .map((path) => [
+    routeFromAppFile(path),
+    /\/route\.(?:[cm]?[jt]sx?)$/.test(path) ? "route handler" : "page",
+    path,
+  ])
   .sort((left, right) => left[0].localeCompare(right[0]) || left[2].localeCompare(right[2]));
 
 const appBoundaries = appFiles
@@ -101,7 +125,9 @@ for (const [path, source] of sourceByPath) {
   }
 }
 
-const migrationFiles = files.filter((path) => path.startsWith("supabase/migrations/") && path.endsWith(".sql"));
+const migrationFiles = files.filter(
+  (path) => path.startsWith("supabase/migrations/") && path.endsWith(".sql"),
+);
 const databaseObjects = [];
 for (const path of migrationFiles) {
   const source = sourceByPath.get(path) ?? "";
@@ -113,17 +139,41 @@ for (const path of migrationFiles) {
   ];
   for (const [kind, pattern] of patterns) {
     for (const match of source.matchAll(pattern)) {
-      databaseObjects.push([kind, match.slice(1).filter(Boolean).join(" on ").replaceAll("|", "\\|"), path]);
+      databaseObjects.push([
+        kind,
+        match.slice(1).filter(Boolean).join(" on ").replaceAll("|", "\\|"),
+        path,
+      ]);
     }
   }
 }
+databaseObjects.sort(
+  (left, right) =>
+    left[0].localeCompare(right[0]) ||
+    left[1].localeCompare(right[1]) ||
+    left[2].localeCompare(right[2]),
+);
 
-databaseObjects.sort((left, right) => left[0].localeCompare(right[0]) || left[1].localeCompare(right[1]) || left[2].localeCompare(right[2]));
+const workflowFiles = files.filter(
+  (path) => path.startsWith(".github/workflows/") && /\.ya?ml$/.test(path),
+);
 
-const workflowFiles = files.filter((path) => path.startsWith(".github/workflows/") && /\.ya?ml$/.test(path));
-const packageJson = JSON.parse(sourceByPath.get("package.json") ?? "{}");
-const dependencies = Object.entries({ ...packageJson.dependencies, ...packageJson.devDependencies })
-  .sort(([left], [right]) => left.localeCompare(right));
+const packageManifests = files.filter(
+  (path) => path === "package.json" || /^(apps|packages)\/[^/]+\/package\.json$/.test(path),
+);
+const dependencies = [];
+for (const manifestPath of packageManifests) {
+  const manifest = JSON.parse(sourceByPath.get(manifestPath) ?? "{}");
+  for (const [name, version] of Object.entries({
+    ...manifest.dependencies,
+    ...manifest.devDependencies,
+  })) {
+    dependencies.push([manifestPath, name, version]);
+  }
+}
+dependencies.sort(
+  (left, right) => left[0].localeCompare(right[0]) || left[1].localeCompare(right[1]),
+);
 
 const integrationMarkers = {
   Clerk: ["@clerk/", "clerkMiddleware", "currentUser("],
@@ -145,7 +195,11 @@ const integrationFiles = Object.entries(integrationMarkers).map(([integration, m
 });
 
 const roleAndPermissionFiles = [...sourceByPath.entries()]
-  .filter(([, source]) => /\b(owner|admin|physio|patient)\b/.test(source) && /(role|permission|ownership|authorize|forbidden|suspended)/i.test(source))
+  .filter(
+    ([, source]) =>
+      /\b(owner|admin|physio|patient)\b/.test(source) &&
+      /(role|permission|ownership|authorize|forbidden|suspended)/i.test(source),
+  )
   .map(([path]) => path)
   .sort();
 
@@ -176,7 +230,10 @@ const lines = [
   "",
   "## App Router pages and route handlers",
   "",
-  markdownTable(["Route", "Kind", "File"], routeEntries.map(([route, kind, path]) => [`\`${route}\``, kind, `\`${path}\``])),
+  markdownTable(
+    ["Route", "Kind", "File"],
+    routeEntries.map(([route, kind, path]) => [`\`${route}\``, kind, `\`${path}\``]),
+  ),
   "",
   "## App Router layouts and boundaries",
   "",
@@ -201,11 +258,21 @@ const lines = [
   "",
   "## Database objects declared by migrations",
   "",
-  markdownTable(["Kind", "Object", "Migration"], databaseObjects.map(([kind, object, path]) => [kind, `\`${object}\``, `\`${path}\``])),
+  markdownTable(
+    ["Kind", "Object", "Migration"],
+    databaseObjects.map(([kind, object, path]) => [kind, `\`${object}\``, `\`${path}\``]),
+  ),
   "",
-  "## Dependencies",
+  "## Dependencies by package",
   "",
-  markdownTable(["Package", "Pinned version"], dependencies.map(([name, version]) => [`\`${name}\``, `\`${version}\``])),
+  markdownTable(
+    ["Manifest", "Package", "Pinned version"],
+    dependencies.map(([manifest, name, version]) => [
+      `\`${manifest}\``,
+      `\`${name}\``,
+      `\`${version}\``,
+    ]),
+  ),
   "",
   "## Integration touchpoints",
   "",
