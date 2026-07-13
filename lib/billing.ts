@@ -4,7 +4,7 @@ import {
   PILOT_CURRENCY,
   PILOT_MONTHLY_PRICE_CENTS,
   type SubscriptionState,
-} from "@/src/features/billing/domain/patient-capacity";
+} from "../src/features/billing/domain/patient-capacity.ts";
 
 export const PHYSIO_MONTHLY_PRICE_EUR = PILOT_MONTHLY_PRICE_CENTS / 100;
 export const PHYSIO_MONTHLY_PRICE_LABEL = `${PHYSIO_MONTHLY_PRICE_EUR.toFixed(2)} ${PILOT_CURRENCY} / muaj`;
