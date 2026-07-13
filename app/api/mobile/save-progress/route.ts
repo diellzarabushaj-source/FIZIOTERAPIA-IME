@@ -156,7 +156,12 @@ export async function POST(request: Request) {
 
   const painDecision = painScore === undefined ? null : evaluatePainSafety(painScore);
   if (painDecision?.action === "stop_and_contact_physio") {
-    await notifyPhysioHighPain({ supabase, patientId: patient.id, painScore, comment: null });
+    await notifyPhysioHighPain({
+      supabase,
+      patientId: patient.id,
+      painScore: painDecision.painScore,
+      comment: null,
+    });
   }
   if (score !== undefined && score < 60) {
     await notifyPhysioLowAiScore({ supabase, patientId: patient.id, score, feedback });
