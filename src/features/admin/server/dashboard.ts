@@ -1,9 +1,9 @@
 import "server-only";
 
-import { patientSessionSigningConfigured } from "../../../../lib/backend-logic.ts";
-import { patientSessionRegistryEnabled } from "../../../../lib/backend/patient-sessions.ts";
-import { checkDatabaseReadiness } from "../../../../lib/backend/schema-readiness.ts";
-import { getSupabaseAdmin } from "../../../../lib/supabase-admin.ts";
+import { patientSessionSigningConfigured } from "@/lib/backend-logic";
+import { patientSessionRegistryEnabled } from "@/lib/backend/patient-sessions";
+import { checkDatabaseReadiness } from "@/lib/backend/schema-readiness";
+import { getSupabaseAdmin } from "@/lib/supabase-admin";
 
 export type AdminProfileSummary = {
   id: string;
