@@ -13,15 +13,26 @@ type QueryCall = {
   args: unknown[];
 };
 
-function queryChain(finalValue: unknown, calls: QueryCall[]) {
+function queryChain(
+  finalValue: unknown,
+  calls: QueryCall[],
+  options: { terminalSelect?: boolean } = {},
+) {
   const chain: Record<string, (...args: unknown[]) => unknown> = {};
-  for (const method of ["select", "update", "insert", "eq", "is", "gt"]) {
+  for (const method of ["update", "eq", "is", "gt"]) {
     chain[method] = (...args: unknown[]) => {
       calls.push({ method, args });
-      if (method === "insert") return Promise.resolve(finalValue);
       return chain;
     };
   }
+  chain.insert = (...args: unknown[]) => {
+    calls.push({ method: "insert", args });
+    return Promise.resolve(finalValue);
+  };
+  chain.select = (...args: unknown[]) => {
+    calls.push({ method: "select", args });
+    return options.terminalSelect ? Promise.resolve(finalValue) : chain;
+  };
   chain.maybeSingle = () => Promise.resolve(finalValue);
   return chain;
 }
@@ -142,13 +153,14 @@ test("individual patient logout revokes the hashed token with a bounded reason",
 
 test("physiotherapist or administrator can revoke all active sessions for one patient", async () => {
   const calls: QueryCall[] = [];
+  const finalValue = {
+    data: [{ id: "session-1" }, { id: "session-2" }],
+    error: null,
+  };
   const supabase = {
     from(table: string) {
       assert.equal(table, PATIENT_AUTH_SESSIONS_TABLE);
-      return queryChain({
-        data: [{ id: "session-1" }, { id: "session-2" }],
-        error: null,
-      }, calls);
+      return queryChain(finalValue, calls, { terminalSelect: true });
     },
   };
 
