@@ -15,14 +15,44 @@ const checks = [
   },
   {
     file: "app/api/mobile/save-progress/route.ts",
-    mustContain: ["verifyPatientCodeSignature", "requireAssignedPlanExercise", ".eq(\"patient_code\", code)"],
+    mustContain: [
+      "validatePatientSession",
+      "patientSessionRegistryEnabled",
+      "requireAssignedPlanExercise",
+      "getBearerToken",
+      "evaluatePainSafety",
+    ],
     mustNotContain: ["alertType: body.alertType"],
-    label: "Mobile progress blocks IDOR and client-selected alert severity",
+    label: "Mobile progress uses revocable sessions, ownership, active-plan assignment and server-derived safety",
   },
   {
     file: "app/api/mobile/patient-session/route.ts",
-    mustContain: ["check_patient_login_attempt", "record_patient_login_result", "signPatientCode"],
-    label: "Mobile login has rate limiting and signed sessions",
+    mustContain: [
+      "check_patient_login_attempt",
+      "record_patient_login_result",
+      "createPatientSession",
+      "revokePatientSession",
+      "patientSessionRegistryEnabled",
+      "signPatientCode",
+    ],
+    label: "Mobile login has rate limiting, revocable registry sessions, logout and a migration-compatible signed fallback",
+  },
+  {
+    file: "apps/mobile-app/lib/api.ts",
+    mustContain: [
+      "EXPO_PUBLIC_API_BASE_URL",
+      "authorization: `Bearer ${token}`",
+      "activePatientSessionToken = \"\"",
+      "REQUEST_TIMEOUT_MS",
+    ],
+    mustNotContain: ["https://fizioterapia-ime.vercel.app\").replace"],
+    label: "Mobile client requires explicit environment configuration and keeps session tokens out of request bodies",
+  },
+  {
+    file: "apps/mobile-app/App.tsx",
+    mustContain: ["mustStopExerciseForPain", "Ky pilot mobile nuk aktivizon kamerën"],
+    mustNotContain: ["DEMO_PATIENT", "DEMO_EXERCISES", "const aiScore", "Demo mode aktiv"],
+    label: "Mobile runtime has no fake patient, exercise or AI result fallback",
   },
   {
     file: "lib/backend-logic.ts",
