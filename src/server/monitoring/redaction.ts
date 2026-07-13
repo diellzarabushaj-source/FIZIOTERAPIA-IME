@@ -1,7 +1,7 @@
 const REDACTED = "[REDACTED]";
 const MAX_DEPTH = 8;
 
-const sensitiveKeyPattern = /(?:authorization|cookie|token|secret|password|passcode|access.?code|session.?id|patient.?id|patient.?name|first.?name|last.?name|diagnosis|clinical|medical|treatment|subjective|objective|phone|email)/i;
+const sensitiveKeyPattern = /(?:authorization|cookie|token|secret|password|passcode|access.?code|session.?id|patient.?id|patient.?name|entity.?id|first.?name|last.?name|diagnosis|clinical|medical|treatment|subjective|objective|phone|email)/i;
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {
   if (!value || typeof value !== "object") return false;
@@ -46,8 +46,9 @@ export function redactLogMetadata(metadata: unknown): unknown {
 }
 
 export function safeLogPayload(event: string, metadata: Record<string, unknown> = {}) {
+  const redacted = redactLogMetadata(metadata);
   return {
     event,
-    ...redactLogMetadata(metadata) as Record<string, unknown>,
+    ...(isPlainObject(redacted) ? redacted : {}),
   };
 }
