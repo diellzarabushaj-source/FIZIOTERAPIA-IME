@@ -1,33 +1,28 @@
 import { NextResponse } from "next/server";
 import { checkDatabaseReadiness } from "@/lib/backend/schema-readiness";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
+import { hasValidMonitorSecret } from "@/src/server/monitoring/monitor-auth";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
-export async function GET(request: Request) {
-  const monitorSecret = request.headers.get("x-monitor-secret");
-  const canSeeDetails = Boolean(
-    process.env.HEALTH_MONITOR_SECRET &&
-      monitorSecret &&
-      monitorSecret === process.env.HEALTH_MONITOR_SECRET,
-  );
+const noStoreHeaders = {
+  "Cache-Control": "no-store, max-age=0",
+  "X-Robots-Tag": "noindex, nofollow",
+};
 
+export async function GET(request: Request) {
+  const canSeeDetails = hasValidMonitorSecret(request.headers.get("x-monitor-secret"));
   const supabase = getSupabaseAdmin();
+
   if (!supabase) {
     return NextResponse.json(
       {
         status: "not_ready",
         timestamp: new Date().toISOString(),
-        reason: "database_environment_missing",
+        ...(canSeeDetails ? { reason: "database_environment_missing" } : {}),
       },
-      {
-        status: 503,
-        headers: {
-          "Cache-Control": "no-store, max-age=0",
-          "X-Robots-Tag": "noindex, nofollow",
-        },
-      },
+      { status: 503, headers: noStoreHeaders },
     );
   }
 
@@ -54,9 +49,6 @@ export async function GET(request: Request) {
 
   return NextResponse.json(body, {
     status: readiness.ready ? 200 : 503,
-    headers: {
-      "Cache-Control": "no-store, max-age=0",
-      "X-Robots-Tag": "noindex, nofollow",
-    },
+    headers: noStoreHeaders,
   });
 }
