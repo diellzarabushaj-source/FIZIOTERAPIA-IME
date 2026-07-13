@@ -143,7 +143,7 @@ export async function getPatientReportForCurrentPatient(
   patientId: string,
 ): Promise<BackendResult<PatientReportData>> {
   const session = await getCurrentPatientSession();
-  if (!session) return fail("UNAUTHORIZED", "Sesioni i pacientit mungon ose ka skaduar.");
+  if (!session) return fail("UNAUTHENTICATED", "Sesioni i pacientit mungon ose ka skaduar.");
   if (session.id !== patientId) {
     return fail("OWNERSHIP_MISMATCH", "Nuk ke qasje te ky raport.");
   }
