@@ -44,6 +44,17 @@ jobs:
       - name: Install dependencies
         run: npm ci --no-audit --no-fund
 
+      - name: Generate repository rebuild inventory
+        run: npm run audit:inventory
+
+      - name: Upload repository rebuild inventory
+        uses: actions/upload-artifact@v4
+        with:
+          name: rebuild-repository-inventory
+          path: docs/rebuild/repository-inventory.generated.md
+          if-no-files-found: error
+          retention-days: 14
+
       - name: Run full quality gate
         id: full-quality
         shell: bash
