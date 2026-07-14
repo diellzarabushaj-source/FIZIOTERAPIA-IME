@@ -2,6 +2,14 @@ import { SignUp } from "@clerk/nextjs";
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 
+const floatingFieldAppearance = {
+  elements: {
+    formFieldRow: "fi-clerk-floating-field",
+    formFieldLabel: "fi-clerk-floating-label",
+    formFieldInput: "fi-clerk-floating-input",
+  },
+};
+
 export default async function SignUpPage() {
   const clerkConfigured = Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY);
 
@@ -22,6 +30,7 @@ export default async function SignUpPage() {
             path="/sign-up"
             signInUrl="/sign-in"
             fallbackRedirectUrl="/auth/continue"
+            appearance={floatingFieldAppearance}
           />
         ) : (
           <div className="role-warning">
