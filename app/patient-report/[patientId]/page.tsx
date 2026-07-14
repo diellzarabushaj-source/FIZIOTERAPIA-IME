@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { currentUser } from "@clerk/nextjs/server";
 import { notFound } from "next/navigation";
+import { clerkServerIsConfigured } from "@/lib/admin-access";
 import { requirePhysioActor } from "@/lib/backend/access";
 import {
   getPatientReportForActor,
@@ -40,20 +41,25 @@ async function loadAuthorizedReport(patientId: string): Promise<{
   report: PatientReportData;
   viewer: "patient" | "staff";
 }> {
-  const patientSession = await getCurrentPatientSession();
-  if (patientSession?.id === patientId) {
-    const result = await getPatientReportForCurrentPatient(patientId);
+  try {
+    const patientSession = await getCurrentPatientSession();
+    if (patientSession?.id === patientId) {
+      const result = await getPatientReportForCurrentPatient(patientId);
+      if (!result.ok) notFound();
+      return { report: result.data, viewer: "patient" };
+    }
+
+    if (!clerkServerIsConfigured()) notFound();
+    const clerkUser = await currentUser();
+    if (!clerkUser) notFound();
+
+    const actor = await requirePhysioActor();
+    const result = await getPatientReportForActor(actor, patientId);
     if (!result.ok) notFound();
-    return { report: result.data, viewer: "patient" };
+    return { report: result.data, viewer: "staff" };
+  } catch {
+    notFound();
   }
-
-  const clerkUser = await currentUser();
-  if (!clerkUser) notFound();
-
-  const actor = await requirePhysioActor();
-  const result = await getPatientReportForActor(actor, patientId);
-  if (!result.ok) notFound();
-  return { report: result.data, viewer: "staff" };
 }
 
 export default async function PatientReportPage({ params }: PageProps) {
