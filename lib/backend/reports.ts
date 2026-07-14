@@ -13,6 +13,27 @@ export type ReportPlan = {
   created_at: string | null;
 };
 
+export type ReportExerciseLibraryItem = {
+  id: string;
+  name: string;
+  category: string | null;
+  instructions_sq: string | null;
+  video_url: string | null;
+};
+
+export type ReportPlanExercise = {
+  id: string;
+  plan_id: string;
+  exercise_id: string;
+  sets: number | null;
+  reps: number | null;
+  frequency: string | null;
+  day_number: number | null;
+  schedule_days: number[] | null;
+  instructions: string | null;
+  exercise_library: ReportExerciseLibraryItem | null;
+};
+
 export type ReportClinicalSession = {
   id: string;
   session_date: string;
@@ -41,10 +62,26 @@ export type ReportPhysio = {
   phone: string | null;
 };
 
+export type ReportBranding = {
+  clinic_name: string | null;
+  clinician_name: string | null;
+  professional_title: string | null;
+  logo_url: string | null;
+  phone: string | null;
+  email: string | null;
+  address: string | null;
+  website: string | null;
+  report_footer: string | null;
+  show_exercise_images: boolean;
+  show_qr_code: boolean;
+};
+
 export type PatientReportData = {
   patient: PatientRecord;
   physio: ReportPhysio | null;
+  branding: ReportBranding | null;
   latestPlan: ReportPlan | null;
+  planExercises: ReportPlanExercise[];
   sessions: ReportClinicalSession[];
   progressEntries: ReportProgressEntry[];
   latestPainScore: number | null;
@@ -65,11 +102,12 @@ async function buildPatientReport(
   const supabase = getSupabaseAdmin();
   if (!supabase) return fail("DATABASE_ERROR", "Databaza nuk është konfiguruar.");
 
-  const [planResult, sessionsResult, progressResult, physioResult] = await Promise.all([
+  const [planResult, sessionsResult, progressResult, physioResult, brandingResult] = await Promise.all([
     supabase
       .from("plans")
       .select("id,title,start_date,end_date,status,created_at")
       .eq("patient_id", patient.id)
+      .in("status", ["active", "approved"])
       .order("created_at", { ascending: false })
       .limit(1)
       .returns<ReportPlan[]>(),
@@ -94,13 +132,42 @@ async function buildPatientReport(
           .eq("id", patient.physio_id)
           .maybeSingle<ReportPhysio>()
       : Promise.resolve({ data: null, error: null }),
+    patient.physio_id
+      ? supabase
+          .from("clinic_branding")
+          .select("clinic_name,clinician_name,professional_title,logo_url,phone,email,address,website,report_footer,show_exercise_images,show_qr_code")
+          .eq("physio_id", patient.physio_id)
+          .maybeSingle<ReportBranding>()
+      : Promise.resolve({ data: null, error: null }),
   ]);
 
-  if (planResult.error || sessionsResult.error || progressResult.error || physioResult.error) {
+  if (
+    planResult.error
+    || sessionsResult.error
+    || progressResult.error
+    || physioResult.error
+    || brandingResult.error
+  ) {
     return fail("DATABASE_ERROR", "Raporti nuk mund të përgatitet.");
   }
 
   const plans = planResult.data || [];
+  const latestPlan = plans[0] || null;
+  let planExercises: ReportPlanExercise[] = [];
+
+  if (latestPlan) {
+    const { data, error } = await supabase
+      .from("plan_exercises")
+      .select("id,plan_id,exercise_id,sets,reps,frequency,day_number,schedule_days,instructions,exercise_library(id,name,category,instructions_sq,video_url)")
+      .eq("plan_id", latestPlan.id)
+      .order("day_number", { ascending: true })
+      .order("id", { ascending: true })
+      .returns<ReportPlanExercise[]>();
+
+    if (error) return fail("DATABASE_ERROR", "Ushtrimet e raportit nuk mund të ngarkohen.");
+    planExercises = data || [];
+  }
+
   const sessions = sessionsResult.data || [];
   const progressEntries = progressResult.data || [];
   const latestProgress = progressEntries[0] || null;
@@ -115,7 +182,9 @@ async function buildPatientReport(
   return ok({
     patient,
     physio: physioResult.data || null,
-    latestPlan: plans[0] || null,
+    branding: brandingResult.data || null,
+    latestPlan,
+    planExercises,
     sessions,
     progressEntries,
     latestPainScore,
