@@ -1,4 +1,5 @@
 import type { ActorContext } from "@/lib/backend/access";
+import { canManageOwnerBilling, ownerBillingDenialMessage } from "@/lib/backend/admin-policy";
 import { writeAuditEvent } from "@/lib/backend/audit";
 import { fail, ok, type BackendResult } from "@/lib/backend/result";
 import { cleanText, validateEmail, validatePositiveInteger, validateUuid } from "@/lib/backend/validation";
@@ -28,9 +29,9 @@ export type AdminSubscriptionRecord = {
   notes: string | null;
 };
 
-function requireAdminRole(actor: ActorContext): BackendResult<true> {
-  if (actor.role !== "owner" && actor.role !== "admin") {
-    return fail("FORBIDDEN", "Ky veprim lejohet vetëm për administratën.");
+function requireOwnerRole(actor: ActorContext): BackendResult<true> {
+  if (!canManageOwnerBilling(actor.role)) {
+    return fail("FORBIDDEN", ownerBillingDenialMessage(actor.role));
   }
   return ok(true);
 }
@@ -39,7 +40,7 @@ export async function upsertPhysioProfileForAdmin(
   actor: ActorContext,
   input: { email: unknown; fullName?: unknown; clinicName?: unknown },
 ): Promise<BackendResult<AdminProfileRecord>> {
-  const roleResult = requireAdminRole(actor);
+  const roleResult = requireOwnerRole(actor);
   if (roleResult.ok === false) return fail(roleResult.error.code, roleResult.error.message);
 
   const emailResult = validateEmail(input.email);
@@ -87,7 +88,7 @@ export async function activatePhysioAccessForAdmin(
   actor: ActorContext,
   input: { physioId: unknown; months: unknown; monthlyPrice: number; invoiceReference?: unknown },
 ): Promise<BackendResult<AdminSubscriptionRecord>> {
-  const roleResult = requireAdminRole(actor);
+  const roleResult = requireOwnerRole(actor);
   if (roleResult.ok === false) return fail(roleResult.error.code, roleResult.error.message);
   const idResult = validateUuid(input.physioId, "physioId");
   if (idResult.ok === false) return fail("VALIDATION_ERROR", idResult.error.message, { fieldErrors: idResult.error.fieldErrors });
@@ -127,7 +128,7 @@ export async function suspendSubscriptionForAdmin(
   actor: ActorContext,
   input: { subscriptionId: unknown; reason?: unknown },
 ): Promise<BackendResult<AdminSubscriptionRecord>> {
-  const roleResult = requireAdminRole(actor);
+  const roleResult = requireOwnerRole(actor);
   if (roleResult.ok === false) return fail(roleResult.error.code, roleResult.error.message);
   const idResult = validateUuid(input.subscriptionId, "subscriptionId");
   if (idResult.ok === false) return fail("VALIDATION_ERROR", idResult.error.message, { fieldErrors: idResult.error.fieldErrors });
@@ -151,7 +152,7 @@ export async function rejectPaymentRequestForAdmin(
   actor: ActorContext,
   input: { requestId: unknown; reason?: unknown },
 ): Promise<BackendResult<{ id: string; physio_id: string; status: string }>> {
-  const roleResult = requireAdminRole(actor);
+  const roleResult = requireOwnerRole(actor);
   if (roleResult.ok === false) return fail(roleResult.error.code, roleResult.error.message);
   const idResult = validateUuid(input.requestId, "requestId");
   if (idResult.ok === false) return fail("VALIDATION_ERROR", idResult.error.message, { fieldErrors: idResult.error.fieldErrors });
