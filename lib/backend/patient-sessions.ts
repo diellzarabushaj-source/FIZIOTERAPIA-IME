@@ -1,9 +1,19 @@
 import { createHash, createHmac, randomBytes } from "node:crypto";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import {
+  evaluatePatientSessionPolicy,
+  PATIENT_SESSION_IDLE_TIMEOUT_SECONDS,
+  PATIENT_SESSION_REGISTRY_MAX_AGE_SECONDS,
+  PATIENT_SESSION_TOUCH_INTERVAL_SECONDS,
+} from "./patient-session-policy.ts";
+
+export {
+  PATIENT_SESSION_IDLE_TIMEOUT_SECONDS,
+  PATIENT_SESSION_REGISTRY_MAX_AGE_SECONDS,
+  PATIENT_SESSION_TOUCH_INTERVAL_SECONDS,
+} from "./patient-session-policy.ts";
 
 export const PATIENT_SESSION_REGISTRY_COOKIE = "fizioplan_patient_registry";
-export const PATIENT_SESSION_REGISTRY_MAX_AGE_SECONDS = 60 * 60 * 24 * 7;
-export const PATIENT_SESSION_IDLE_TIMEOUT_SECONDS = 60 * 60 * 24;
 export const PATIENT_AUTH_SESSIONS_TABLE = "patient_auth_sessions";
 
 export function patientSessionRegistryEnabled(env: NodeJS.ProcessEnv = process.env) {
@@ -100,35 +110,32 @@ export async function validatePatientSession({
     .select("id,expires_at,last_used_at,revoked_at")
     .eq("patient_id", patientId)
     .eq("token_hash", hashSessionToken(token))
-    .is("revoked_at", null)
-    .gt("expires_at", now.toISOString())
     .maybeSingle<PatientSessionRow>();
 
   if (error || !data) return false;
 
-  const lastUsedAt = Date.parse(data.last_used_at);
-  if (!Number.isFinite(lastUsedAt)) {
-    await revokeSessionById({
-      supabase,
-      sessionId: data.id,
-      reason: "invalid_last_used_at",
-      now,
-    });
+  const decision = evaluatePatientSessionPolicy(
+    {
+      expiresAt: data.expires_at,
+      lastUsedAt: data.last_used_at,
+      revokedAt: data.revoked_at,
+    },
+    now,
+  );
+
+  if (!decision.valid) {
+    if (decision.revokeReason && !data.revoked_at) {
+      await revokeSessionById({
+        supabase,
+        sessionId: data.id,
+        reason: decision.revokeReason,
+        now,
+      });
+    }
     return false;
   }
 
-  const idleMilliseconds = now.getTime() - lastUsedAt;
-  if (idleMilliseconds >= PATIENT_SESSION_IDLE_TIMEOUT_SECONDS * 1000) {
-    await revokeSessionById({
-      supabase,
-      sessionId: data.id,
-      reason: "idle_timeout",
-      now,
-    });
-    return false;
-  }
-
-  if (idleMilliseconds >= 15 * 60 * 1000) {
+  if (decision.shouldTouch) {
     const { error: touchError } = await supabase
       .from(PATIENT_AUTH_SESSIONS_TABLE)
       .update({ last_used_at: now.toISOString() })
