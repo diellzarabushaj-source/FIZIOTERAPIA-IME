@@ -78,6 +78,21 @@ const checks = [
     label: "Patient sessions expire, require a dedicated strong secret, fail closed, and enforce active-plan ownership",
   },
   {
+    file: "lib/backend/patient-sessions.ts",
+    mustContain: [
+      "evaluatePatientSessionPolicy",
+      "decision.revokeReason",
+      "decision.shouldTouch",
+    ],
+    label: "Patient session persistence applies the tested expiry, revocation, idle-timeout and rolling-touch policy",
+  },
+  {
+    file: "lib/backend/admin.ts",
+    mustContain: ["canManageOwnerBilling", "requireOwnerRole"],
+    mustNotContain: ['actor.role !== "owner" && actor.role !== "admin"'],
+    label: "Billing and subscription mutations remain owner-only at the backend service boundary",
+  },
+  {
     file: "app/api/patient/access-qr/[code]/route.ts",
     mustContain: ["actorCanAccessPhysioResource", '.eq("status", "active")'],
     label: "QR generation checks operator authentication, patient ownership, and status",
