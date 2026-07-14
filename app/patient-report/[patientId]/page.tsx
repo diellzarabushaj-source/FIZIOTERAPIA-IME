@@ -145,7 +145,7 @@ export default async function PatientReportPage({ params }: PageProps) {
           </div>
           <dl className="clinical-report-meta">
             <div><dt>Gjeneruar</dt><dd>{formatDate(report.generatedAt, true)}</dd></div>
-            <div><dt>Profesionisti</dt><dd>{authorName}<small>{authorTitle}</small></dd></div>
+            <div><dt>Autori</dt><dd>{authorName}<small>{authorTitle}</small></dd></div>
             <div><dt>Burimi</dt><dd>{reportSource}</dd></div>
           </dl>
         </header>
