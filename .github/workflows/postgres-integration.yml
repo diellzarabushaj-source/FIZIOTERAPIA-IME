@@ -1,0 +1,56 @@
+name: PostgreSQL Integration
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  patient-capacity:
+    name: Atomic capacity and database privilege boundaries
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: app_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d app_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/app_test
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install PostgreSQL client
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends postgresql-client
+
+      - name: Run atomic capacity and privilege integration tests
+        run: bash tests/database/patient-capacity-integration.sh
+
+      - name: Upload database failure evidence
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: postgres-integration-logs
+          path: /tmp/*race*.log
+          retention-days: 7
+          if-no-files-found: ignore
