@@ -1,7 +1,14 @@
 import { SignIn } from "@clerk/nextjs";
+import { auth } from "@clerk/nextjs/server";
+import { redirect } from "next/navigation";
 
-export default function SignInPage() {
+export default async function SignInPage() {
   const clerkConfigured = Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY);
+
+  if (clerkConfigured) {
+    const { userId } = await auth();
+    if (userId) redirect("/auth/continue");
+  }
 
   return (
     <main className="auth-page">
@@ -14,8 +21,8 @@ export default function SignInPage() {
             routing="path"
             path="/sign-in"
             signUpUrl="/sign-up"
-            fallbackRedirectUrl="/physiotherapist-portal/overview"
-            signUpFallbackRedirectUrl="/physiotherapist-portal/overview"
+            fallbackRedirectUrl="/auth/continue"
+            signUpFallbackRedirectUrl="/auth/continue"
           />
         ) : (
           <div className="role-warning">
