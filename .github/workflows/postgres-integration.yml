@@ -11,10 +11,10 @@ permissions:
   contents: read
 
 jobs:
-  patient-capacity:
-    name: Atomic capacity and database privilege boundaries
+  database-boundaries:
+    name: Capacity, privileges and admin billing transactions
     runs-on: ubuntu-latest
-    timeout-minutes: 12
+    timeout-minutes: 15
 
     services:
       postgres:
@@ -46,11 +46,14 @@ jobs:
       - name: Run atomic capacity and privilege integration tests
         run: bash tests/database/patient-capacity-integration.sh
 
+      - name: Run admin billing transaction integration tests
+        run: bash tests/database/admin-billing-integration.sh
+
       - name: Upload database failure evidence
         if: failure()
         uses: actions/upload-artifact@v4
         with:
           name: postgres-integration-logs
-          path: /tmp/*race*.log
+          path: /tmp/*.log
           retention-days: 7
           if-no-files-found: ignore
