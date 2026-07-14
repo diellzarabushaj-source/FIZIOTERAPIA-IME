@@ -14,6 +14,7 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "test:e2e": "playwright test",
+    "test:e2e:clerk": "playwright test --config=playwright.clerk.config.mjs",
     "test:e2e:headed": "playwright test --headed",
     "test:e2e:report": "playwright show-report",
     "test:backend": "node --experimental-strip-types --test tests/backend/*.test.ts",
