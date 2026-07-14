@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { BrandMark } from "@/components/BrandMark";
 import { getCurrentPatientSession } from "@/lib/patient-session";
@@ -23,13 +22,6 @@ const errorMessages: Record<string, string> = {
   system: "Hyrja me kod nuk është e disponueshme për momentin. Kontakto fizioterapeutin dhe provo përsëri më vonë.",
 };
 
-function developmentFixturesEnabled() {
-  const appEnvironment = String(process.env.APP_ENV || "").trim().toLowerCase();
-  if (appEnvironment) return appEnvironment === "development" || appEnvironment === "test";
-  if (process.env.VERCEL_ENV) return process.env.VERCEL_ENV === "development";
-  return process.env.NODE_ENV !== "production";
-}
-
 export default async function PatientPortalPage({
   searchParams,
 }: {
@@ -41,7 +33,6 @@ export default async function PatientPortalPage({
   const params = await searchParams;
   const errorMessage = params?.error ? errorMessages[params.error] : undefined;
   const code = (params?.code || "").slice(0, 40);
-  const showDevelopmentDemo = developmentFixturesEnabled();
 
   return (
     <main className="page patient-entry-page">
@@ -100,20 +91,6 @@ export default async function PatientPortalPage({
           <small className="patient-entry-helper">
             Mos e ndaj kodin publikisht. Nuk e ke kodin? Kontakto fizioterapeutin.
           </small>
-
-          {showDevelopmentDemo ? (
-            <div className="patient-entry-demo">
-              <span className="fi-badge success">Development fixture</span>
-              <h2>Shiko dashboard-in pa të dhëna reale</h2>
-              <p>
-                Ky demonstrim shfaqet vetëm në development/test, nuk lidhet me
-                databazën dhe nuk deploy-ohet si workflow pacienti në production.
-              </p>
-              <Link className="button secondary" href="/patient-dashboard/demo">
-                Hap fixture-in lokal
-              </Link>
-            </div>
-          ) : null}
         </form>
 
         <aside className="patient-entry-preview" aria-label="Si funksionon hyrja e pacientit">
