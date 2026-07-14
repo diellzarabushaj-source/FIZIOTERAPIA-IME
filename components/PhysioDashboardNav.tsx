@@ -93,6 +93,23 @@ export function PhysioDashboardNav() {
     );
   };
 
+  const renderDrawerLink = (item: (typeof items)[number]) => {
+    const active = itemIsActive(pathname, item.href);
+    const Icon = item.icon;
+    return (
+      <Link
+        key={item.href}
+        href={item.href}
+        className={active ? "active" : ""}
+        aria-current={active ? "page" : undefined}
+        onClick={closeMenu}
+      >
+        <Icon size={19} aria-hidden="true" />
+        <span>{item.label}</span>
+      </Link>
+    );
+  };
+
   return (
     <>
       <button
@@ -150,22 +167,10 @@ export function PhysioDashboardNav() {
             </div>
 
             <nav aria-label="Të gjitha seksionet">
-              {items.map((item) => {
-                const active = itemIsActive(pathname, item.href);
-                const Icon = item.icon;
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    className={active ? "active" : ""}
-                    aria-current={active ? "page" : undefined}
-                    onClick={closeMenu}
-                  >
-                    <Icon size={19} aria-hidden="true" />
-                    <span>{item.label}</span>
-                  </Link>
-                );
-              })}
+              <span className="pd-mobile-drawer-label">Puna klinike</span>
+              {clinicalItems.map((item) => renderDrawerLink(item))}
+              <span className="pd-mobile-drawer-label pd-mobile-drawer-label-account">Llogaria dhe raportet</span>
+              {accountItems.map((item) => renderDrawerLink(item))}
             </nav>
           </aside>
         </div>
