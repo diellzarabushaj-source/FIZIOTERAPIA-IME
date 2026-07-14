@@ -5,32 +5,38 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
   BellRing,
+  CalendarClock,
   CalendarDays,
   ClipboardList,
   CreditCard,
   Dumbbell,
+  FileText,
   LayoutDashboard,
   Menu,
   MoreHorizontal,
+  Palette,
   Users,
   X,
 } from "lucide-react";
 
 const items = [
-  { href: "/physiotherapist-portal/overview", label: "Përmbledhje", icon: LayoutDashboard },
-  { href: "/physiotherapist-portal/patients", label: "Pacientët", icon: Users },
-  { href: "/physiotherapist-portal/sessions", label: "Seancat", icon: CalendarDays },
-  { href: "/physiotherapist-portal/programs", label: "Programet", icon: ClipboardList },
-  { href: "/physiotherapist-portal/exercises", label: "Ushtrimet", icon: Dumbbell },
-  { href: "/physiotherapist-portal/alerts", label: "Alarmet", icon: BellRing },
-  { href: "/physiotherapist-portal/billing", label: "Pagesat", icon: CreditCard },
+  { href: "/physiotherapist-portal/overview", label: "Përmbledhje", icon: LayoutDashboard, group: "clinical" },
+  { href: "/physiotherapist-portal/patients", label: "Pacientët", icon: Users, group: "clinical" },
+  { href: "/physiotherapist-portal/sessions", label: "Seancat", icon: CalendarClock, group: "clinical" },
+  { href: "/physiotherapist-portal/calendar", label: "Kalendari", icon: CalendarDays, group: "clinical" },
+  { href: "/physiotherapist-portal/programs", label: "Programet", icon: ClipboardList, group: "clinical" },
+  { href: "/physiotherapist-portal/exercises", label: "Ushtrimet", icon: Dumbbell, group: "clinical" },
+  { href: "/physiotherapist-portal/reports", label: "Raportet", icon: FileText, group: "clinical" },
+  { href: "/physiotherapist-portal/alerts", label: "Alarmet", icon: BellRing, group: "clinical" },
+  { href: "/physiotherapist-portal/billing", label: "Pagesat", icon: CreditCard, group: "account" },
+  { href: "/physiotherapist-portal/settings/branding", label: "Pamja e raporteve", icon: Palette, group: "account" },
 ] as const;
 
 const mobilePrimaryItems = items.filter((item) =>
   [
     "/physiotherapist-portal/overview",
     "/physiotherapist-portal/patients",
-    "/physiotherapist-portal/sessions",
+    "/physiotherapist-portal/calendar",
   ].includes(item.href),
 );
 
@@ -39,6 +45,9 @@ function itemIsActive(pathname: string, href: string): boolean {
   if (href.endsWith("/patients")) return pathname === href || pathname.startsWith(href + "/");
   if (href.endsWith("/programs")) {
     return pathname.startsWith(href) || pathname.startsWith("/physiotherapist-portal/plan-builder");
+  }
+  if (href.endsWith("/reports")) {
+    return pathname.startsWith(href) || pathname.startsWith("/patient-report/");
   }
   return pathname.startsWith(href);
 }
@@ -64,6 +73,25 @@ export function PhysioDashboardNav() {
   }, [open]);
 
   const closeMenu = () => setOpen(false);
+  const clinicalItems = items.filter((item) => item.group === "clinical");
+  const accountItems = items.filter((item) => item.group === "account");
+
+  const renderLink = (item: (typeof items)[number], onClick?: () => void) => {
+    const active = itemIsActive(pathname, item.href);
+    const Icon = item.icon;
+    return (
+      <Link
+        key={item.href}
+        href={item.href}
+        className={active ? "pd-nav-link active" : "pd-nav-link"}
+        aria-current={active ? "page" : undefined}
+        onClick={onClick}
+      >
+        <span className="pd-nav-icon" aria-hidden="true"><Icon size={18} strokeWidth={2} /></span>
+        <span>{item.label}</span>
+      </Link>
+    );
+  };
 
   return (
     <>
@@ -80,23 +108,9 @@ export function PhysioDashboardNav() {
 
       <nav className="pd-nav" aria-label="Navigimi i dashboard-it">
         <span className="pd-nav-label">Puna klinike</span>
-        {items.map((item) => {
-          const active = itemIsActive(pathname, item.href);
-          const Icon = item.icon;
-          return (
-            <div className={item.href.endsWith("/billing") ? "pd-nav-account" : undefined} key={item.href}>
-              {item.href.endsWith("/billing") && <span className="pd-nav-label">Llogaria</span>}
-              <Link
-                href={item.href}
-                className={active ? "pd-nav-link active" : "pd-nav-link"}
-                aria-current={active ? "page" : undefined}
-              >
-                <span className="pd-nav-icon" aria-hidden="true"><Icon size={18} strokeWidth={2} /></span>
-                <span>{item.label}</span>
-              </Link>
-            </div>
-          );
-        })}
+        {clinicalItems.map((item) => renderLink(item))}
+        <span className="pd-nav-label pd-nav-account">Llogaria dhe raportet</span>
+        {accountItems.map((item) => renderLink(item))}
       </nav>
 
       <nav className="pd-mobile-bottom-nav" aria-label="Navigimi kryesor mobile">
@@ -128,7 +142,7 @@ export function PhysioDashboardNav() {
             <div className="pd-mobile-drawer-head">
               <div>
                 <strong>Fizioterapia ime</strong>
-                <small>Hapësira klinike</small>
+                <small>CRM klinik</small>
               </div>
               <button type="button" aria-label="Mbyll navigimin" onClick={closeMenu} autoFocus>
                 <X size={20} aria-hidden="true" />
