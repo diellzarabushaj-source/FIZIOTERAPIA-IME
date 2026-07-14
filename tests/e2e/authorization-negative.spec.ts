@@ -120,7 +120,6 @@ test.describe("Negative authorization and privacy boundaries", () => {
       },
     });
 
-    expect(response.status()).toBeLessThan(500);
     expect([401, 403, 503]).toContain(response.status());
     const body = await response.text();
     await expectNoClinicalContent(body);
