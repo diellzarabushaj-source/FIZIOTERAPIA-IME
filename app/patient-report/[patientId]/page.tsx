@@ -116,6 +116,7 @@ export default async function PatientReportPage({ params }: PageProps) {
   const logoUrl = safeExternalUrl(report.branding?.logo_url);
   const showExerciseMedia = report.branding?.show_exercise_images !== false;
   const showQrCode = report.branding?.show_qr_code !== false && Boolean(report.patient.patient_code);
+  const reportSource = report.source === "clinical_database" ? "Databaza klinike" : report.source;
   const contactItems = [
     report.branding?.phone || report.physio?.phone,
     report.branding?.email || report.physio?.email,
@@ -145,7 +146,7 @@ export default async function PatientReportPage({ params }: PageProps) {
           <dl className="clinical-report-meta">
             <div><dt>Gjeneruar</dt><dd>{formatDate(report.generatedAt, true)}</dd></div>
             <div><dt>Profesionisti</dt><dd>{authorName}<small>{authorTitle}</small></dd></div>
-            <div><dt>Burimi</dt><dd>Databaza klinike</dd></div>
+            <div><dt>Burimi</dt><dd>{reportSource}</dd></div>
           </dl>
         </header>
 
@@ -344,6 +345,7 @@ export default async function PatientReportPage({ params }: PageProps) {
             <span>{authorName} · {authorTitle}</span>
           </div>
           {contactItems.length ? <span>{contactItems.join(" · ")}</span> : null}
+          <span>Burimi: {reportSource}</span>
           <span>Gjeneruar: {formatDate(report.generatedAt, true)}</span>
         </footer>
       </article>
