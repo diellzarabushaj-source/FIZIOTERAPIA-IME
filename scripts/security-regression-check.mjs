@@ -83,6 +83,23 @@ const checks = [
     label: "QR generation checks operator authentication, patient ownership, and status",
   },
   {
+    file: "app/auth/continue/page.tsx",
+    mustContain: ["getActorContext", "getWorkspaceHome", "profile-not-active"],
+    label: "Post-authentication routing resolves the authorized actor and sends the user to the role workspace",
+  },
+  {
+    file: "app/admin-feedback/page.tsx",
+    mustContain: ["requireOwnerActor"],
+    mustNotContain: ["currentUser", "diellzarabushaj@gmail.com"],
+    label: "Admin feedback page uses centralized owner authorization instead of a hard-coded email",
+  },
+  {
+    file: "app/admin-feedback/actions.ts",
+    mustContain: ["requireOwnerActor"],
+    mustNotContain: ["currentUser", "diellzarabushaj@gmail.com", "requireAdminEmail"],
+    label: "Admin feedback mutations re-authorize the owner on the server",
+  },
+  {
     file: "next.config.mjs",
     mustContain: [
       "Content-Security-Policy",
