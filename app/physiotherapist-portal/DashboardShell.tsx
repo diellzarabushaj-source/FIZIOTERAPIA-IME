@@ -27,8 +27,10 @@ export async function DashboardShell({ children }: { children: React.ReactNode }
 
       <aside className="pd-sidebar" aria-label="Navigimi klinik">
         <div className="pd-brand">
-          <BrandMark href="/physiotherapist-portal/overview" />
-          <small>CRM klinik</small>
+          <div className="pd-brand-lockup">
+            <BrandMark href="/physiotherapist-portal/overview" />
+            <small>CRM klinik</small>
+          </div>
         </div>
 
         <PhysioDashboardNav />
