@@ -11,8 +11,10 @@ export async function GET(_request: Request, { params }: RouteProps) {
   const code = normalizePatientCode(decodeURIComponent(rawCode || ""));
   if (!code) return NextResponse.json({ ok: false, error: "missing_code" }, { status: 400 });
 
-  const patientSession = await getCurrentPatientSession();
-  const actor = patientSession ? null : await getActorContext();
+  const [patientSession, actor] = await Promise.all([
+    getCurrentPatientSession(),
+    getActorContext(),
+  ]);
   if (!patientSession && !actor) {
     return NextResponse.json({ ok: false, error: "unauthorized" }, { status: 401 });
   }
