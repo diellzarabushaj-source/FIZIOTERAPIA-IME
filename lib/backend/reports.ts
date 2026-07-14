@@ -107,7 +107,7 @@ async function buildPatientReport(
       .from("plans")
       .select("id,title,start_date,end_date,status,created_at")
       .eq("patient_id", patient.id)
-      .in("status", ["active", "approved"])
+      .eq("status", "active")
       .order("created_at", { ascending: false })
       .limit(1)
       .returns<ReportPlan[]>(),
