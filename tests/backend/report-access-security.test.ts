@@ -55,3 +55,46 @@ test("report is private, printable and identifies author, generation time and so
   assert.match(styles, /@page/);
   assert.match(printButton, /window\.print\(\)/);
 });
+
+test("patient report publishes only the active assigned exercise plan", async () => {
+  const page = await source("app/patient-report/[patientId]/page.tsx");
+  const service = await source("lib/backend/reports.ts");
+
+  assert.match(service, /\.from\("plans"\)[\s\S]*?\.eq\("patient_id", patient\.id\)[\s\S]*?\.eq\("status", "active"\)/);
+  assert.doesNotMatch(service, /\.in\("status", \["active", "approved"\]\)/);
+  assert.match(service, /\.from\("plan_exercises"\)/);
+  assert.match(service, /exercise_library\(id,name,category,instructions_sq,video_url\)/);
+  assert.match(page, /report\.planExercises\.map/);
+  assert.match(page, /item\.instructions[\s\S]*?\|\| exercise\?\.instructions_sq/);
+  assert.match(page, /item\.sets/);
+  assert.match(page, /item\.reps/);
+  assert.match(page, /item\.frequency/);
+  assert.match(page, /item\.schedule_days/);
+});
+
+test("report branding is resolved from the patient's assigned physiotherapist", async () => {
+  const page = await source("app/patient-report/[patientId]/page.tsx");
+  const service = await source("lib/backend/reports.ts");
+
+  assert.match(service, /\.from\("clinic_branding"\)/);
+  assert.match(service, /\.eq\("physio_id", patient\.physio_id\)/);
+  assert.match(page, /report\.branding\?\.clinic_name/);
+  assert.match(page, /report\.branding\?\.logo_url/);
+  assert.match(page, /report\.branding\?\.show_exercise_images/);
+  assert.match(page, /report\.branding\?\.show_qr_code/);
+  assert.match(page, /report\.branding\?\.report_footer/);
+});
+
+test("patient QR remains private to the exact patient session or authorized staff", async () => {
+  const page = await source("app/patient-report/[patientId]/page.tsx");
+  const route = await source("app/api/patient/access-qr/[code]/route.ts");
+
+  assert.match(route, /getCurrentPatientSession\(\)/);
+  assert.match(route, /getActorContext\(\)/);
+  assert.match(route, /patientSession\.id === patient\.id/);
+  assert.match(route, /normalizePatientCode\(patientSession\.patient_code\) === code/);
+  assert.match(route, /actorCanAccessPhysioResource\(actor, patient\.physio_id\)/);
+  assert.match(route, /if \(!patientAuthorized && !staffAuthorized\)/);
+  assert.match(route, /Cache-Control": "no-store, private"/);
+  assert.match(page, /\/api\/patient\/access-qr\/\$\{encodeURIComponent/);
+});

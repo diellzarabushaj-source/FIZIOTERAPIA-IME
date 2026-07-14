@@ -1,17 +1,23 @@
 import { NextResponse } from "next/server";
 import QRCode from "qrcode";
 import { getActorContext, actorCanAccessPhysioResource } from "@/lib/backend/access";
+import { getCurrentPatientSession } from "@/lib/patient-session";
 import { getPatientAccessUrl, getSupabaseAdmin, normalizePatientCode } from "@/lib/supabase-admin";
 
 type RouteProps = { params: Promise<{ code: string }> };
 
 export async function GET(_request: Request, { params }: RouteProps) {
-  const actor = await getActorContext();
-  if (!actor) return NextResponse.json({ ok: false, error: "unauthorized" }, { status: 401 });
-
   const { code: rawCode } = await params;
   const code = normalizePatientCode(decodeURIComponent(rawCode || ""));
   if (!code) return NextResponse.json({ ok: false, error: "missing_code" }, { status: 400 });
+
+  const [patientSession, actor] = await Promise.all([
+    getCurrentPatientSession(),
+    getActorContext(),
+  ]);
+  if (!patientSession && !actor) {
+    return NextResponse.json({ ok: false, error: "unauthorized" }, { status: 401 });
+  }
 
   const supabase = getSupabaseAdmin();
   if (!supabase) return NextResponse.json({ ok: false, error: "service_unavailable" }, { status: 503 });
@@ -24,7 +30,15 @@ export async function GET(_request: Request, { params }: RouteProps) {
     .maybeSingle<{ id: string; physio_id: string | null; status: string }>();
 
   if (!patient) return NextResponse.json({ ok: false, error: "patient_not_found" }, { status: 404 });
-  if (!actorCanAccessPhysioResource(actor, patient.physio_id)) {
+
+  const patientAuthorized = Boolean(
+    patientSession
+    && patientSession.id === patient.id
+    && normalizePatientCode(patientSession.patient_code) === code,
+  );
+  const staffAuthorized = Boolean(actor && actorCanAccessPhysioResource(actor, patient.physio_id));
+
+  if (!patientAuthorized && !staffAuthorized) {
     return NextResponse.json({ ok: false, error: "forbidden" }, { status: 403 });
   }
 
