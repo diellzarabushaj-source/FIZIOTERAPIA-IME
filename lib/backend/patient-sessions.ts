@@ -108,6 +108,8 @@ export async function validatePatientSession({
     .select("id,expires_at,last_used_at,revoked_at")
     .eq("patient_id", patientId)
     .eq("token_hash", hashSessionToken(token))
+    .is("revoked_at", null)
+    .gt("expires_at", now.toISOString())
     .maybeSingle<PatientSessionRow>();
 
   if (error || !data) return false;
