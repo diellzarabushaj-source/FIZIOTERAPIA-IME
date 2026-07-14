@@ -3,9 +3,10 @@ import type { ActorContext } from "@/lib/backend/access";
 import { actorCanAccessPhysioResource } from "@/lib/backend/access";
 import { writeAuditEvent } from "@/lib/backend/audit";
 import { fail, ok, type BackendResult } from "@/lib/backend/result";
-import { cleanText, optionalText } from "@/lib/backend/validation";
-import { canCreateAnotherPatient, FREE_PATIENT_LIMIT } from "@/lib/billing";
+import { cleanText } from "@/lib/backend/validation";
+import { FREE_PATIENT_LIMIT } from "@/lib/billing";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
+import { validatePatientProfile } from "@/src/features/patients/domain/patient-profile";
 
 export type PatientRecord = {
   id: string;
@@ -111,100 +112,44 @@ export async function createPatientForActor(
   actor: ActorContext,
   input: CreatePatientInput,
 ): Promise<BackendResult<CreatePatientOutcome>> {
+  const validation = validatePatientProfile({
+    firstName: input.firstName,
+    lastName: input.lastName,
+    dateOfBirth: input.dateOfBirth,
+    phone: input.phone,
+    diagnosis: input.diagnosis,
+  });
+  if (validation.ok === false) {
+    return fail("VALIDATION_ERROR", "Kontrollo fushat e shënuara.", {
+      fieldErrors: validation.fieldErrors,
+    });
+  }
+
   const supabase = getSupabaseAdmin();
   if (!supabase) return fail("DATABASE_ERROR", "Databaza nuk është konfiguruar.");
 
-  const firstName = cleanText(input.firstName, 80);
-  const lastName = cleanText(input.lastName, 80);
-  const dateOfBirth = cleanText(input.dateOfBirth, 10);
+  const { data, error } = await supabase.rpc("create_or_get_patient_atomic", {
+    p_physio_id: actor.profileId,
+    p_first_name: validation.data.firstName,
+    p_last_name: validation.data.lastName,
+    p_date_of_birth: validation.data.dateOfBirth,
+    p_phone: validation.data.phone,
+    p_diagnosis: validation.data.diagnosis,
+    p_patient_code: createPatientCode(),
+    p_patient_username: normalizeUsername(input.username),
+    p_enforce_capacity: actor.role === "physio",
+  });
 
-  if (firstName.length < 2) {
-    return fail("VALIDATION_ERROR", "Emri i pacientit është i detyrueshëm.", {
-      fieldErrors: { firstName: "Shkruaj së paku 2 karaktere." },
-    });
-  }
-  if (lastName.length < 2) {
-    return fail("VALIDATION_ERROR", "Mbiemri i pacientit është i detyrueshëm.", {
-      fieldErrors: { lastName: "Shkruaj së paku 2 karaktere." },
-    });
-  }
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(dateOfBirth)) {
-    return fail("VALIDATION_ERROR", "Datëlindja është e detyrueshme për identifikim të sigurt.", {
-      fieldErrors: { dateOfBirth: "Zgjidh datëlindjen e pacientit." },
-    });
-  }
-
-  const { data: existing, error: existingError } = await supabase
-    .from("patients")
-    .select(patientSelect)
-    .eq("physio_id", actor.profileId)
-    .eq("first_name", firstName)
-    .eq("last_name", lastName)
-    .eq("date_of_birth", dateOfBirth)
-    .maybeSingle<PatientRecord>();
-
-  if (existingError) return fail("DATABASE_ERROR", "Pacienti ekzistues nuk mund të verifikohet.");
-  if (existing) {
-    const normalized = withCalculatedAge(existing);
-    await writeAuditEvent({
-      actor,
-      action: "patient.reused_existing_record",
-      entityType: "patient",
-      entityId: normalized.id,
-      after: {
-        physio_id: normalized.physio_id,
-        first_name: normalized.first_name,
-        last_name: normalized.last_name,
-        date_of_birth: normalized.date_of_birth,
-        status: normalized.status,
-      },
-    });
-    return ok({ patient: normalized, created: false });
-  }
-
-  if (actor.role === "physio") {
-    const [patientCountResult, subscriptionResult] = await Promise.all([
-      supabase
-        .from("patients")
-        .select("id", { count: "exact", head: true })
-        .eq("physio_id", actor.profileId),
-      supabase
-        .from("subscriptions")
-        .select("status,current_period_end,price,currency")
-        .eq("physio_id", actor.profileId)
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle(),
-    ]);
-
-    if (patientCountResult.error || subscriptionResult.error) {
-      return fail("DATABASE_ERROR", "Kufiri i pacientëve nuk mund të verifikohet.");
-    }
-
-    if (!canCreateAnotherPatient({
-      role: actor.role,
-      subscription: subscriptionResult.data,
-      patientCount: patientCountResult.count || 0,
-    })) {
+  if (error) {
+    const databaseMessage = `${error.message || ""} ${error.details || ""} ${error.hint || ""}`.toLowerCase();
+    if (databaseMessage.includes("subscription_required")) {
       return fail(
         "SUBSCRIPTION_INACTIVE",
         `I ke përdorur ${FREE_PATIENT_LIMIT} pacientët falas. Aktivizo abonimin 9.90 EUR / muaj për të shtuar pacientë të tjerë.`,
       );
     }
+    return fail("DATABASE_ERROR", "Pacienti nuk u ruajt.");
   }
-
-  const { data, error } = await supabase.rpc("create_or_get_patient", {
-    p_physio_id: actor.profileId,
-    p_first_name: firstName,
-    p_last_name: lastName,
-    p_date_of_birth: dateOfBirth,
-    p_phone: optionalText(input.phone, 40),
-    p_diagnosis: optionalText(input.diagnosis, 1500),
-    p_patient_code: createPatientCode(),
-    p_patient_username: normalizeUsername(input.username),
-  });
-
-  if (error) return fail("DATABASE_ERROR", "Pacienti nuk u ruajt.");
 
   const row = Array.isArray(data) ? data[0] : data;
   const patient = row?.patient as PatientRecord | undefined;

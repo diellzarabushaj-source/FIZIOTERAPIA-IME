@@ -3,10 +3,13 @@ import { readFile } from "node:fs/promises";
 const files = {
   service: "lib/backend/schema-readiness.ts",
   route: "app/api/readiness/route.ts",
+  monitorAuth: "src/server/monitoring/monitor-auth.ts",
   baseMigration: "supabase/migrations/20260711_database_schema_readiness.sql",
   sessionMigration: "supabase/migrations/20260711_patient_session_registry.sql",
   latestMigration: "supabase/migrations/20260711_zz_exercise_library_readiness.sql",
+  atomicPatientMigration: "supabase/migrations/20260713_atomic_patient_capacity.sql",
   sessionService: "lib/backend/patient-sessions.ts",
+  patientService: "lib/backend/patients.ts",
   exerciseService: "lib/backend/exercises.ts",
   overview: "app/physiotherapist-portal/overview/page.tsx",
   rotationAction: "app/physiotherapist-portal/patients/access-actions.ts",
@@ -37,6 +40,11 @@ const rules = [
   ["clinical overview continues to count treatment sessions", content.overview.includes('.from("patient_sessions")') && content.overview.includes("session_date")],
   ["code rotation is transactional in the database", content.sessionMigration.includes("function public.rotate_patient_access_code") && content.sessionMigration.includes("update public.patient_auth_sessions")],
   ["server action uses the atomic rotation RPC", content.rotationAction.includes('.rpc("rotate_patient_access_code"')],
+  ["patient capacity uses a transaction-scoped physiotherapist lock", content.atomicPatientMigration.includes("pg_advisory_xact_lock")],
+  ["patient capacity checks count and active subscription in the same function", ["v_patient_count >= 5", "s.status = 'active'", "s.current_period_end > now()"].every((token) => content.atomicPatientMigration.includes(token))],
+  ["atomic patient function is restricted to service role", content.atomicPatientMigration.includes("grant execute on function public.create_or_get_patient_atomic") && content.atomicPatientMigration.includes("to service_role")],
+  ["patient service uses the atomic capacity RPC", content.patientService.includes('.rpc("create_or_get_patient_atomic"')],
+  ["patient service no longer calls the non-atomic RPC", !content.patientService.includes('.rpc("create_or_get_patient",')],
   ["latest migration adds exercise ownership columns", ["is_default", "owner_physio_id", "status", "updated_at"].every((column) => content.latestMigration.includes(`add column if not exists ${column}`))],
   ["latest readiness checks exercise ownership columns", ["exercise_library.is_default", "exercise_library.owner_physio_id", "exercise_library.status", "exercise_library.updated_at"].every((column) => content.latestMigration.includes(column))],
   ["exercise service requires the ownership schema", ["is_default", "owner_physio_id", "status", "updated_at"].every((column) => content.exerciseService.includes(column))],
@@ -45,7 +53,9 @@ const rules = [
   ["route reports missing columns to protected monitors", content.route.includes("missingColumns: readiness.missingColumns")],
   ["route fails closed with HTTP 503", content.route.includes("status: readiness.ready ? 200 : 503")],
   ["route disables caching", content.route.includes('"Cache-Control": "no-store, max-age=0"')],
-  ["route protects diagnostics with monitor secret", content.route.includes("HEALTH_MONITOR_SECRET")],
+  ["route uses centralized monitor authentication", content.route.includes("hasValidMonitorSecret")],
+  ["monitor authentication reads the dedicated secret", content.monitorAuth.includes("HEALTH_MONITOR_SECRET")],
+  ["monitor authentication uses constant-time comparison", content.monitorAuth.includes("timingSafeEqual")],
 ];
 
 console.table(rules.map(([rule, passed]) => ({ rule, status: passed ? "pass" : "fail" })));

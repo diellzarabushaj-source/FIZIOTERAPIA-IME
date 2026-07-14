@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { readFile } from "node:fs/promises";
+import { actorCanAccessPhysioResource } from "../../lib/backend/domain.ts";
 
-const accessSource = await readFile(new URL("../../lib/backend/access.ts", import.meta.url), "utf8");
 const patientsSource = await readFile(new URL("../../lib/backend/patients.ts", import.meta.url), "utf8");
 const duplicateRouteSource = await readFile(
   new URL("../../app/api/physio/patients/check-duplicate/route.ts", import.meta.url),
@@ -23,10 +23,11 @@ test("duplicate checks are isolated to the logged-in physiotherapist", () => {
 });
 
 test("physiotherapists cannot access patients owned by another physiotherapist", () => {
-  assert.match(
-    accessSource,
-    /resourcePhysioId\s*&&\s*resourcePhysioId\s*===\s*actor\.profileId/,
-  );
+  assert.equal(actorCanAccessPhysioResource("physio", "physio-a", "physio-a"), true);
+  assert.equal(actorCanAccessPhysioResource("physio", "physio-a", "physio-b"), false);
+  assert.equal(actorCanAccessPhysioResource("physio", "physio-a", null), false);
+  assert.equal(actorCanAccessPhysioResource("admin", "admin-a", "physio-b"), true);
+  assert.equal(actorCanAccessPhysioResource("owner", "owner-a", "physio-b"), true);
 });
 
 test("the new patient screen explains permanent ownership", () => {

@@ -1,6 +1,7 @@
 import { defineConfig, devices } from '@playwright/test';
 
-const baseURL = process.env.PLAYWRIGHT_BASE_URL ?? 'https://fizioterapia-ime.vercel.app';
+const baseURL = process.env.PLAYWRIGHT_BASE_URL ?? 'http://127.0.0.1:3000';
+const webServerCommand = process.env.PLAYWRIGHT_WEB_SERVER_COMMAND?.trim();
 
 export default defineConfig({
   testDir: './tests/e2e',
@@ -18,6 +19,16 @@ export default defineConfig({
     video: 'retain-on-failure',
     ignoreHTTPSErrors: false,
   },
+  webServer: webServerCommand
+    ? {
+        command: webServerCommand,
+        url: baseURL,
+        reuseExistingServer: !process.env.CI,
+        timeout: 300_000,
+        stdout: 'pipe',
+        stderr: 'pipe',
+      }
+    : undefined,
   projects: [
     {
       name: 'desktop-chromium',

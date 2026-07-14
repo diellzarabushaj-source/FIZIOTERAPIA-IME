@@ -1,32 +1,39 @@
 import { NextResponse } from "next/server";
 import { patientSessionSigningConfigured } from "@/lib/backend-logic";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
+import { hasValidMonitorSecret } from "@/src/server/monitoring/monitor-auth";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 const startedAt = Date.now();
+const noStoreHeaders = {
+  "Cache-Control": "no-store, max-age=0",
+  "X-Robots-Tag": "noindex, nofollow",
+};
 
 export async function GET(request: Request) {
   const requestStartedAt = Date.now();
-  const monitorSecret = request.headers.get("x-monitor-secret");
-  const canSeeDetails = Boolean(
-    process.env.HEALTH_MONITOR_SECRET &&
-      monitorSecret &&
-      monitorSecret === process.env.HEALTH_MONITOR_SECRET,
-  );
+  const canSeeDetails = hasValidMonitorSecret(request.headers.get("x-monitor-secret"));
 
   const checks = {
-    supabaseEnvironment: Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY),
+    supabaseEnvironment: Boolean(
+      process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY,
+    ),
     database: false,
-    clerk: Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY && process.env.CLERK_SECRET_KEY),
+    clerk: Boolean(
+      process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY && process.env.CLERK_SECRET_KEY,
+    ),
     patientSession: patientSessionSigningConfigured(),
     email: Boolean(process.env.RESEND_API_KEY),
   };
 
   const supabase = getSupabaseAdmin();
   if (supabase) {
-    const { error } = await supabase.from("profiles").select("id", { head: true, count: "exact" }).limit(1);
+    const { error } = await supabase
+      .from("profiles")
+      .select("id", { head: true, count: "exact" })
+      .limit(1);
     checks.database = !error;
   }
 
@@ -52,9 +59,6 @@ export async function GET(request: Request) {
 
   return NextResponse.json(body, {
     status: healthy ? 200 : 503,
-    headers: {
-      "Cache-Control": "no-store, max-age=0",
-      "X-Robots-Tag": "noindex, nofollow",
-    },
+    headers: noStoreHeaders,
   });
 }

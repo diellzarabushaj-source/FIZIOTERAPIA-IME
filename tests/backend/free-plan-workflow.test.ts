@@ -19,9 +19,13 @@ test("plan builder actions do not require an active subscription", async () => {
 
 test("the free limit remains enforced when creating the sixth patient", async () => {
   const patients = await source("lib/backend/patients.ts");
-  const billing = await source("lib/billing.ts");
+  const capacity = await source("src/features/billing/domain/patient-capacity.ts");
+  const migration = await source("supabase/migrations/20260713_atomic_patient_capacity.sql");
 
-  assert.match(patients, /canCreateAnotherPatient/);
-  assert.match(patients, /FREE_PATIENT_LIMIT/);
-  assert.match(billing, /FREE_PATIENT_LIMIT\s*=\s*5/);
+  assert.match(capacity, /FREE_PATIENT_LIMIT\s*=\s*5/);
+  assert.match(patients, /create_or_get_patient_atomic/);
+  assert.match(patients, /p_enforce_capacity:\s*actor\.role === "physio"/);
+  assert.match(migration, /v_patient_count >= 5/);
+  assert.match(migration, /subscription_required/);
+  assert.match(migration, /pg_advisory_xact_lock/);
 });

@@ -9,24 +9,24 @@
     "android": "expo start --android",
     "web": "expo start --web",
     "typecheck": "tsc --noEmit",
+    "check:env": "node scripts/check-env.mjs",
     "generate:assets": "node scripts/generate-assets.mjs",
-    "build:preview": "npm run generate:assets && eas build --profile preview --platform all",
-    "build:ios": "npm run generate:assets && eas build --profile production --platform ios",
-    "build:android": "npm run generate:assets && eas build --profile production --platform android",
+    "build:preview": "npm run check:env && npm run generate:assets && eas build --profile preview --platform all",
+    "build:ios": "npm run check:env && npm run generate:assets && eas build --profile production --platform ios",
+    "build:android": "npm run check:env && npm run generate:assets && eas build --profile production --platform android",
     "submit:ios": "eas submit --platform ios",
     "submit:android": "eas submit --platform android"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.110.1",
-    "expo": "~53.0.0",
-    "expo-status-bar": "~2.2.3",
+    "expo": "53.0.0",
+    "expo-status-bar": "2.2.3",
     "react": "19.0.0",
     "react-native": "0.79.0",
-    "react-native-url-polyfill": "^2.0.0"
+    "react-native-url-polyfill": "2.0.0"
   },
   "devDependencies": {
-    "@types/react": "~19.0.10",
-    "sharp": "^0.34.1",
-    "typescript": "~5.8.3"
+    "@types/react": "19.0.10",
+    "sharp": "0.34.1",
+    "typescript": "5.8.3"
   }
 }

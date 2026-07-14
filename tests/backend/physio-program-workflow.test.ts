@@ -34,6 +34,7 @@ test("private exercises remain owned and reusable only by their physiotherapist"
 test("plans persist explicit multi-day schedules and patient dashboard consumes them", async () => {
   const planService = await source("lib/backend/plans.ts");
   const planActions = await source("app/physiotherapist-portal/plan-builder/actions.ts");
+  const patientService = await source("src/features/patients/server/patient-dashboard.ts");
   const patientDashboard = await source("app/patient-dashboard/page.tsx");
   const migration = await source("supabase/migrations/20260710_add_plan_exercise_schedule_days.sql");
 
@@ -41,7 +42,8 @@ test("plans persist explicit multi-day schedules and patient dashboard consumes 
   assert.match(planService, /parseScheduleDays/);
   assert.match(planService, /validateScheduleForPlan/);
   assert.match(planActions, /scheduleDays: formData\.get\("scheduleDays"\)/);
-  assert.match(patientDashboard, /schedule_days/);
+  assert.match(patientService, /schedule_days/);
+  assert.match(patientDashboard, /exercise\.scheduleDays/);
   assert.match(patientDashboard, /scheduledDays\.includes\(day\)/);
   assert.match(migration, /integer\[\]/);
   assert.match(migration, /using gin/);

@@ -1,6 +1,14 @@
-export const PHYSIO_MONTHLY_PRICE_EUR = 9.9;
-export const PHYSIO_MONTHLY_PRICE_LABEL = "9.90 EUR / muaj";
-export const FREE_PATIENT_LIMIT = 5;
+import {
+  evaluatePatientCreationCapacity,
+  FREE_PATIENT_LIMIT,
+  PILOT_CURRENCY,
+  PILOT_MONTHLY_PRICE_CENTS,
+  type SubscriptionState,
+} from "../src/features/billing/domain/patient-capacity.ts";
+
+export const PHYSIO_MONTHLY_PRICE_EUR = PILOT_MONTHLY_PRICE_CENTS / 100;
+export const PHYSIO_MONTHLY_PRICE_LABEL = `${PHYSIO_MONTHLY_PRICE_EUR.toFixed(2)} ${PILOT_CURRENCY} / muaj`;
+export { FREE_PATIENT_LIMIT };
 
 export type SubscriptionLike = {
   status?: string | null;
@@ -13,15 +21,24 @@ export function isOwnerRole(role?: string | null) {
   return role === "owner" || role === "admin";
 }
 
-export function hasActiveSubscription(role?: string | null, subscription?: SubscriptionLike | null) {
+function toSubscriptionState(subscription?: SubscriptionLike | null): SubscriptionState {
+  if (subscription?.status !== "active" || !subscription.current_period_end) {
+    return { status: "inactive" };
+  }
+
+  const expiresAt = new Date(subscription.current_period_end);
+  if (!Number.isFinite(expiresAt.getTime())) return { status: "inactive" };
+  return { status: "active", expiresAt };
+}
+
+export function hasActiveSubscription(
+  role?: string | null,
+  subscription?: SubscriptionLike | null,
+  now = new Date(),
+) {
   if (isOwnerRole(role)) return true;
-  if (!subscription) return false;
-
-  const status = subscription.status || "unpaid";
-  const paidUntil = subscription.current_period_end ? new Date(subscription.current_period_end).getTime() : 0;
-  const now = Date.now();
-
-  return status === "active" && Number.isFinite(paidUntil) && paidUntil >= now;
+  const state = toSubscriptionState(subscription);
+  return state.status === "active" && state.expiresAt.getTime() > now.getTime();
 }
 
 /**
@@ -36,19 +53,25 @@ export function canCreateAnotherPatient({
   role,
   subscription,
   patientCount,
+  now = new Date(),
 }: {
   role?: string | null;
   subscription?: SubscriptionLike | null;
   patientCount: number;
+  now?: Date;
 }) {
-  if (isOwnerRole(role) || hasActiveSubscription(role, subscription)) return true;
-  return patientCount < FREE_PATIENT_LIMIT;
+  if (isOwnerRole(role)) return true;
+  return evaluatePatientCreationCapacity({
+    currentPatientCount: patientCount,
+    subscription: toSubscriptionState(subscription),
+    now,
+  }).allowed;
 }
 
-export function getBillingStatusLabel(subscription?: SubscriptionLike | null) {
+export function getBillingStatusLabel(subscription?: SubscriptionLike | null, now = new Date()) {
   if (!subscription) return `Falas deri në ${FREE_PATIENT_LIMIT} pacientë`;
   if (subscription.status === "active") {
-    return hasActiveSubscription("physio", subscription) ? "Aktive" : "E skaduar";
+    return hasActiveSubscription("physio", subscription, now) ? "Aktive" : "E skaduar";
   }
   if (subscription.status === "pending") return "Në pritje";
   if (subscription.status === "suspended") return "E bllokuar";

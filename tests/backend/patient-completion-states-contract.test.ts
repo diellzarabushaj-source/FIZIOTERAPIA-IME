@@ -38,9 +38,10 @@ test("last scheduled day asks the patient to contact the physiotherapist", async
 
 test("expired program blocks exercises and requires a new review", async () => {
   const dashboard = await source(dashboardPath);
-  assert.match(dashboard, /todayKey > activePlan\.end_date/);
+  assert.match(dashboard, /todayKey > activePlan\.endDate/);
   assert.match(dashboard, /PROGRAMI U MBYLL/);
   assert.match(dashboard, /Mos vazhdo me të njëjtin program pa kontroll të ri/);
+  assert.match(dashboard, /const exercises = hasNotStarted \|\| ended/);
 });
 
 test("completion state is accessible and respects reduced motion", async () => {

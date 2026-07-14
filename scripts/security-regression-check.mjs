@@ -3,9 +3,20 @@ import { readFileSync } from "node:fs";
 const checks = [
   {
     file: "app/patient-dashboard/page.tsx",
-    mustContain: ["getCurrentPatientSession"],
+    mustContain: ["getPatientDashboardData"],
+    mustNotContain: ["fizioplan_patient_code", "getSupabaseAdmin"],
+    label: "Patient dashboard delegates clinical data access to the typed server boundary",
+  },
+  {
+    file: "src/features/patients/server/patient-dashboard.ts",
+    mustContain: [
+      'import "server-only"',
+      "getCurrentPatientSession",
+      '.eq("status", "active")',
+      '.is("archived_at", null)',
+    ],
     mustNotContain: ["fizioplan_patient_code"],
-    label: "Patient dashboard requires the shared signed-session guard",
+    label: "Patient dashboard server boundary requires the shared signed session and active patient ownership",
   },
   {
     file: "app/api/patient/ai-check/route.ts",
@@ -15,14 +26,44 @@ const checks = [
   },
   {
     file: "app/api/mobile/save-progress/route.ts",
-    mustContain: ["verifyPatientCodeSignature", "requireAssignedPlanExercise", ".eq(\"patient_code\", code)"],
+    mustContain: [
+      "validatePatientSession",
+      "patientSessionRegistryEnabled",
+      "requireAssignedPlanExercise",
+      "getBearerToken",
+      "evaluatePainSafety",
+    ],
     mustNotContain: ["alertType: body.alertType"],
-    label: "Mobile progress blocks IDOR and client-selected alert severity",
+    label: "Mobile progress uses revocable sessions, ownership, active-plan assignment and server-derived safety",
   },
   {
     file: "app/api/mobile/patient-session/route.ts",
-    mustContain: ["check_patient_login_attempt", "record_patient_login_result", "signPatientCode"],
-    label: "Mobile login has rate limiting and signed sessions",
+    mustContain: [
+      "check_patient_login_attempt",
+      "record_patient_login_result",
+      "createPatientSession",
+      "revokePatientSession",
+      "patientSessionRegistryEnabled",
+      "signPatientCode",
+    ],
+    label: "Mobile login has rate limiting, revocable registry sessions, logout and a migration-compatible signed fallback",
+  },
+  {
+    file: "apps/mobile-app/lib/api.ts",
+    mustContain: [
+      "EXPO_PUBLIC_API_BASE_URL",
+      "authorization: `Bearer ${token}`",
+      "activePatientSessionToken = \"\"",
+      "REQUEST_TIMEOUT_MS",
+    ],
+    mustNotContain: ["https://fizioterapia-ime.vercel.app\").replace"],
+    label: "Mobile client requires explicit environment configuration and keeps session tokens out of request bodies",
+  },
+  {
+    file: "apps/mobile-app/App.tsx",
+    mustContain: ["mustStopExerciseForPain", "Ky pilot mobile nuk aktivizon kamerën"],
+    mustNotContain: ["DEMO_PATIENT", "DEMO_EXERCISES", "const aiScore", "Demo mode aktiv"],
+    label: "Mobile runtime has no fake patient, exercise or AI result fallback",
   },
   {
     file: "lib/backend-logic.ts",
@@ -31,20 +72,15 @@ const checks = [
       "PATIENT_SESSION_SECRET_MIN_LENGTH",
       "timingSafeEqual",
       "must contain at least",
-      ".eq(\"plans.status\", \"active\")",
+      '.eq("plans.status", "active")',
     ],
     mustNotContain: ["CLERK_SECRET_KEY ||", "SUPABASE_SERVICE_ROLE_KEY ||"],
     label: "Patient sessions expire, require a dedicated strong secret, fail closed, and enforce active-plan ownership",
   },
   {
     file: "app/api/patient/access-qr/[code]/route.ts",
-    mustContain: ["actorCanAccessPhysioResource", ".eq(\"status\", \"active\")"],
+    mustContain: ["actorCanAccessPhysioResource", '.eq("status", "active")'],
     label: "QR generation checks operator authentication, patient ownership, and status",
-  },
-  {
-    file: "app/patient-dashboard/page.tsx",
-    mustContain: ["getCurrentPatientSession"],
-    label: "Public patient routes protect clinical data at the server session layer",
   },
   {
     file: "next.config.mjs",
@@ -83,10 +119,14 @@ for (const check of checks) {
   }
 
   for (const token of check.mustContain || []) {
-    if (!source.includes(token)) failures.push(`${check.label}: ${check.file} is missing ${JSON.stringify(token)}`);
+    if (!source.includes(token)) {
+      failures.push(`${check.label}: ${check.file} is missing ${JSON.stringify(token)}`);
+    }
   }
   for (const token of check.mustNotContain || []) {
-    if (source.includes(token)) failures.push(`${check.label}: ${check.file} contains forbidden ${JSON.stringify(token)}`);
+    if (source.includes(token)) {
+      failures.push(`${check.label}: ${check.file} contains forbidden ${JSON.stringify(token)}`);
+    }
   }
 }
 

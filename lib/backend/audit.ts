@@ -1,6 +1,7 @@
 import { headers } from "next/headers";
 import type { ActorContext } from "@/lib/backend/access";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
+import { redactLogMetadata, safeLogPayload } from "@/src/server/monitoring/redaction";
 
 type JsonObject = Record<string, unknown>;
 
@@ -16,33 +17,21 @@ export type AuditEvent = {
   requestId?: string | null;
 };
 
-const sensitiveKeys = new Set([
-  "password", "secret", "token", "authorization", "cookie",
-  "patient_code", "patientCode", "sessionToken", "proof_path", "proofPath",
-]);
-
-function redactValue(value: unknown, depth = 0): unknown {
-  if (depth > 6) return "[TRUNCATED]";
-  if (Array.isArray(value)) return value.slice(0, 100).map((item) => redactValue(item, depth + 1));
-  if (value && typeof value === "object") {
-    const output: JsonObject = {};
-    for (const [key, nested] of Object.entries(value as JsonObject)) {
-      output[key] = sensitiveKeys.has(key) ? "[REDACTED]" : redactValue(nested, depth + 1);
-    }
-    return output;
-  }
-  if (typeof value === "string") return value.slice(0, 4_000);
-  return value;
-}
-
 function safeSnapshot(value: JsonObject | null | undefined): JsonObject | null {
-  return value ? (redactValue(value) as JsonObject) : null;
+  if (!value) return null;
+  const redacted = redactLogMetadata(value);
+  return redacted && typeof redacted === "object" && !Array.isArray(redacted)
+    ? redacted as JsonObject
+    : null;
 }
 
 export async function writeAuditEvent(event: AuditEvent): Promise<void> {
   const supabase = getSupabaseAdmin();
   if (!supabase) {
-    console.error("audit_log_skipped", { action: event.action, reason: "missing_supabase" });
+    console.error(safeLogPayload("audit_log_skipped", {
+      action: event.action,
+      reason: "missing_supabase",
+    }));
     return;
   }
 
@@ -65,6 +54,12 @@ export async function writeAuditEvent(event: AuditEvent): Promise<void> {
   });
 
   if (error) {
-    console.error("audit_log_failed", { action: event.action, entityType: event.entityType, entityId: event.entityId, message: error.message, requestId });
+    console.error(safeLogPayload("audit_log_failed", {
+      action: event.action,
+      entityType: event.entityType,
+      entityId: event.entityId,
+      databaseCode: error.code,
+      requestId,
+    }));
   }
 }

@@ -1,36 +1,64 @@
 import { NextResponse } from "next/server";
+import { patientSessionSigningConfigured } from "@/lib/backend-logic";
+import { patientSessionRegistryEnabled } from "@/lib/backend/patient-sessions";
+import { getSupabaseAdmin } from "@/lib/supabase-admin";
+import { hasValidMonitorSecret } from "@/src/server/monitoring/monitor-auth";
 
-function envStatus(name: string) {
-  return Boolean(process.env[name]);
-}
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
-export async function GET() {
+const noStoreHeaders = {
+  "Cache-Control": "no-store, max-age=0",
+  "X-Robots-Tag": "noindex, nofollow",
+};
+
+export async function GET(request: Request) {
+  const canSeeDetails = hasValidMonitorSecret(request.headers.get("x-monitor-secret"));
+  const environment = process.env.APP_ENV || process.env.VERCEL_ENV || "unknown";
+  const productionLike = environment === "production";
+  const registryEnabled = patientSessionRegistryEnabled();
+  const supabase = getSupabaseAdmin();
+
   const checks = {
-    supabaseUrl: envStatus("NEXT_PUBLIC_SUPABASE_URL"),
-    supabaseServiceRole: envStatus("SUPABASE_SERVICE_ROLE_KEY"),
-    clerkPublishable: envStatus("NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY"),
-    clerkSecret: envStatus("CLERK_SECRET_KEY"),
-    resendApi: envStatus("RESEND_API_KEY"),
-    resendFrom: envStatus("RESEND_FROM_EMAIL"),
-    resendReplyTo: envStatus("RESEND_REPLY_TO_EMAIL"),
+    databaseEnvironment: Boolean(
+      process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY,
+    ),
+    database: false,
+    patientSessionSigning: patientSessionSigningConfigured(),
+    patientSessionRegistry: productionLike ? registryEnabled : true,
   };
 
-  const required = [
-    checks.supabaseUrl,
-    checks.supabaseServiceRole,
-    checks.clerkPublishable,
-    checks.clerkSecret,
-  ];
+  if (supabase) {
+    const { error } = await supabase
+      .from("profiles")
+      .select("id", { head: true, count: "exact" })
+      .limit(1);
+    checks.database = !error;
+  }
 
-  const ok = required.every(Boolean);
-
-  return NextResponse.json({
-    app: "Fizioterapia ime",
+  const failedChecks = Object.entries(checks)
+    .filter(([, passed]) => !passed)
+    .map(([name]) => name);
+  const ready = failedChecks.length === 0;
+  const common = {
     service: "mobile-api",
-    ok,
-    status: ok ? "ready" : "missing-required-env",
-    checks,
+    status: ready ? "ready" : "not_ready",
     timestamp: new Date().toISOString(),
-    note: "This endpoint reports presence/missing status only. It never returns secret values.",
-  }, { status: ok ? 200 : 503 });
+    failedChecks,
+  };
+
+  const body = canSeeDetails
+    ? {
+        ...common,
+        environment,
+        deploymentVersion: process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 12) || "unknown",
+        checks,
+        registryMode: registryEnabled ? "revocable" : "signed_fallback",
+      }
+    : common;
+
+  return NextResponse.json(body, {
+    status: ready ? 200 : 503,
+    headers: noStoreHeaders,
+  });
 }

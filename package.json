@@ -17,6 +17,8 @@
     "test:e2e:headed": "playwright test --headed",
     "test:e2e:report": "playwright show-report",
     "test:backend": "node --experimental-strip-types --test tests/backend/*.test.ts",
+    "audit:inventory": "node scripts/generate-rebuild-inventory.mjs",
+    "audit:inventory:check": "node scripts/generate-rebuild-inventory.mjs --check",
     "preflight:routes": "node scripts/verify-route-files.mjs",
     "check:dependencies": "node scripts/dependency-policy-check.mjs",
     "check:env": "node scripts/check-env-readiness.mjs",

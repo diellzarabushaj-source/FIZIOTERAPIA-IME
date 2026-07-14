@@ -1,3 +1,8 @@
+import {
+  sendTransactionalEmail,
+  type EmailTemplate,
+} from "@/src/server/email/service";
+
 type EmailInput = {
   to: string | string[];
   subject: string;
@@ -6,43 +11,77 @@ type EmailInput = {
   tags?: { name: string; value: string }[];
 };
 
+type LegacyEmailProps = {
+  subject: string;
+  html: string;
+  text: string;
+};
+
+const legacyTemplate: EmailTemplate<LegacyEmailProps> = {
+  key: "legacy_transactional",
+  render: (props) => props,
+};
+
+function textFromHtml(html: string) {
+  return html
+    .replace(/<style[\s\S]*?<\/style>/gi, " ")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&amp;/g, "&")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 export async function sendResendEmail(input: EmailInput) {
-  const apiKey = process.env.RESEND_API_KEY;
-  const from = process.env.RESEND_FROM_EMAIL || "FizioPlan <onboarding@resend.dev>";
+  const recipients = (Array.isArray(input.to) ? input.to : [input.to])
+    .map((recipient) => recipient.trim().toLowerCase())
+    .filter(Boolean);
 
-  if (!apiKey) {
-    return { ok: false, skipped: true, error: "RESEND_API_KEY is missing" };
+  if (recipients.length === 0) {
+    return { ok: false, skipped: true, error: "missing_recipient" };
   }
 
-  const response = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      from,
-      to: input.to,
-      subject: input.subject,
-      html: input.html,
-      text: input.text,
-      tags: input.tags,
-    }),
-  });
+  const results = await Promise.all(
+    recipients.map((recipient) =>
+      sendTransactionalEmail({
+        to: recipient,
+        template: legacyTemplate,
+        props: {
+          subject: input.subject,
+          html: input.html,
+          text: input.text || textFromHtml(input.html),
+        },
+      }),
+    ),
+  );
 
-  const payload = await response.json().catch(() => ({}));
-
-  if (!response.ok) {
-    return { ok: false, skipped: false, error: payload?.message || "Resend email failed", payload };
+  const sent = results.filter((result) => result.status === "sent");
+  if (sent.length === results.length) {
+    const first = sent[0];
+    return {
+      ok: true,
+      skipped: false,
+      id: first?.status === "sent" ? first.providerId || undefined : undefined,
+    };
   }
 
-  return { ok: true, skipped: false, id: payload?.id as string | undefined };
+  const failed = results.find((result) => result.status === "failed");
+  if (failed?.status === "failed") {
+    return { ok: false, skipped: false, error: failed.reason };
+  }
+
+  const suppressed = results.find((result) => result.status === "suppressed");
+  return {
+    ok: false,
+    skipped: true,
+    error: suppressed?.status === "suppressed" ? suppressed.reason : "delivery_incomplete",
+  };
 }
 
 export function clinicalAlertEmailHtml({
   title,
-  patientName,
-  diagnosis,
+  patientName: _patientName,
+  diagnosis: _diagnosis,
   body,
   ctaUrl,
 }: {
@@ -53,20 +92,24 @@ export function clinicalAlertEmailHtml({
   ctaUrl?: string;
 }) {
   return `
-    <div style="font-family:Arial,sans-serif;background:#f6fbff;padding:24px;color:#102033">
-      <div style="max-width:620px;margin:0 auto;background:#ffffff;border:1px solid #d8e8f5;border-radius:18px;padding:24px">
-        <div style="display:inline-block;background:#e8fff4;color:#16764f;padding:8px 12px;border-radius:999px;font-weight:700;font-size:13px">FizioPlan Clinical Alert</div>
-        <h1 style="margin:18px 0 8px;font-size:26px;line-height:1.2">${title}</h1>
-        <p style="font-size:16px;line-height:1.6;color:#4c6075">${body}</p>
-        <div style="background:#f6fbff;border:1px solid #d8e8f5;border-radius:14px;padding:16px;margin:18px 0">
-          <p style="margin:0 0 6px"><strong>Pacienti:</strong> ${patientName}</p>
-          <p style="margin:0"><strong>Diagnoza:</strong> ${diagnosis || "—"}</p>
-        </div>
-        ${ctaUrl ? `<a href="${ctaUrl}" style="display:inline-block;background:#6fd6a5;color:#063b28;font-weight:800;text-decoration:none;border-radius:14px;padding:13px 18px">Hap FizioPlan</a>` : ""}
-        <p style="font-size:12px;line-height:1.5;color:#6b7a90;margin-top:22px">
-          Ky email është njoftim klinik informues. Vendimi klinik mbetet përgjegjësi e fizioterapeutit.
-        </p>
+    <div style="font-family:Arial,Helvetica,sans-serif;background:#f7fafc;padding:24px;color:#111827">
+      <div style="max-width:620px;margin:0 auto;background:#ffffff;border:1px solid #e6eef8;border-radius:18px;padding:28px">
+        <p style="margin:0 0 8px;color:#30b5a8;font-weight:700">Fizioterapia ime</p>
+        <h1 style="margin:0 0 16px;font-size:24px;line-height:1.35">${escapeHtml(title)}</h1>
+        <p style="font-size:16px;line-height:1.6;color:#374151">${escapeHtml(body)}</p>
+        <p style="font-size:14px;line-height:1.6;color:#4b5563">Identiteti dhe detajet klinike të pacientit shfaqen vetëm pas hyrjes në dashboard-in e mbrojtur.</p>
+        ${ctaUrl ? `<a href="${escapeHtml(ctaUrl)}" style="display:inline-block;margin-top:20px;background:#34c759;color:white;text-decoration:none;padding:12px 18px;border-radius:12px;font-weight:700">Hap dashboard-in</a>` : ""}
+        <p style="margin-top:24px;font-size:12px;color:#6b7280">Ky njoftim nuk përbën diagnozë dhe nuk zëvendëson vlerësimin profesional.</p>
       </div>
     </div>
   `;
+}
+
+function escapeHtml(value: string) {
+  return value
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
 }
