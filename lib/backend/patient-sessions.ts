@@ -2,9 +2,7 @@ import { createHash, createHmac, randomBytes } from "node:crypto";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import {
   evaluatePatientSessionPolicy,
-  PATIENT_SESSION_IDLE_TIMEOUT_SECONDS,
   PATIENT_SESSION_REGISTRY_MAX_AGE_SECONDS,
-  PATIENT_SESSION_TOUCH_INTERVAL_SECONDS,
 } from "./patient-session-policy.ts";
 
 export {
