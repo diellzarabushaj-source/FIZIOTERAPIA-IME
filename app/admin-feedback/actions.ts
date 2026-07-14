@@ -1,8 +1,8 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
+import { requireOwnerActor } from "@/lib/backend/access";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 
 function stringValue(formData: FormData, key: string) {
@@ -10,15 +10,8 @@ function stringValue(formData: FormData, key: string) {
   return typeof value === "string" ? value.trim() : "";
 }
 
-async function requireAdminEmail() {
-  const user = await currentUser();
-  const email = user?.primaryEmailAddress?.emailAddress?.toLowerCase();
-  if (email !== "diellzarabushaj@gmail.com") redirect("/admin-hidden");
-  return email;
-}
-
 export async function updateFeedbackTriageAction(formData: FormData) {
-  await requireAdminEmail();
+  await requireOwnerActor();
 
   const feedbackId = stringValue(formData, "feedbackId");
   const triageStatus = stringValue(formData, "triageStatus") || "reviewed";

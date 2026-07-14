@@ -1,7 +1,6 @@
-import { currentUser } from "@clerk/nextjs/server";
-import { redirect } from "next/navigation";
 import { AuthControls } from "@/components/AuthControls";
 import { BrandMark } from "@/components/BrandMark";
+import { requireOwnerActor } from "@/lib/backend/access";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import { updateFeedbackTriageAction } from "./actions";
 
@@ -57,9 +56,7 @@ function scorePill(label: string, value: number | null) {
 }
 
 export default async function AdminFeedbackPage() {
-  const user = await currentUser();
-  const email = user?.primaryEmailAddress?.emailAddress?.toLowerCase();
-  if (email !== "diellzarabushaj@gmail.com") redirect("/admin-hidden");
+  await requireOwnerActor();
 
   const supabase = getSupabaseAdmin();
   if (!supabase) {

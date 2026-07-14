@@ -62,12 +62,17 @@ test("patient record exposes QR access and a protected patient-specific program 
   assert.match(program, /plan_exercises\(count\)/);
 });
 
-test("physiotherapist sign-in and navigation lead directly into the real work dashboard", async () => {
+test("physiotherapist sign-in resolves the actor before entering the real work dashboard", async () => {
   const signIn = await source("app/sign-in/[[...sign-in]]/page.tsx");
+  const postAuth = await source("app/auth/continue/page.tsx");
+  const routing = await source("lib/backend/workspace-routing.ts");
   const portal = await source("app/physiotherapist-portal/page.tsx");
   const navigation = await source("components/PhysioDashboardNav.tsx");
 
-  assert.match(signIn, /physiotherapist-portal\/overview/);
+  assert.match(signIn, /fallbackRedirectUrl="\/auth\/continue"/);
+  assert.match(postAuth, /getActorContext/);
+  assert.match(postAuth, /getWorkspaceHome\(actor\.role\)/);
+  assert.match(routing, /physio: "\/physiotherapist-portal\/overview"/);
   assert.match(portal, /physiotherapist-portal\/overview/);
   assert.match(navigation, /lucide-react/);
   assert.match(navigation, /physiotherapist-portal\/programs/);
