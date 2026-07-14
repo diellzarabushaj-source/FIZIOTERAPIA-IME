@@ -34,9 +34,9 @@ test("authenticated journeys cover owner redirect, physio redirect and sign-out"
   };
 
   assert.match(spec, /clerk\.signIn/);
-  assert.match(spec, /\/auth\/continue/);
-  assert.match(spec, /\/admin-dashboard/);
-  assert.match(spec, /\/physiotherapist-portal\\\/overview/);
+  assert.ok(spec.includes("/auth/continue"));
+  assert.ok(spec.includes("/admin-dashboard"));
+  assert.ok(spec.includes("/physiotherapist-portal/overview"));
   assert.match(spec, /clerk\.signOut/);
   assert.match(spec, /E2E_CLERK_OWNER_EMAIL/);
   assert.match(spec, /E2E_CLERK_PHYSIO_EMAIL/);
